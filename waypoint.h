@@ -9,6 +9,9 @@
 class WAYPOINT
 {
 	public:
+        static const int ORIGIN_AIRAC_AIRPORTS;
+        static const int ORIGIN_AIRAC_NAVAIDS;
+        static const int ORIGIN_AIRAC_WAYPOINTS;
         static const int ORIGIN_FMS;
         static const int ORIGIN_EARTHNAV;
         static const int ORIGIN_RSBN;

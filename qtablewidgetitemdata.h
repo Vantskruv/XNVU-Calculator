@@ -10,7 +10,7 @@ class QTableWidgetItemData : public QTableWidgetItem
 public:
     NVUPOINT* nvupoint;
     //WAYPOINT* waypoint;
-    std::vector< std::pair<NVUPOINT*, double> > lRSBN_Dist;
+    //std::vector< std::pair<NVUPOINT*, double> > lRSBN_Dist;
 
     QTableWidgetItemData();
 };

@@ -11,8 +11,10 @@ QString DialogSettings::fileNavaids;
 QString DialogSettings::fileWaypoints;
 QString DialogSettings::fileNavdata;
 QString DialogSettings::fileRSBN;
-bool DialogSettings::correctionVORDME = true;
-int DialogSettings::beaconDistance = 1000;
+bool DialogSettings::correctionVORDME = false;
+int DialogSettings::beaconDistance = 500;
+int DialogSettings::windowWidth = 1600;
+int DialogSettings::windowHeight = 1054;
 
 QString DialogSettings::_xDir;
 QString DialogSettings::_fileAirports;
@@ -20,8 +22,10 @@ QString DialogSettings::_fileNavaids;
 QString DialogSettings::_fileWaypoints;
 QString DialogSettings::_fileNavdata;
 QString DialogSettings::_fileRSBN;
-bool DialogSettings::_correctionVORDME = true;
-int DialogSettings::_beaconDistance = 1000;
+bool DialogSettings::_correctionVORDME = false;
+int DialogSettings::_beaconDistance = 500;
+int DialogSettings::_windowWidth = 1600;
+int DialogSettings::_windowHeight = 1054;
 
 
 DialogSettings::DialogSettings(QWidget *parent) :
@@ -96,6 +100,18 @@ void DialogSettings::loadSettings()
                 beaconDistance = qstr.toInt();
                 _beaconDistance = qstr.toInt();
             }
+            else if(list[0].simplified().compare("WindowWidth")==0)
+            {
+                windowWidth = qstr.toInt();
+                _windowWidth = qstr.toInt();
+            }
+            else if(list[0].simplified().compare("WindowHeight")==0)
+            {
+                windowHeight = qstr.toInt();
+                _windowHeight = qstr.toInt();
+            }
+
+
         }
 
     }//while
@@ -141,6 +157,8 @@ void DialogSettings::saveSettings()
     out << "RSBNFile = " << fileRSBN << "\n";
     out << "VORDMECorrection = " << correctionVORDME << "\n";
     out << "BeaconDistance = " << beaconDistance << "\n";
+    out << "WindowWidth = " << windowWidth << "\n";
+    out << "WindowHeight = " << windowHeight<< "\n";
 
     outfile.close();
 }
@@ -155,6 +173,8 @@ bool DialogSettings::isChanged()
     if(fileRSBN.compare(_fileRSBN)!=0) return true;
     if(correctionVORDME!=_correctionVORDME) return true;
     if(beaconDistance!=_beaconDistance) return true;
+    if(windowWidth!=_windowWidth) return true;
+    if(windowHeight!=_windowHeight) return true;
 
     return false;
 }

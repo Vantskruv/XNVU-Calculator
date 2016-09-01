@@ -28,7 +28,7 @@ private slots:
     void saveNVUFlightPlan();
     void tableGoUp();
     void tableGoDown();
-    //void insertNVUPoint(NVUPOINT*);
+    void updateTotalDistance();
     void insertTableWidgetWaypoint(NVUPOINT* waypoint, int row);
     void replaceTableWidgetWaypoint(NVUPOINT* nvupoint, int row);
     void deleteTableWidgetWaypoint(int row);
@@ -40,7 +40,6 @@ private slots:
     void painterDrawNVUPoint(QPainter& painter, NVUPOINT*wp, int wpNumber, bool isArr, int &y);
 
 
-    void on_lineEdit_returnPressed();
 
     void on_lineEdit_textChanged(const QString &arg1);
     void on_listWidget_itemDoubleClicked(QListWidgetItem *item);

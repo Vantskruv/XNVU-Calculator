@@ -40,6 +40,8 @@ public:
     static QString fileRSBN;
     static bool correctionVORDME;
     static int beaconDistance;
+    static int windowWidth;
+    static int windowHeight;
 
     static QString _xDir;
     static QString _fileAirports;
@@ -49,7 +51,8 @@ public:
     static QString _fileRSBN;
     static bool _correctionVORDME;
     static int _beaconDistance;
-
+    static int _windowWidth;
+    static int _windowHeight;
 };
 
 #endif // DIALOGSETTINGS_H

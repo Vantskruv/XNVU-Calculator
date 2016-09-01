@@ -280,6 +280,7 @@ void XFMS_DATA::validate_airport(const QStringList& record)
 		}//switch
 	}//for
 
+    wp->wpOrigin = WAYPOINT::ORIGIN_AIRAC_AIRPORTS;
     wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat);
     lWP.insert(std::make_pair(wp->name, wp));
     lWP2.insert(std::make_pair(wp->name2, wp));
@@ -334,6 +335,7 @@ void XFMS_DATA::validate_navaid(const QStringList &record)
 		}//switch
 	}//for
 
+    wp->wpOrigin = WAYPOINT::ORIGIN_AIRAC_NAVAIDS;
     wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat);
     lWP.insert(std::make_pair(wp->name, wp));
     lWP2.insert(std::make_pair(wp->name2, wp));
@@ -522,6 +524,7 @@ void XFMS_DATA::validate_waypoint(const QStringList& record)
 		}//switch
 	}//for
 
+    wp->wpOrigin = WAYPOINT::ORIGIN_AIRAC_WAYPOINTS;
     wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat);
     lWP.insert(std::make_pair(wp->name, wp));
     lWP2.insert(std::make_pair(wp->name2, wp));
