@@ -26,6 +26,7 @@ std::vector<NVUPOINT*> XFMS_DATA::lVOR;
 std::vector<NVUPOINT*> XFMS_DATA::lDME;
 std::vector<NVUPOINT*> XFMS_DATA::lVORDME;         //Cannot be used as RSBN, as there is no angle deviation data.
 std::vector<NVUPOINT*> XFMS_DATA::lFixes;
+std::vector<AIRWAY*> XFMS_DATA::lAirways;
 
 //Loaded from earthnav.dat
 std::vector<NVUPOINT*> XFMS_DATA::lXNDB;
@@ -63,6 +64,7 @@ void XFMS_DATA::clear()
     lDME.clear();
     lVORDME.clear();
     lFixes.clear();
+    lAirways.clear();
 
     lXNDB.clear();
     lXVOR.clear();
@@ -109,6 +111,176 @@ std::vector<NVUPOINT*> XFMS_DATA::search(const QString& _name)
 	return rWP;
 }
 
+QString XFMS_DATA::getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVUPOINT* wpB, std::vector<NVUPOINT*>& lA, bool allowOpposite)
+{
+    std::vector<NVUPOINT*> llA = XFMS_DATA::search(airway);
+    QString sError = "";
+    bool kAIsFound = false;
+    bool kBIsFound = false;
+
+    lA.clear();
+    for(int i=0; i<llA.size(); i++)
+    {
+        NVUPOINT* wp = llA[i];
+        if(wp->type != WAYPOINT::TYPE_AIRWAY) continue;
+
+        AIRWAY* aw = (AIRWAY*) wp->data;
+
+        int kA = -1;
+        int kB = -1;
+        for(int k=0; k<aw->lATS.size(); k++)
+        {
+            NVUPOINT* ap = (NVUPOINT*) aw->lATS[k];
+            if(ap->name.compare(wpA->name)==0) kA = k;
+            if(ap->name.compare(wpB->name)==0) kB = k;
+        }
+ /*
+        {
+            if(lA.size()==0 && !kAIsFound) sError = "Route: Waypoint [" + wpA->name + "] is not found in airway [" + airway + "].";
+            continue;
+        }
+        else if(kB<0)
+        {
+            if(lA.size()==0) sError = "Route: Waypoint [" + wpB->name + "] is not found in airway [" + airway + "].";
+            continue;
+        }
+*/
+        if(kA>=0) kAIsFound = true;
+        if(kB>=0) kBIsFound = true;
+        if(kA<0 || kB<0) continue;
+        else if(kB<kA)
+        {
+            if(lA.size()==0 && allowOpposite)
+            {
+                for(int k=kA-1; k>kB; k--)
+                {
+                    lA.push_back((NVUPOINT*) aw->lATS[k]);
+                }
+                sError = "";
+            }//if
+            else sError = "Route: Note, airway [" + airway + "] is directional and opposite to waypoints [" + wpA->name + "] -> [" + wpB->name + "].";
+            continue;
+        }
+        else if(kA<kB)
+        {
+            lA.clear();
+            for(int k=kA+1; k<kB; k++)
+            {
+                lA.push_back((NVUPOINT*) aw->lATS[k]);
+            }
+
+            return "";
+        }
+    }//for
+
+    if(llA.size()==0) return "Route: Airway [" + airway + "] is not found.";
+
+    //If nothing is added something is wrong. Set error returns here.
+    if(sError.isEmpty() && lA.size()==0)
+    {
+        if(kAIsFound && kBIsFound)
+        {
+            return "Route: Cannot connect waypoints [" + wpA->name + "] and [" + wpB->name + "].";
+        }
+
+        if(!kAIsFound && !kBIsFound) return "Route: Waypoint [" + wpA->name + "] and [" + wpB->name + "] is not found in airway [" + airway + "].";
+        if(!kAIsFound) return "Route: Waypoint [" + wpA->name + "] is not found in airway [" + airway + "].";
+        else if(!kBIsFound) return "Route: Waypoint [" + wpB->name + "] is not found in airway [" + airway + "].";
+
+        return "Route: Major programming error, should not be here, contact confused developer.";
+    }
+
+    return sError;
+}
+
+QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
+{
+    QStringList record = _qstr.split(' ', QString::SkipEmptyParts);
+    std::vector<NVUPOINT*> sWaypoint;
+    std::vector<NVUPOINT*> cRoute;
+
+    QString qstr;
+    NVUPOINT* wp = NULL;
+    NVUPOINT* cwp;
+    double dCurrent, dMin;
+
+    route.clear();
+    for(int i=0; i<record.size(); i++)
+    {
+        qstr = record[i];
+
+        //Search for identifier in database
+        sWaypoint = XFMS_DATA::search(qstr);
+        if(sWaypoint.size() == 0) return "Route: [" + record[i] + "] is not found.";
+
+        //If more than 1 one is found, choose waypoint that is closest to the last one in current route
+        //Though if this is an airway, it may be bidirectional, so currently we just store the closest beginning of the airway.
+        dMin = std::numeric_limits<double>::max();
+        dCurrent = 0;
+        for(int k=0; k<sWaypoint.size(); k++)
+        {
+            if(cRoute.size()>0) dCurrent = LMATH::calc_distance(sWaypoint[k]->latlon, cRoute[cRoute.size()-1]->latlon);
+            if(dCurrent<dMin)
+            {
+                dMin = dCurrent;
+                cwp = sWaypoint[k];
+            }
+        }
+
+        cRoute.push_back(cwp);
+    }
+    sWaypoint.clear();
+
+    for(int i=0; i<cRoute.size(); i++)
+    {
+        NVUPOINT* wp = cRoute[i];
+
+        //If waypoint is an airway, check if previous and next waypoint in route exist in airway,
+        if(wp->type == WAYPOINT::TYPE_AIRWAY)
+        {
+            AIRWAY* ats = (AIRWAY*) wp->data;
+            //It is not valid if an airway starts or ends the route
+            if(i==0) return "Route: First point in route should not be an airway [" + ats->name + "].";
+            if(i==(cRoute.size()-1)) return "Route: Last point in route should not be an airway [" + ats->name + "].";
+
+
+            std::vector<NVUPOINT*> lA;
+            NVUPOINT* rPrev = cRoute[i-1];
+            NVUPOINT* rNext = cRoute[i+1];
+            QString sError = XFMS_DATA::getAirwayWaypointsBetween(ats->name, rPrev, rNext, lA, true);
+
+            //Return error
+            if(!sError.isEmpty()) return sError;
+
+            for(int k=0; k<lA.size(); k++) route.push_back(lA[k]);
+            continue; //Do not push the airway itself to the list
+        }//if
+
+        route.push_back(wp);
+    }//for
+
+    return "";
+}
+
+NVUPOINT* XFMS_DATA::getClosestSimilarWaypoint(NVUPOINT* wp, double &distance)
+{
+    double dMin = std::numeric_limits<double>::max();
+    NVUPOINT* cWP = NULL;
+    std::vector<NVUPOINT*> lS = search(wp->name);
+    for(int i=0; i<lS.size(); i++)
+    {
+        double d = LMATH::calc_distance(wp->latlon, lS[i]->latlon);
+        if(d<dMin)
+        {
+            dMin = d;
+            cWP = lS[i];
+        }
+    }
+
+    distance = dMin;
+    return cWP;
+}
+
 //Closest to waypoint, N closest RSBN to return, D max distance of RSBN, includeVOR to true to include VORDME
 //If N<1, return all the RSBN:s
 std::vector< std::pair<NVUPOINT*, double> > XFMS_DATA::getClosestRSBN(const NVUPOINT* wp, int n, double d, bool includeVOR)
@@ -149,10 +321,16 @@ std::vector< std::pair<NVUPOINT*, double> > XFMS_DATA::getClosestRSBN(const NVUP
 
 int XFMS_DATA::_load(const QString& file, int type)
 {
+
     QFile infile(file);
     if(!infile.open(QIODevice::ReadOnly | QIODevice::Text)) return 0;
 
-    int li = 0;
+    if(type == 6)
+    {
+        validate_airways(infile);
+        infile.close();
+        return 1;
+    }
 
     while(!infile.atEnd())
 	{
@@ -171,8 +349,6 @@ int XFMS_DATA::_load(const QString& file, int type)
             case 4: validate_earthnav(list); break;
             case 5: validate_xnvu(list); break;
 		}//switch
-
-        li++;
 	}//while
 
 	infile.close();
@@ -212,6 +388,10 @@ QString XFMS_DATA::load(int _dat)
     if(!_load(DialogSettings::fileNavdata, 4))
     {
         sError = sError + " [earth_nav.txt]";
+    }
+    if(!_load(DialogSettings::fileAirways, 6))
+    {
+        sError = sError + " [ats.txt]";
     }
     if(!_load(XNVU_WPS_FILENAME, 5))
     {
@@ -460,37 +640,25 @@ void XFMS_DATA::validate_earthnav(const QStringList &record)
                 }
         }//switch
     }//for
-
-    /*
-    //Search and add real name and country
-    double dMargin = 0.1;
-    double dMin = std::numeric_limits<double>::max();
-    NVUPOINT* cWP = NULL;
-    std::vector<NVUPOINT*> lS = search(wp->name);
-    for(int i=0; i<lS.size(); i++)
-    {
-        double d = LMATH::calc_distance(wp->latlon, lS[i]->latlon);
-        if(d<dMin)
-        {
-            dMin = d;
-            cWP = lS[i];
-        }
-    }
-
-    if(cWP)
-    {
-        if(dMin<dMargin)
-        {
-            wp->country = cWP->country;
-        }
-    }
-    */
-
-
     wp->wpOrigin = WAYPOINT::ORIGIN_EARTHNAV;
     wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat);
-    lWP.insert(std::make_pair(wp->name, wp));
-    lWP2.insert(std::make_pair(wp->name2, wp));
+
+
+    if(DialogSettings::distAlignEarthNav)
+    {
+        double d;
+        NVUPOINT *nwp = getClosestSimilarWaypoint(wp, d);
+        if(d<DialogSettings::distAlignMargin)
+        {
+            delete wp;
+            wp = nwp;
+        }
+    }
+    else
+    {
+        lWP.insert(std::make_pair(wp->name, wp));
+        lWP2.insert(std::make_pair(wp->name2, wp));
+    }//else
 
     if(wp->type == WAYPOINT::TYPE_NDB) lXNDB.push_back(wp);
     else if(wp->type == WAYPOINT::TYPE_VORDME) lXVORDME.push_back(wp);
@@ -529,6 +697,135 @@ void XFMS_DATA::validate_waypoint(const QStringList& record)
     lWP.insert(std::make_pair(wp->name, wp));
     lWP2.insert(std::make_pair(wp->name2, wp));
     lFixes.push_back(wp);
+}
+
+void XFMS_DATA::validate_airways(QFile& infile)
+{
+    QString qstr;
+    NVUPOINT wpA, wpB;
+    AIRWAY* ats = NULL;
+    int inboundCourse = 0;
+    int outboundCourse = 0;
+    double distance = 0;
+
+    while_loop:
+    while(!infile.atEnd())
+    {
+        QString line = infile.readLine();
+        QStringList record;
+        record = line.split(',',  QString::SkipEmptyParts);
+
+        for(int i=0; i<record.size(); i++)
+        {
+            qstr = record.at(i).simplified();
+            switch(i)
+            {
+                case 0:	//Identifier
+                    if(qstr.compare("A") == 0)  //If beginning of a ATS route, get the ATS name and continue on next line.
+                    {
+                        if(ats)
+                        {
+                            if(ats->lATS.size()>0)
+                            {
+                                NVUPOINT* wpA = new NVUPOINT;
+                                wpA->type = WAYPOINT::TYPE_AIRWAY;
+                                wpA->name = ats->name;
+                                wpA->latlon = ats->lATS[0]->latlon;
+                                wpA->MD = ats->lATS[0]->MD;
+                                wpA->data = ats;
+                                ats->distance = 0;
+                                for(int k=0; k<ats->lATS.size()-1; k++)
+                                {
+                                    ats->distance+=LMATH::calc_distance(ats->lATS[k]->latlon, ats->lATS[k+1]->latlon);
+                                }
+                                lAirways.push_back(ats);
+                                lWP.insert(std::make_pair(wpA->name, wpA));
+                            }//if
+                            else delete ats;
+                        }//if
+                        ats = new AIRWAY();
+                        ats->name = record.at(1).simplified();
+                        goto while_loop;
+                    }
+                    else if(qstr.compare("S")!=0) i= record.size(); //If not A, it should be S, otherwise the line is corrupt
+                break;
+                case 1:	//Waypoint A identifier
+                    wpA.name = qstr;
+                break;
+                case 2:	//A Latitude
+                    wpA.latlon.x = qstr.toDouble();
+                break;
+                case 3:	//A Longitude
+                    wpA.latlon.y = qstr.toDouble();
+                break;
+                case 4:	//Waypoint B identifier
+                    wpB.name = qstr;
+                break;
+                case 5:	//B Latitude
+                    wpB.latlon.x = qstr.toDouble();
+                break;
+                case 6:	//B Longitude
+                    wpB.latlon.y = qstr.toDouble();
+                break;
+                case 7: //Inbound course
+                    inboundCourse = qstr.toInt();
+                break;
+                case 8: //Outbound course
+                    outboundCourse = qstr.toInt();
+                break;
+                case 9: //Distance
+                    distance = qstr.toDouble();
+                break;
+            }//switch
+        }//for
+
+        wpA.wpOrigin = WAYPOINT::ORIGIN_AIRAC_ATS;
+        wpA.MD =  calc_magvar(wpA.latlon.x, wpA.latlon.y, dat);
+        wpA.type = WAYPOINT::TYPE_FIX;
+        wpB.wpOrigin = WAYPOINT::ORIGIN_AIRAC_ATS;
+        wpB.MD =  calc_magvar(wpB.latlon.x, wpB.latlon.y, dat);
+        wpB.type = WAYPOINT::TYPE_FIX;
+
+        NVUPOINT* a = NULL;
+        NVUPOINT* b = NULL;
+
+
+        if(DialogSettings::distAlignATS)
+        {
+            double d;
+            a = getClosestSimilarWaypoint(&wpA, d);
+            if(!(d<DialogSettings::distAlignMargin)) a = NULL;
+
+            b = getClosestSimilarWaypoint(&wpB, d);
+            if(!(d<DialogSettings::distAlignMargin)) b = NULL;
+        }//if
+
+        if(ats->lATS.size()==0)
+        {
+            if(!a)
+            {
+                a = new NVUPOINT(wpA);
+                lWP.insert(std::make_pair(a->name, a));
+            }//if
+
+            if(!b)
+            {
+                b = new NVUPOINT(wpB);
+                lWP.insert(std::make_pair(b->name, b));
+            }//if
+            ats->lATS.push_back(a);
+            ats->lATS.push_back(b);
+        }
+        else
+        {
+            if(!b)
+            {
+                b = new NVUPOINT(wpB);
+                lWP.insert(std::make_pair(b->name, b));
+            }//if
+            ats->lATS.push_back(b);
+        }//else
+    }
 }
 
 void XFMS_DATA::validate_RSBN(const QStringList &record)
@@ -831,7 +1128,16 @@ void XFMS_DATA::validate_xnvuflightplan(const QStringList& RAW)
     wp.wpOrigin = WAYPOINT::ORIGIN_XNVU_FLIGHTPLAN;
     wp.MD = calc_magvar(wp.latlon.x, wp.latlon.y, dat);
 
-    NVUPOINT* nwp = new NVUPOINT(wp);
+    NVUPOINT* nwp = NULL;
+    if(DialogSettings::distAlignWPS)
+    {
+        double d;
+        nwp = getClosestSimilarWaypoint(&wp, d);
+
+        if(!(d<DialogSettings::distAlignMargin)) nwp = new NVUPOINT(wp);
+    }//if
+    else nwp = new NVUPOINT(wp);
+
     //lWP.insert(std::make_pair(nwp->name, nwp));
     //lWP2.insert(std::make_pair(nwp->name2, nwp));
     lXNVUFlightplan.push_back(nwp);
@@ -911,7 +1217,14 @@ void XFMS_DATA::validate_fms(const QStringList& RAW)
     wp.wpOrigin = WAYPOINT::ORIGIN_FMS;
     wp.MD = calc_magvar(wp.latlon.x, wp.latlon.y, dat);
 
-    NVUPOINT* nwp = new NVUPOINT(wp);
+    NVUPOINT* nwp;
+    if(DialogSettings::distAlignFMS)
+    {
+        double d;
+        nwp = XFMS_DATA::getClosestSimilarWaypoint(&wp, d);
+        if(!(d<DialogSettings::distAlignMargin)) nwp = new NVUPOINT(wp);
+    }
+    else nwp = new NVUPOINT(wp);
     //lWP.insert(std::make_pair(nwp->name, nwp));
     //lWP2.insert(std::make_pair(nwp->name2, nwp));
     lFMS.push_back(nwp);

@@ -36,23 +36,37 @@ public:
     static QString fileAirports;
     static QString fileNavaids;
     static QString fileWaypoints;
+    static QString fileAirways;
     static QString fileNavdata;
     static QString fileRSBN;
     static bool correctionVORDME;
     static int beaconDistance;
     static int windowWidth;
     static int windowHeight;
+    static bool distAlignWPS;
+    static bool distAlignFMS;
+    static bool distAlignATS;
+    static bool distAlignEarthNav;
+    static double distAlignMargin;
+
 
     static QString _xDir;
     static QString _fileAirports;
     static QString _fileNavaids;
     static QString _fileWaypoints;
+    static QString _fileAirways;
     static QString _fileNavdata;
     static QString _fileRSBN;
     static bool _correctionVORDME;
     static int _beaconDistance;
     static int _windowWidth;
     static int _windowHeight;
+    static bool _distAlignWPS;
+    static bool _distAlignFMS;
+    static bool _distAlignATS;
+    static bool _distAlignEarthNav;
+    static double _distAlignMargin;
+
 };
 
 #endif // DIALOGSETTINGS_H

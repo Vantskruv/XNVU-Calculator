@@ -162,7 +162,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>570</y>
+     <y>660</y>
      <width>761</width>
      <height>26</height>
     </rect>
@@ -172,7 +172,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>550</y>
+     <y>640</y>
      <width>181</width>
      <height>18</height>
     </rect>
@@ -259,6 +259,35 @@
    </property>
    <property name="text">
     <string>WARNING: Selecting OK will reload the data, and therefore current flightplan needs to be erased.</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_8">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>550</y>
+     <width>181</width>
+     <height>18</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>ats.txt</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditAirwaysFile">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>570</y>
+     <width>761</width>
+     <height>26</height>
+    </rect>
    </property>
   </widget>
  </widget>

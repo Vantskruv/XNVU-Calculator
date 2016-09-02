@@ -3,6 +3,7 @@
 const int WAYPOINT::ORIGIN_AIRAC_AIRPORTS = 1;
 const int WAYPOINT::ORIGIN_AIRAC_NAVAIDS = 2;
 const int WAYPOINT::ORIGIN_AIRAC_WAYPOINTS = 3;
+const int WAYPOINT::ORIGIN_AIRAC_ATS = 9;
 const int WAYPOINT::ORIGIN_FMS = 4;
 const int WAYPOINT::ORIGIN_EARTHNAV = 5;
 const int WAYPOINT::ORIGIN_RSBN = 6;
@@ -17,6 +18,7 @@ const int WAYPOINT::TYPE_DME = 5;
 const int WAYPOINT::TYPE_RSBN = 6;
 const int WAYPOINT::TYPE_FIX = 7;
 const int WAYPOINT::TYPE_LATLON = 8;
+const int WAYPOINT::TYPE_AIRWAY = 9;
 
 bool WAYPOINT::compare(WAYPOINT *p)
 {
@@ -65,6 +67,7 @@ QString WAYPOINT::getTypeStr(const WAYPOINT* wp, int _type)
     if(t == TYPE_RSBN) return "RSBN";
     if(t == TYPE_FIX) return "FIX";
     if(t == TYPE_LATLON) return "LAT/LON";
+    if(t == TYPE_AIRWAY) return "AIRWAY";
 
     return "NAN";
 };
@@ -81,6 +84,7 @@ std::vector<QString> WAYPOINT::getTypeStrList()
     rTStr.push_back(getTypeStr(NULL, TYPE_RSBN));
     rTStr.push_back(getTypeStr(NULL, TYPE_FIX));
     rTStr.push_back(getTypeStr(NULL, TYPE_LATLON));
+    rTStr.push_back(getTypeStr(NULL, TYPE_AIRWAY));
 
     return rTStr;
 };

@@ -28,11 +28,13 @@ private slots:
     void saveNVUFlightPlan();
     void tableGoUp();
     void tableGoDown();
-    void updateTotalDistance();
+    void updateDistanceAndN();
+    void insertRoute(std::vector<NVUPOINT*> route, int row, int offset);
+    void insertWaypoint(NVUPOINT* wp, int row, int offset);
     void insertTableWidgetWaypoint(NVUPOINT* waypoint, int row);
-    void replaceTableWidgetWaypoint(NVUPOINT* nvupoint, int row);
-    void deleteTableWidgetWaypoint(int row);
-    void deleteCurrentTableWidgetWaypoint();
+    //void replaceTableWidgetWaypoint(NVUPOINT* nvupoint, int row);
+    void deleteWaypoint(int row);
+    void deleteCurrentWaypoint();
     void setWaypointDescription(NVUPOINT* wp);
 
     void printPreview(QPrinter*);
@@ -56,13 +58,21 @@ private slots:
 
     void on_listWidget_currentRowChanged(int currentRow);
 
-    void on_pushButtonSet_clicked();
-
     void on_tableWidget_itemSelectionChanged();
 
     void on_tableWidget_cellDoubleClicked(int row, int column);
 
     void on_pushButton_ClearFlightplan_clicked();
+
+    void on_pushButtonRouteInsertAfter_clicked();
+
+    void on_pushButtonRouteInsertBefore_clicked();
+
+    void on_pushButtonRouteReplace_clicked();
+
+    void on_actionOptions_triggered();
+
+    void on_frameDescription_clicked();
 
 private:
     Ui::MainWindow *ui;

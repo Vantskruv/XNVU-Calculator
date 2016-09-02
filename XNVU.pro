@@ -28,7 +28,9 @@ SOURCES += main.cpp\
     waypoint.cpp \
     dialogwaypointedit.cpp \
     qflightplantable.cpp \
-    dialogrsbn.cpp
+    dialogrsbn.cpp \
+    dialogoptions.cpp \
+    qframeclickable.cpp
 
 HEADERS  += mainwindow.h \
     coremag.h \
@@ -43,9 +45,12 @@ HEADERS  += mainwindow.h \
     dialogsettings.h \
     dialogwaypointedit.h \
     qflightplantable.h \
-    dialogrsbn.h
+    dialogrsbn.h \
+    dialogoptions.h \
+    qframeclickable.h
 
 FORMS    += mainwindow.ui \
     dialogsettings.ui \
     dialogwaypointedit.ui \
-    dialogrsbn.ui
+    dialogrsbn.ui \
+    dialogoptions.ui

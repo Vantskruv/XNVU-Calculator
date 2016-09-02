@@ -12,6 +12,7 @@ class WAYPOINT
         static const int ORIGIN_AIRAC_AIRPORTS;
         static const int ORIGIN_AIRAC_NAVAIDS;
         static const int ORIGIN_AIRAC_WAYPOINTS;
+        static const int ORIGIN_AIRAC_ATS;
         static const int ORIGIN_FMS;
         static const int ORIGIN_EARTHNAV;
         static const int ORIGIN_RSBN;
@@ -26,6 +27,7 @@ class WAYPOINT
         static const int TYPE_RSBN;
         static const int TYPE_FIX;
         static const int TYPE_LATLON;
+        static const int TYPE_AIRWAY;
 
 
         CPoint latlon;
@@ -43,6 +45,7 @@ class WAYPOINT
         double MD = 0;
         double ADEV = 0;          //Angle deviation of VOR/DME from X-Plane earth_nav.dat
         int wpOrigin = 0;         //If waypoint has not been converted from FMS (1), is retrieved from earth_nav.dat (2), or is custom made (3)
+        void* data;
 
         bool compare(WAYPOINT*);
 
@@ -55,6 +58,16 @@ class WAYPOINT
 
 		WAYPOINT(){};
         virtual ~WAYPOINT(){};
+};
+
+class AIRWAY
+{
+    public:
+        QString name;
+        double distance;
+        std::vector<WAYPOINT*> lATS;
+
+        AIRWAY(){};
 };
 
 #endif

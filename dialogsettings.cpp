@@ -9,23 +9,36 @@ QString DialogSettings::xDir;
 QString DialogSettings::fileAirports;
 QString DialogSettings::fileNavaids;
 QString DialogSettings::fileWaypoints;
+QString DialogSettings::fileAirways;
 QString DialogSettings::fileNavdata;
 QString DialogSettings::fileRSBN;
 bool DialogSettings::correctionVORDME = false;
 int DialogSettings::beaconDistance = 500;
 int DialogSettings::windowWidth = 1600;
 int DialogSettings::windowHeight = 1054;
+bool DialogSettings::distAlignWPS = false;
+bool DialogSettings::distAlignFMS = false;
+bool DialogSettings::distAlignATS = false;
+bool DialogSettings::distAlignEarthNav = false;
+double DialogSettings::distAlignMargin = 0.0001;
+
 
 QString DialogSettings::_xDir;
 QString DialogSettings::_fileAirports;
 QString DialogSettings::_fileNavaids;
 QString DialogSettings::_fileWaypoints;
+QString DialogSettings::_fileAirways;
 QString DialogSettings::_fileNavdata;
 QString DialogSettings::_fileRSBN;
 bool DialogSettings::_correctionVORDME = false;
 int DialogSettings::_beaconDistance = 500;
 int DialogSettings::_windowWidth = 1600;
 int DialogSettings::_windowHeight = 1054;
+bool DialogSettings::_distAlignWPS = false;
+bool DialogSettings::_distAlignFMS = false;
+bool DialogSettings::_distAlignATS = false;
+bool DialogSettings::_distAlignEarthNav = false;
+double DialogSettings::_distAlignMargin = 0.0001;
 
 
 DialogSettings::DialogSettings(QWidget *parent) :
@@ -38,6 +51,7 @@ DialogSettings::DialogSettings(QWidget *parent) :
     ui->lineEditAirportsFiles->setText(fileAirports);
     ui->lineEditNavaidsFile->setText(fileNavaids);
     ui->lineEditWaypointsFile->setText(fileWaypoints);
+    ui->lineEditAirwaysFile->setText(fileAirways);
     ui->lineEditEarthnavFile->setText(fileNavdata);
     ui->lineEditRSBNFile->setText(fileRSBN);
 }
@@ -80,6 +94,11 @@ void DialogSettings::loadSettings()
                 fileWaypoints = qstr;
                 _fileWaypoints = qstr;
             }
+            else if(list[0].simplified().compare("AirwaysFile")==0)
+            {
+                fileAirways = qstr;
+                _fileAirways = qstr;
+            }
             else if(list[0].simplified().compare("EarthNavFile")==0)
             {
                 fileNavdata = qstr;
@@ -110,8 +129,31 @@ void DialogSettings::loadSettings()
                 windowHeight = qstr.toInt();
                 _windowHeight = qstr.toInt();
             }
-
-
+            else if(list[0].simplified().compare("DistAlignWPS")==0)
+            {
+                distAlignWPS = qstr.toInt();
+                distAlignWPS = qstr.toInt();
+            }
+            else if(list[0].simplified().compare("DistAlignFMS")==0)
+            {
+                distAlignFMS = qstr.toInt();
+                distAlignFMS = qstr.toInt();
+            }
+            else if(list[0].simplified().compare("DistAlignATS")==0)
+            {
+                distAlignATS = qstr.toInt();
+                distAlignATS = qstr.toInt();
+            }
+            else if(list[0].simplified().compare("DistAlignEarthNav")==0)
+            {
+                distAlignEarthNav = qstr.toInt();
+                distAlignEarthNav = qstr.toInt();
+            }
+            else if(list[0].simplified().compare("DistAlignMargin")==0)
+            {
+                distAlignMargin = qstr.toDouble();
+                distAlignMargin = qstr.toDouble();
+            }
         }
 
     }//while
@@ -149,16 +191,23 @@ void DialogSettings::saveSettings()
 
     QTextStream out(&outfile);
 
+    out << qSetRealNumberPrecision(16);
     out << "XPlaneDirectory = " << xDir << "\n";
     out << "AirportFile = " << fileAirports << "\n";
     out << "NavaidFile = " << fileNavaids << "\n";
     out << "WaypointsFile = " << fileWaypoints << "\n";
+    out << "AirwaysFile = " << fileAirways << "\n";
     out << "EarthNavFile = " << fileNavdata << "\n";
     out << "RSBNFile = " << fileRSBN << "\n";
     out << "VORDMECorrection = " << correctionVORDME << "\n";
     out << "BeaconDistance = " << beaconDistance << "\n";
     out << "WindowWidth = " << windowWidth << "\n";
-    out << "WindowHeight = " << windowHeight<< "\n";
+    out << "WindowHeight = " << windowHeight << "\n";
+    out << "DistAlignWPS = " << distAlignWPS << "\n";
+    out << "DistAlignFMS = " << distAlignFMS << "\n";
+    out << "DistAlignATS = " << distAlignATS << "\n";
+    out << "DistAlignEarthNav = " << distAlignEarthNav << "\n";
+    out << "DistAlignMargin = " << distAlignMargin << "\n";
 
     outfile.close();
 }
@@ -169,12 +218,18 @@ bool DialogSettings::isChanged()
     if(fileAirports.compare(_fileAirports)!=0) return true;
     if(fileNavaids.compare(_fileNavaids)!=0) return true;
     if(fileWaypoints.compare(_fileWaypoints)!=0) return true;
+    if(fileAirways.compare(_fileAirways)!=0) return true;
     if(fileNavdata.compare(_fileNavdata)!=0) return true;
     if(fileRSBN.compare(_fileRSBN)!=0) return true;
     if(correctionVORDME!=_correctionVORDME) return true;
     if(beaconDistance!=_beaconDistance) return true;
     if(windowWidth!=_windowWidth) return true;
     if(windowHeight!=_windowHeight) return true;
+    if(distAlignWPS!=_distAlignWPS) return true;
+    if(distAlignFMS!=_distAlignFMS) return true;
+    if(distAlignATS!=_distAlignATS) return true;
+    if(distAlignEarthNav!=_distAlignEarthNav) return true;
+    if(distAlignMargin!=_distAlignMargin) return true;
 
     return false;
 }
@@ -188,12 +243,14 @@ void DialogSettings::on_toolButton_6_clicked()
     fileAirports = xDir + "/Resources/GNS430/navdata/Airports.txt";
     fileNavaids = xDir + "/Resources/GNS430/navdata/Navaids.txt";
     fileWaypoints = xDir + "/Resources/GNS430/navdata/Waypoints.txt";
+    fileWaypoints = xDir + "/Resources/GNS430/navdata/ATS.txt";
     fileNavdata = xDir + "/Resources/default data/earth_nav.dat";
 
     ui->lineEditXPlaneDirectory->setText(xDir);
     ui->lineEditAirportsFiles->setText(fileAirports);
     ui->lineEditNavaidsFile->setText(fileNavaids);
     ui->lineEditWaypointsFile->setText(fileWaypoints);
+    ui->lineEditAirwaysFile->setText(fileAirways);
     ui->lineEditEarthnavFile->setText(fileNavdata);
 }
 
@@ -212,11 +269,13 @@ void DialogSettings::on_lineEditXPlaneDirectory_textChanged(const QString &arg1)
     fileAirports = xDir + "/Resources/GNS430/navdata/Airports.txt";
     fileNavaids = xDir + "/Resources/GNS430/navdata/Navaids.txt";
     fileWaypoints = xDir + "/Resources/GNS430/navdata/Waypoints.txt";
+    fileAirways = xDir + "/Resources/GNS430/navdata/ATS.txt";
     fileNavdata = xDir + "/Resources/default data/earth_nav.dat";
 
     ui->lineEditXPlaneDirectory->setText(xDir);
     ui->lineEditAirportsFiles->setText(fileAirports);
     ui->lineEditNavaidsFile->setText(fileNavaids);
     ui->lineEditWaypointsFile->setText(fileWaypoints);
+    ui->lineEditAirwaysFile->setText(fileAirways);
     ui->lineEditEarthnavFile->setText(fileNavdata);
 }

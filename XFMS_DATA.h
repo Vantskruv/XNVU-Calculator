@@ -5,6 +5,7 @@
 #include <vector>
 #include <QString>
 #include <NVU.h>
+#include <QFile>
 
 #define XNVU_WPS_FILENAME "xnvu_wps.txt"
 
@@ -15,23 +16,26 @@ class XFMS_DATA
         static std::multimap<QString, NVUPOINT*> lWP2;
         static void validate_airport(const QStringList& record);
         static void validate_navaid(const QStringList& record);
-        static void validate_earthnav(const QStringList& record);
         static void validate_waypoint(const QStringList &record);
+        static void validate_airways(QFile&);
+        static void validate_earthnav(const QStringList& record);
         static void validate_RSBN(const QStringList& record);
         static void validate_xnvu(const QStringList& record);
         static void validate_fms(const QStringList& record);
         static void validate_xnvuflightplan(const QStringList& record);
 
+
     public:
         static int dat;
 
-        //Loaded from i.e. navigraph
+        //Loaded from i.e. navigraph (airports.txt, navaids.txt, waypoints.txt, ats.txt)
         static std::vector<NVUPOINT*> lAirports;
         static std::vector<NVUPOINT*> lNDB;
         static std::vector<NVUPOINT*> lVOR;
         static std::vector<NVUPOINT*> lDME;
         static std::vector<NVUPOINT*> lVORDME;         //Cannot be used as RSBN, as there is no angle deviation data.
         static std::vector<NVUPOINT*> lFixes;
+        static std::vector<AIRWAY*> lAirways;
 
         //Loaded from earth_nav.txt
         static std::vector<NVUPOINT*> lXNDB;
@@ -51,8 +55,11 @@ class XFMS_DATA
         //loaded from user *.wps
         static std::vector<NVUPOINT*> lXNVUFlightplan;
 
+        static QString getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVUPOINT* wpB, std::vector<NVUPOINT *> &lA, bool allowOpposite);
+        static QString getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route);
         static std::vector<NVUPOINT*> search(const QString& _name);
         static std::vector< std::pair<NVUPOINT*, double> > getClosestRSBN(const NVUPOINT* wp, int n, double d, bool includeVOR);
+        static NVUPOINT* getClosestSimilarWaypoint(NVUPOINT* wp, double &distance);
 
         static void addXNVUWaypoint(NVUPOINT* lP);
         static void addXNVUData(std::vector<NVUPOINT*> lP);
