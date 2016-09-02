@@ -608,13 +608,13 @@ void MainWindow::insertWaypoint(NVUPOINT* wp, int row, int offset)
     {
         if(ui->tableWidget->currentRow()<0) row = 0;
         else row++;
+        if(row>ui->tableWidget->rowCount()) row = ui->tableWidget->rowCount();
         insertTableWidgetWaypoint(wp, row);
         ui->tableWidget->selectRow(row);
     }
     else
     {
         //if(row == ui->tableWidget->rowCount() && row>0) row++;
-
         ui->tableWidget->removeRow(row);
         insertTableWidgetWaypoint(wp, row);
         ui->tableWidget->selectRow(row);
