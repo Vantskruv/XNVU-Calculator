@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include <QTextStream>
 #include <QFileInfo>
+#include <QDebug>
 
 QString DialogSettings::xDir;
 QString DialogSettings::fileAirports;
@@ -11,6 +12,7 @@ QString DialogSettings::fileNavaids;
 QString DialogSettings::fileWaypoints;
 QString DialogSettings::fileAirways;
 QString DialogSettings::fileNavdata;
+bool DialogSettings::manualSetDir = false;
 QString DialogSettings::fileRSBN;
 bool DialogSettings::correctionVORDME = false;
 int DialogSettings::beaconDistance = 500;
@@ -29,6 +31,7 @@ QString DialogSettings::_fileNavaids;
 QString DialogSettings::_fileWaypoints;
 QString DialogSettings::_fileAirways;
 QString DialogSettings::_fileNavdata;
+bool DialogSettings::_manualSetDir = false;
 QString DialogSettings::_fileRSBN;
 bool DialogSettings::_correctionVORDME = false;
 int DialogSettings::_beaconDistance = 500;
@@ -54,6 +57,9 @@ DialogSettings::DialogSettings(QWidget *parent) :
     ui->lineEditAirwaysFile->setText(fileAirways);
     ui->lineEditEarthnavFile->setText(fileNavdata);
     ui->lineEditRSBNFile->setText(fileRSBN);
+
+    ui->checkBoxManual->setChecked(manualSetDir);
+    on_checkBoxManual_clicked(manualSetDir);
 }
 
 DialogSettings::~DialogSettings()
@@ -103,6 +109,11 @@ void DialogSettings::loadSettings()
             {
                 fileNavdata = qstr;
                 _fileNavdata = qstr;
+            }
+            else if(list[0].simplified().compare("ManualSetDir")==0)
+            {
+                manualSetDir = qstr.toInt();
+                _manualSetDir = qstr.toInt();
             }
             else if(list[0].simplified().compare("RSBNFile")==0)
             {
@@ -198,6 +209,7 @@ void DialogSettings::saveSettings()
     out << "WaypointsFile = " << fileWaypoints << "\n";
     out << "AirwaysFile = " << fileAirways << "\n";
     out << "EarthNavFile = " << fileNavdata << "\n";
+    out << "ManualSetDir = " << manualSetDir << "\n";
     out << "RSBNFile = " << fileRSBN << "\n";
     out << "VORDMECorrection = " << correctionVORDME << "\n";
     out << "BeaconDistance = " << beaconDistance << "\n";
@@ -220,6 +232,7 @@ bool DialogSettings::isChanged()
     if(fileWaypoints.compare(_fileWaypoints)!=0) return true;
     if(fileAirways.compare(_fileAirways)!=0) return true;
     if(fileNavdata.compare(_fileNavdata)!=0) return true;
+    if(manualSetDir!=_manualSetDir) return true;
     if(fileRSBN.compare(_fileRSBN)!=0) return true;
     if(correctionVORDME!=_correctionVORDME) return true;
     if(beaconDistance!=_beaconDistance) return true;
@@ -243,10 +256,12 @@ void DialogSettings::on_toolButton_6_clicked()
     fileAirports = xDir + "/Resources/GNS430/navdata/Airports.txt";
     fileNavaids = xDir + "/Resources/GNS430/navdata/Navaids.txt";
     fileWaypoints = xDir + "/Resources/GNS430/navdata/Waypoints.txt";
-    fileWaypoints = xDir + "/Resources/GNS430/navdata/ATS.txt";
+    fileAirways = xDir + "/Resources/GNS430/navdata/ATS.txt";
     fileNavdata = xDir + "/Resources/default data/earth_nav.dat";
 
     ui->lineEditXPlaneDirectory->setText(xDir);
+    if(manualSetDir) return;
+
     ui->lineEditAirportsFiles->setText(fileAirports);
     ui->lineEditNavaidsFile->setText(fileNavaids);
     ui->lineEditWaypointsFile->setText(fileWaypoints);
@@ -266,6 +281,9 @@ void DialogSettings::on_toolButton_4_clicked()
 void DialogSettings::on_lineEditXPlaneDirectory_textChanged(const QString &arg1)
 {
     xDir = arg1;
+
+    if(manualSetDir) return;
+
     fileAirports = xDir + "/Resources/GNS430/navdata/Airports.txt";
     fileNavaids = xDir + "/Resources/GNS430/navdata/Navaids.txt";
     fileWaypoints = xDir + "/Resources/GNS430/navdata/Waypoints.txt";
@@ -278,4 +296,38 @@ void DialogSettings::on_lineEditXPlaneDirectory_textChanged(const QString &arg1)
     ui->lineEditWaypointsFile->setText(fileWaypoints);
     ui->lineEditAirwaysFile->setText(fileAirways);
     ui->lineEditEarthnavFile->setText(fileNavdata);
+}
+
+void DialogSettings::on_buttonBox_accepted()
+{
+    fileRSBN = ui->lineEditRSBNFile->text();
+
+    xDir = ui->lineEditXPlaneDirectory->text();
+    fileAirports = ui->lineEditAirportsFiles->text();
+    fileNavaids = ui->lineEditNavaidsFile->text();
+    fileWaypoints = ui->lineEditWaypointsFile->text();
+    fileAirways = ui->lineEditAirwaysFile->text();
+    fileNavdata = ui->lineEditEarthnavFile->text();
+    manualSetDir = ui->checkBoxManual->isChecked();
+}
+
+void DialogSettings::on_checkBoxManual_clicked(bool checked)
+{
+    manualSetDir = checked;
+    if(checked)
+    {
+        ui->lineEditAirportsFiles->setEnabled(true);
+        ui->lineEditNavaidsFile->setEnabled(true);
+        ui->lineEditWaypointsFile->setEnabled(true);
+        ui->lineEditAirwaysFile->setEnabled(true);
+        ui->lineEditEarthnavFile->setEnabled(true);
+    }
+    else
+    {
+        ui->lineEditAirportsFiles->setEnabled(false);
+        ui->lineEditNavaidsFile->setEnabled(false);
+        ui->lineEditWaypointsFile->setEnabled(false);
+        ui->lineEditAirwaysFile->setEnabled(false);
+        ui->lineEditEarthnavFile->setEnabled(false);
+    }
 }

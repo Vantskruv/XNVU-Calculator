@@ -23,6 +23,10 @@ private slots:
 
     void on_lineEditXPlaneDirectory_textChanged(const QString &arg1);
 
+    void on_buttonBox_accepted();
+
+    void on_checkBoxManual_clicked(bool checked);
+
 private:
     Ui::DialogSettings *ui;
 
@@ -38,6 +42,7 @@ public:
     static QString fileWaypoints;
     static QString fileAirways;
     static QString fileNavdata;
+    static bool manualSetDir;
     static QString fileRSBN;
     static bool correctionVORDME;
     static int beaconDistance;
@@ -56,6 +61,7 @@ public:
     static QString _fileWaypoints;
     static QString _fileAirways;
     static QString _fileNavdata;
+    static bool _manualSetDir;
     static QString _fileRSBN;
     static bool _correctionVORDME;
     static int _beaconDistance;
