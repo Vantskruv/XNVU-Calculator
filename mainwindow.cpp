@@ -163,7 +163,7 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
             if(row>0)
             {
                 deleteWaypoint(row);
-                insertWaypoint(wp, row, -1);
+                insertWaypoint(wp, row-1, -1);
                 ui->tableWidget->selectRow(row - 1);
             }
         }
@@ -332,17 +332,28 @@ void MainWindow::deleteCurrentWaypoint()
 
 void MainWindow::updateDistanceAndN()
 {
-    QListWidgetItemData* iN;
-    QListWidgetItemData* iC;
+    QTableWidgetItemData* iN;
+    QTableWidgetItemData* iC;
     double currentDistance = 0.0;
     double legDistance;
-    ui->tableWidget->item(0, 6)->setText("0.0");
 
+    if(ui->tableWidget->rowCount()>0)
+    {
+        ui->tableWidget->item(0, 6)->setText("0.0");
+        ui->tableWidget->item(ui->tableWidget->rowCount()-1, 6)->setText(QString::number(currentDistance, 'f', 1));
+        ui->tableWidget->item(ui->tableWidget->rowCount()-1, 0)->setText(QString::number(ui->tableWidget->rowCount()));
+
+        iN = (QTableWidgetItemData*) ui->tableWidget->item(0, 0);
+        iC = (QTableWidgetItemData*) ui->tableWidget->item(ui->tableWidget->rowCount()-1, 0);
+        double f = LMATH::calc_fork(iN->nvupoint->latlon.x, iN->nvupoint->latlon.y, iC->nvupoint->latlon.x, iC->nvupoint->latlon.y, dat);
+        ui->labelFork->setText("Fork   " + QString::number(f, 'f', 1));
+    }
+    else ui->labelFork->setText("Fork   0.0");
 
     for(int i=0; i<ui->tableWidget->rowCount() - 1; i++)
     {
-        iC = (QListWidgetItemData*) ui->tableWidget->item(i, 0);
-        iN = (QListWidgetItemData*) ui->tableWidget->item(i+1, 0);
+        iC = (QTableWidgetItemData*) ui->tableWidget->item(i, 0);
+        iN = (QTableWidgetItemData*) ui->tableWidget->item(i+1, 0);
 
         legDistance = LMATH::calc_distance(iN->nvupoint->latlon, iC->nvupoint->latlon);
         ui->tableWidget->item(i, 5)->setText(QString::number(legDistance, 'f', 1));
@@ -351,11 +362,7 @@ void MainWindow::updateDistanceAndN()
         currentDistance+=legDistance;
     }
 
-    if(ui->tableWidget->rowCount()>0)
-    {
-        ui->tableWidget->item(ui->tableWidget->rowCount()-1, 6)->setText(QString::number(currentDistance, 'f', 1));
-        ui->tableWidget->item(ui->tableWidget->rowCount()-1, 0)->setText(QString::number(ui->tableWidget->rowCount()));
-    }
+
 }
 
 void MainWindow::tableGoUp()
@@ -494,15 +501,6 @@ void MainWindow::insertTableWidgetWaypoint(NVUPOINT* waypoint, int row)
     }
     else item->setText("NO CORRECTION");
     ui->tableWidget->setItem(row, 7, item);
-
-
-    itemD = (QTableWidgetItemData*) ui->tableWidget->item(0, 0);
-    NVUPOINT* dep = itemD->nvupoint;
-    itemD = (QTableWidgetItemData*) ui->tableWidget->item(row, 0);
-    NVUPOINT* arr = itemD->nvupoint;
-
-    double f = LMATH::calc_fork(dep->latlon.x, dep->latlon.y, arr->latlon.x, arr->latlon.y, dat);
-    ui->labelFork->setText("Fork   " + QString::number(f, 'f', 1));
 
     updateDistanceAndN();
 }
