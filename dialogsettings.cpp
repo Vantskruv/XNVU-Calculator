@@ -132,27 +132,27 @@ void DialogSettings::loadSettings()
             else if(list[0].simplified().compare("DistAlignWPS")==0)
             {
                 distAlignWPS = qstr.toInt();
-                distAlignWPS = qstr.toInt();
+                _distAlignWPS = qstr.toInt();
             }
             else if(list[0].simplified().compare("DistAlignFMS")==0)
             {
                 distAlignFMS = qstr.toInt();
-                distAlignFMS = qstr.toInt();
+                _distAlignFMS = qstr.toInt();
             }
             else if(list[0].simplified().compare("DistAlignATS")==0)
             {
                 distAlignATS = qstr.toInt();
-                distAlignATS = qstr.toInt();
+                _distAlignATS = qstr.toInt();
             }
             else if(list[0].simplified().compare("DistAlignEarthNav")==0)
             {
                 distAlignEarthNav = qstr.toInt();
-                distAlignEarthNav = qstr.toInt();
+                _distAlignEarthNav = qstr.toInt();
             }
             else if(list[0].simplified().compare("DistAlignMargin")==0)
             {
                 distAlignMargin = qstr.toDouble();
-                distAlignMargin = qstr.toDouble();
+                _distAlignMargin = qstr.toDouble();
             }
         }
 
