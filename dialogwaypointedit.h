@@ -27,6 +27,7 @@ private slots:
     void on_pushButton_Cancel_clicked();
     void on_pushButton_SaveCurrent_clicked();
     void on_pushButton_CreateNew_clicked();
+    void on_pushButton_CreateTemp_clicked();
 };
 
 #endif // DIALOGWAYPOINTEDIT_H

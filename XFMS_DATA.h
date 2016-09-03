@@ -49,6 +49,9 @@ class XFMS_DATA
         //Loaded from XNVU local library xnvu.dat
         static std::vector<NVUPOINT*> lXNVU;
 
+        //Tempory created waypoints for this instance (not added to search function, hence lWP and lWP2 list).
+        static std::vector<NVUPOINT*> lXNVUTemp;
+
         //Loaded from user *.fms
         static std::vector<NVUPOINT*> lFMS;
 
@@ -62,6 +65,7 @@ class XFMS_DATA
         static NVUPOINT* getClosestSimilarWaypoint(NVUPOINT* wp, double &distance);
 
         static void addXNVUWaypoint(NVUPOINT* lP);
+        static void addXNVUWaypointTempory(NVUPOINT* lP);
         static void addXNVUData(std::vector<NVUPOINT*> lP);
         static QString load(int dat);
         static int _load(const QString& file, int _type);

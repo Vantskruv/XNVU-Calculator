@@ -3,12 +3,13 @@
 const int WAYPOINT::ORIGIN_AIRAC_AIRPORTS = 1;
 const int WAYPOINT::ORIGIN_AIRAC_NAVAIDS = 2;
 const int WAYPOINT::ORIGIN_AIRAC_WAYPOINTS = 3;
-const int WAYPOINT::ORIGIN_AIRAC_ATS = 9;
 const int WAYPOINT::ORIGIN_FMS = 4;
 const int WAYPOINT::ORIGIN_EARTHNAV = 5;
 const int WAYPOINT::ORIGIN_RSBN = 6;
 const int WAYPOINT::ORIGIN_XNVU_FLIGHTPLAN = 7;
 const int WAYPOINT::ORIGIN_XNVU = 8;
+const int WAYPOINT::ORIGIN_AIRAC_ATS = 9;
+const int WAYPOINT::ORIGIN_XNVU_TEMP = 10;
 
 const int WAYPOINT::TYPE_AIRPORT = 1;
 const int WAYPOINT::TYPE_NDB = 2;
@@ -70,7 +71,7 @@ QString WAYPOINT::getTypeStr(const WAYPOINT* wp, int _type)
     if(t == TYPE_AIRWAY) return "AIRWAY";
 
     return "NAN";
-};
+}
 
 std::vector<QString> WAYPOINT::getTypeStrList()
 {
@@ -88,6 +89,7 @@ std::vector<QString> WAYPOINT::getTypeStrList()
 
     return rTStr;
 };
+
 
 bool WAYPOINT::isNavaid(int _type)
 {

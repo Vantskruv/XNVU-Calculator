@@ -40,6 +40,9 @@ std::vector<NVUPOINT*> XFMS_DATA::lRSBN;
 //Loaded from xnvu.dat
 std::vector<NVUPOINT*> XFMS_DATA::lXNVU;
 
+//Tempory user custom created waypoints for this instance (not added to search function, hence lWP and lWP2 list).
+std::vector<NVUPOINT*> XFMS_DATA::lXNVUTemp;
+
 //Loaded from user fms file
 std::vector<NVUPOINT*> XFMS_DATA::lFMS;
 
@@ -84,6 +87,9 @@ void XFMS_DATA::clear()
         delete it->second;
     }
     lWP.clear();
+
+    for(int i=0; i<lXNVUTemp.size(); i++) delete lXNVUTemp[i];
+    lXNVUTemp.clear();
 }
 
 std::vector<NVUPOINT*> XFMS_DATA::search(const QString& _name)
@@ -416,6 +422,11 @@ void XFMS_DATA::addXNVUWaypoint(NVUPOINT* lP)
     lXNVU.push_back(lP);
     lWP.insert(std::make_pair(lP->name, lP));
     lWP2.insert(std::make_pair(lP->name2, lP));
+}
+
+void XFMS_DATA::addXNVUWaypointTempory(NVUPOINT* lP)
+{
+    lXNVUTemp.push_back(lP);
 }
 
 

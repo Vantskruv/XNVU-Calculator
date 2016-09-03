@@ -18,6 +18,7 @@ class WAYPOINT
         static const int ORIGIN_RSBN;
         static const int ORIGIN_XNVU_FLIGHTPLAN;
         static const int ORIGIN_XNVU;
+        static const int ORIGIN_XNVU_TEMP;
 
         static const int TYPE_AIRPORT;
         static const int TYPE_NDB;

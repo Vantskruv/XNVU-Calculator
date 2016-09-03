@@ -72,8 +72,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->lineEdit->setFont(font);
     ui->lineEditRoute->setFont(font);
 
-    //Setup align notes
-
+    //Setup warning label
     labelWarning = new QLabel("");
     labelWarning->setStyleSheet("background-color: rgb(0, 30, 0);"
                                 "color: rgb(255, 255, 0);");
@@ -136,6 +135,13 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
     //QComboBox* qCombo = (QComboBox*) ui->tableWidget->item(row, 5);
 
     QMenu fpMenu;
+    QAction* selectedItem;
+    QString styleSheet = "background-color: rgb(0, 30, 0);"
+                         "color: rgb(107, 239, 0);"
+                         "selected-background-color: rgb(107, 239, 0);"
+                         "selected-color: rgb(0, 0, 0);";
+    fpMenu.setStyleSheet(styleSheet);
+
     if(itemD)
     {
         fpMenu.addAction("Move up");
@@ -145,16 +151,36 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
         fpMenu.addSeparator();
         fpMenu.addAction("Delete");
     }//if
-    else return;
+    else
+    {
+        //Clicked outside
+        fpMenu.addAction("Create custom waypoint...");
+        selectedItem = fpMenu.exec(globalPos);
+        if(selectedItem)
+        {
+            DialogWaypointEdit dEdit(NULL);
+            int dr = dEdit.exec();
+            if(dr == QDialog::Rejected) return;
+            if(dr==2)
+            {
+                XFMS_DATA::addXNVUWaypoint(dEdit.nvupoint);
+                qDebug() << "Added";
+            }
+            else if(dr==3)
+            {
+                XFMS_DATA::addXNVUWaypointTempory(dEdit.nvupoint);
+            }
+            dEdit.nvupoint->rsbn = NULL;
+            insertWaypoint(dEdit.nvupoint, ui->tableWidget->rowCount(), 0);
+        }
 
-    QString styleSheet = "background-color: rgb(0, 30, 0);"
-                         "color: rgb(107, 239, 0);"
-                         "selected-background-color: rgb(107, 239, 0);"
-                         "selected-color: rgb(0, 0, 0);";
-    fpMenu.setStyleSheet(styleSheet);
+        return;
+    }
 
 
-    QAction* selectedItem = fpMenu.exec(globalPos);
+
+
+    selectedItem = fpMenu.exec(globalPos);
     if (selectedItem)
     {
         NVUPOINT* wp = itemD->nvupoint;
@@ -186,6 +212,10 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
             {
                 XFMS_DATA::addXNVUWaypoint(dEdit.nvupoint);
             }
+            else if(dr==3)
+            {
+                XFMS_DATA::addXNVUWaypointTempory(dEdit.nvupoint);
+            }
             dEdit.nvupoint->rsbn = NULL;
             insertWaypoint(dEdit.nvupoint, row, 0);
         }
@@ -212,6 +242,7 @@ void MainWindow::showXPlaneSettings()
     if(QDialog::Rejected == dSettings.exec()) return;
 
     DialogSettings::saveSettings();
+
     XFMS_DATA::saveXNVUData();
 
     while(ui->tableWidget->rowCount()>0) ui->tableWidget->removeRow(0);
@@ -729,6 +760,10 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
     else if(wp->wpOrigin == WAYPOINT::ORIGIN_XNVU)
     {
         ui->labelWPNote->setText("Source: xnvu_wps.txt (XNVU local library)");
+    }
+    else if(wp->wpOrigin == WAYPOINT::ORIGIN_XNVU_TEMP)
+    {
+        ui->labelWPNote->setText("Source: Custom user tempory waypoint");
     }
     else if(wp->wpOrigin == WAYPOINT::ORIGIN_RSBN)
     {
@@ -1254,6 +1289,10 @@ void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
     if(dr==2) //Create new
     {
         XFMS_DATA::addXNVUWaypoint(dEdit.nvupoint);
+    }
+    else if(dr==3)
+    {
+        XFMS_DATA::addXNVUWaypointTempory(dEdit.nvupoint);
     }
     dEdit.nvupoint->rsbn = NULL;
     insertWaypoint(dEdit.nvupoint, row, 0);
