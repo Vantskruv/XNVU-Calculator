@@ -147,6 +147,7 @@ QString XFMS_DATA::getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVU
 */
         if(kA>=0) kAIsFound = true;
         if(kB>=0) kBIsFound = true;
+
         if(kA<0 || kB<0) continue;
         else if(kB<kA)
         {
@@ -747,7 +748,7 @@ void XFMS_DATA::validate_airways(QFile& infile)
                         ats->name = record.at(1).simplified();
                         goto while_loop;
                     }
-                    else if(qstr.compare("S")!=0) i= record.size(); //If not A, it should be S, otherwise the line is corrupt
+                    else if(qstr.compare("S")!=0) goto while_loop; //If not A, it should be S, otherwise the line is corrupt
                 break;
                 case 1:	//Waypoint A identifier
                     wpA.name = qstr;
