@@ -207,7 +207,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
     std::vector<NVUPOINT*> cRoute;
 
     QString qstr;
-    NVUPOINT* wp = NULL;
+    //NVUPOINT* wp = NULL;
     NVUPOINT* cwp;
     double dCurrent, dMin;
 
@@ -218,8 +218,18 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
 
         //Search for identifier in database
         sWaypoint = XFMS_DATA::search(qstr);
-        if(sWaypoint.size() == 0) return "Route: [" + record[i] + "] is not found.";
-
+        if(sWaypoint.size() == 0)
+        {
+            if(cRoute.size() == 0) return "Route: [" + record[i] + "] is not found.";
+            cwp = cRoute[cRoute.size() - 1];
+            NVUPOINT* wp = validate_custom_point(cwp, qstr);
+            if(wp)
+            {
+                cRoute.push_back(wp);
+                continue;
+            }
+            else return "Route: [" + record[i] + "] is not found.";
+         }//if
         //If more than 1 one is found, choose waypoint that is closest to the last one in current route
         //Though if this is an airway, it may be bidirectional, so currently we just store the closest beginning of the airway.
         dMin = std::numeric_limits<double>::max();
@@ -710,6 +720,174 @@ void XFMS_DATA::validate_waypoint(const QStringList& record)
     lWP2.insert(std::make_pair(wp->name2, wp));
     lFixes.push_back(wp);
 }
+
+
+//wpRef: reference waypoint (If more than 1 waypoints of the the same identifier is found, use wpRef to select the closest one)
+//record: string of custom point
+//Returns allocated waypoint, returns NULL if not valid
+NVUPOINT* XFMS_DATA::validate_custom_point(const NVUPOINT* wpRef, const QString& record)
+{
+    //Validates a point of either a 7-11 string coordinate,
+    //or a bearing and distance from an existing waypoint, and then creates a tempory waypoint.
+    //Four format examples: 46N078W, 4620N07805W, 562530N0165259E, BEDLA245052
+    //Lat/lon format is Degrees, Minutes and Seconds.
+    //Note: Waypoints which ends with numbers will not currently work with added bearing and distance,
+    //as we do clip the last numbers of string.
+
+    //Check if waypoint is detected as bearing and distance from waypoint
+    QString sID = record;
+    QString sBD = record;
+    int lIndex = sID.lastIndexOf(QRegExp("[A-Z]"));
+    sID.truncate(lIndex+1);
+    sBD.remove(0, lIndex+1);
+
+    if(!sID.isEmpty() && !sBD.isEmpty())
+    {
+        //Bearing and distance section needs to be 6 characters
+        if(sBD.size() != 6) return NULL;
+
+        //Bearing and distance needs to be a number
+        bool isOk;
+        sBD.toUInt(&isOk);
+        if(!isOk) return NULL;
+
+        std::vector<NVUPOINT*> lWP = XFMS_DATA::search(sID);
+        //Identifier needs to be found in database
+        if(lWP.size() == 0) return NULL;
+
+        NVUPOINT* cWP;
+        double dMin = std::numeric_limits<double>::max();
+        double dCurrent = 0;
+        for(int k=0; k<lWP.size(); k++)
+        {
+            dCurrent = LMATH::calc_distance(wpRef->latlon, lWP[k]->latlon);
+            if(dCurrent<dMin)
+            {
+                dMin = dCurrent;
+                cWP = lWP[k];
+            }
+        }
+
+        //cWP is now the base point, calculate now the position of bearing and distance
+        int brng = sBD.left(3).toInt();
+        int dist = sBD.right(3).toInt();
+
+        NVUPOINT* newPoint = new NVUPOINT();
+        LMATH::calc_destination_orthodromic(cWP->latlon, brng, double(dist)*1.852, newPoint->latlon);
+
+
+        newPoint->name = record;
+        newPoint->type = WAYPOINT::TYPE_LATLON;
+        newPoint->MD = calc_magvar(newPoint->latlon.x, newPoint->latlon.y, dat);
+        newPoint->wpOrigin = WAYPOINT::ORIGIN_XNVU_TEMP;
+
+        return newPoint;
+    }
+
+    //Check if is detected as latitude/longitude
+    bool isNE, isOK;
+    double lat, lon;
+    int format;
+
+    //Search for N/S tag, if not found return.
+    lIndex = record.lastIndexOf(QRegExp("[NS]"));
+    sID = record.left(lIndex+1);
+    if(sID.size()==0) return NULL;
+
+    //Check if tag is N or S
+    if(sID[sID.size()-1] == 'N') isNE = true;
+    else if(sID[sID.size()-1] == 'S') isNE = false;
+    else return NULL;
+    sID.remove(sID.size()-1, 1);
+
+    //Check if coordinate before the tag is a number
+    sID.toUInt(&isOK);
+    if(!isOK) return NULL;
+
+    format = sID.size();
+    switch(format)
+    {
+        case 2: //2 Digit lat (i.e. 46N)
+            lat = sID.toInt();
+        break;
+
+        case 4: //4 Digit lat (i.e. 4659N
+            lat = sID.left(2).toInt();
+            sID.remove(0, 2);
+            lat = lat + sID.toInt()/60.0;
+        break;
+
+        case 6: //6 Digit lat (i.e. 465923N)
+            lat = sID.left(2).toInt();
+            sID.remove(0, 2);
+            lat = lat + sID.left(2).toInt()/60.0;
+            sID.remove(0, 2);
+            lat = lat + sID.toInt()/3600.0;
+        break;
+        default:
+            //Not a correct format, should be 2, 4 or digits.
+            return NULL;
+    }
+    if(!isNE) lat = -lat;
+
+    //Search for E/W tag, if not found return.
+    sID = record;
+    lIndex = sID.lastIndexOf(QRegExp("[NS]"));
+    sID = sID.remove(0, lIndex+1);
+    lIndex = sID.lastIndexOf(QRegExp("[EW]"));
+    sID = sID.left(lIndex+1);
+    if(sID.size()==0) return NULL;
+
+    //Check if tag is E or W
+    if(sID[sID.size()-1] == 'E') isNE = true;
+    else if(sID[sID.size()-1] == 'W') isNE = false;
+    else return NULL;
+    sID.remove(sID.size()-1, 1);
+
+    //Check if coordinate before the tag is a number
+    sID.toUInt(&isOK);
+    if(!isOK) return NULL;
+
+    format = sID.size();
+    switch(format)
+    {
+        case 3: //3 Digit lon (i.e. 046E)
+            lon = sID.toInt();
+        break;
+
+        case 5: //5 Digit lon (i.e. 04659E)
+            lon = sID.left(3).toInt();
+            sID.remove(0, 3);
+            lon = lon + sID.toInt()/60.0;
+        break;
+
+        case 7: //7 Digit lon (i.e. 0465923E)
+            lon = sID.left(3).toInt();
+            sID.remove(0, 3);
+            lon = lon + sID.left(2).toInt()/60.0;
+            sID.remove(0, 2);
+            lon = lon + sID.toInt()/3600.0;
+        break;
+        default:
+            //Not a correct format, should be 2, 4 or digits.
+            return NULL;
+    }
+    if(!isNE) lon = -lon;
+
+    NVUPOINT* newPoint = new NVUPOINT();
+    newPoint->latlon.x = lat;
+    newPoint->latlon.y = lon;
+    newPoint->name = record;
+    newPoint->type = WAYPOINT::TYPE_LATLON;
+    newPoint->MD = calc_magvar(newPoint->latlon.x, newPoint->latlon.y, dat);
+    newPoint->wpOrigin = WAYPOINT::ORIGIN_XNVU_TEMP;
+
+    return newPoint;
+}
+
+
+
+
 
 void XFMS_DATA::validate_airways(QFile& infile)
 {

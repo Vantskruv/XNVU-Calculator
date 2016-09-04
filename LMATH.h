@@ -17,7 +17,9 @@ namespace LMATH
     double calc_bearing_radial(const CPoint& a, const CPoint& b );
     double calc_distance(double lat1, double lon1, double lat2, double lon2);
     double calc_distance(const CPoint&, const CPoint&);
-    void calc_destination(double lat1, double lon1, double brng, double dt, double& lat2, double& lon2);
+    void calc_destination_orthodromic(double lat1, double lon1, double brng, double dt, double& lat2, double& lon2);
+    void calc_destination_orthodromic(CPoint a, double brng, double dt, CPoint &b);
+    void calc_destination_rhumb(CPoint a, double brng, double dt, CPoint& b);
 
 }//namespace LMATH
 #endif

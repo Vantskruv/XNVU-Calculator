@@ -119,7 +119,7 @@ double LMATH::calc_distance(const CPoint& A, const CPoint& B)
     return calc_distance(A.x, A.y, B.x, B.y);
 }
 
-void LMATH::calc_destination(double lat1, double lon1, double brng, double dt, double& lat2, double& lon2)
+void LMATH::calc_destination_orthodromic(double lat1, double lon1, double brng, double dt, double& lat2, double& lon2)
 {
     lat1*=M_PI/180.0;
     lon1*=M_PI/180.0;
@@ -133,3 +133,77 @@ void LMATH::calc_destination(double lat1, double lon1, double brng, double dt, d
     lon2 = lon3*180.0/M_PI;
 }
 
+void LMATH::calc_destination_orthodromic(CPoint a, double brng, double dt, CPoint& b)
+{
+    a.x*=M_PI/180.0;
+    a.y*=M_PI/180.0;
+    brng*=M_PI/180.0;
+
+    double r = KM_RADIUS;
+    double lat3 = asin(sin(a.x) * cos(dt / r) + cos(a.x) * sin(dt / r) * cos(brng));
+    double lon3 = a.y + atan2(sin(brng) * sin(dt / r) * cos(a.x) , cos(dt / r) - sin(a.x) * sin(lat3));
+
+    b.x = lat3*180.0/M_PI;
+    b.y = lon3*180.0/M_PI;
+}
+
+void LMATH::calc_destination_rhumb(CPoint a, double brng, double dt, CPoint& b)
+{
+
+    /*
+    var Δφ = δ*Math.cos(θ);
+    var φ2 = φ1 + Δλ;
+
+    var Δψ = Math.log(Math.tan(φ2/2+Math.PI/4)/Math.tan(φ1/2+Math.PI/4));
+    var q = Math.abs(Δψ) > 10e-12 ? Δφ / Δψ : Math.cos(φ1); // E-W course becomes ill-conditioned with 0/0
+
+    var Δλ = δ*Math.sin(θ)/q;
+    var λ2 = λ1 + Δλ;
+
+    // check for some daft bugger going past the pole, normalise latitude if so
+    if (Math.abs(φ2) > Math.PI/2) φ2 = φ2>0 ? Math.PI-φ2 : -Math.PI-φ2;
+    */
+
+    a.x*=M_PI/180.0;
+    a.y*=M_PI/180.0;
+    brng*=M_PI/180.0;
+
+    double da = dt / KM_RADIUS; // angular distance in radians
+    double dlat = da * cos(brng);
+    double lat2 = a.x + dlat;
+
+    // check for some daft bugger going past the pole, normalise latitude if so
+    if(fabs(lat2) > M_PI/2.0) lat2 = lat2>0 ? M_PI-lat2 : -M_PI-lat2;
+
+    double dd = log(tan(lat2/2.0+M_PI/4.0)/tan(a.x/2.0+M_PI/4.0));
+    double q = fabs(dd) > 0 ? dlat / dd : cos(a.x); // E-W course becomes ill-conditioned with 0/0
+
+    double dlon = da*sin(brng)/q;
+    double lon2 = a.y + dlon;
+
+    b.x = lat2*180/M_PI;
+    b.y = std::remainder((lon2*180/M_PI) + 540, 360) - 180;
+
+    /*
+
+
+    a.x*=M_PI/180.0;
+    a.y*=M_PI/180.0;
+    brng*=M_PI/180.0;
+
+    double da = dt/KM_RADIUS;
+    double dlat = da*cos(brng);
+    double lat2 = a.x + dlat;
+
+    if(fabs(lat2)>(M_PI/2.0)) lat2 = (lat2>0 ? M_PI - lat2 : -M_PI - lat2);
+
+    double dlon = log(tan(lat2/2.0 + M_PI/4.0)/tan(a.x/2.0 + M_PI/4.0));
+    double q = (fabs(dlon) > 0 ? dlat/dlon : cos(a.x));
+
+    double dd = da*sin(brng)/q;
+    double lon2 = a.y + dd;
+
+    b.x = lat2*180.0/M_PI;
+    b.y = std::remainder((lon2*180.0/M_PI) + 540, 360) - 180;
+    */
+}

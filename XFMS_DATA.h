@@ -58,6 +58,8 @@ class XFMS_DATA
         //loaded from user *.wps
         static std::vector<NVUPOINT*> lXNVUFlightplan;
 
+        static NVUPOINT* validate_custom_point(const NVUPOINT* wpRef, const QString& record);
+
         static QString getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVUPOINT* wpB, std::vector<NVUPOINT *> &lA, bool allowOpposite);
         static QString getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route);
         static std::vector<NVUPOINT*> search(const QString& _name);
