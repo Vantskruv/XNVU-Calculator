@@ -6,14 +6,14 @@
 #include "coremag.h"
 #include <QDebug>
 
-void NVUPOINT::calc_rsbn_corr(CPoint p2R)
+void NVUPOINT::calc_rsbn_corr(CPoint _p2R)
 {
     if(rsbn==NULL) return;
 
     //Set coordinates to radial
     CPoint pRR = rsbn->latlon*M_PI/180.0;
     CPoint p1R = latlon*M_PI/180.0;
-    p2R = p2R*M_PI/180.0;
+    CPoint p2R = _p2R*M_PI/180.0;
 
     //Calculate point on course which is in 90 degree angle to the RSBN (vI)
     CPoint v = LMATH::latlonToVector(p2R) - LMATH::latlonToVector(p1R);       //Vector v pointing from p1R to p2R
@@ -51,10 +51,10 @@ void NVUPOINT::calc_rsbn_corr(CPoint p2R)
     if(rsbn->wpOrigin == WAYPOINT::ORIGIN_EARTHNAV) MapAngle-=rsbn->ADEV;
 
     //Calculate Atrg
-    Atrg = LMATH::calc_bearing(rsbn->latlon, latlon);
+    Atrg = LMATH::calc_bearing(rsbn->latlon, _p2R);
 
     //Calculate Dtrg
-    Dtrg = LMATH::calc_distance(rsbn->latlon, latlon);
+    Dtrg = LMATH::calc_distance(rsbn->latlon, _p2R);
 
 }
 

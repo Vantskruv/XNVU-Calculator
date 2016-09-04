@@ -13,6 +13,7 @@
 #include "dialogrsbn.h"
 #include "dialogoptions.h"
 
+#define XNVU_VERSION    "XNVU version 0.24"
 #define XPLANE_DIR  "/media/sda3/Documents/Utveckling/cc/XNVU_calc/"
 
 //XFMS_DATA xdata;
@@ -393,7 +394,7 @@ void MainWindow::updateDistanceAndN()
         currentDistance+=legDistance;
     }
 
-
+    if(ui->tableWidget->rowCount()>=0) ui->tableWidget->item(ui->tableWidget->rowCount()-1, 6)->setText(QString::number(currentDistance, 'f', 1));
 }
 
 void MainWindow::tableGoUp()
@@ -541,7 +542,7 @@ void MainWindow::printPreview(QPrinter* printer)
 {
     printer->setPageSize(QPrinter::A4);
     printer->setOrientation(QPrinter::Landscape);
-    printer->setPageMargins (15,15,15,15,QPrinter::Millimeter);
+    printer->setPageMargins (10,10,10,10,QPrinter::Millimeter);
     printer->setFullPage(false);
     //printer->setOutputFileName("output.pdf");
     //printer->setOutputFormat(QPrinter::PdfFormat); //you can use native format of system usin QPrinter::NativeFormat
@@ -808,9 +809,19 @@ void MainWindow::drawNVUHeader(QPainter& painter, int& y)
     }
     painter.drawText(x, y, routeName);
 
-    //Draw distance and fork
+
+
+
+
     font.setBold(false);
     painter.setFont(font);
+
+    //Draw version
+    painter.drawText(11300, y, XNVU_VERSION);
+
+
+
+    //Draw distance and fork
     y+=260;
     painter.drawText(10, y, "Distance, km.");
     font.setBold(true);
@@ -825,6 +836,9 @@ void MainWindow::drawNVUHeader(QPainter& painter, int& y)
     y+=40;
     painter.drawRect(2000, y, 1000, 5);
     painter.drawRect(6000, y, 1000, 5);
+
+    //Draw time and date
+    painter.drawText(10900, y, QDateTime::currentDateTimeUtc().toString("yyyy/MM/dd    hh:mm:ss") + "   UTC");
 
 
     y+=90;
@@ -900,7 +914,7 @@ void MainWindow::drawNVUHeader(QPainter& painter, int& y)
     x+=rectW*xscale;
 
     //Draw Pv/Pp
-    xscale = 2.1;
+    xscale = 1.9;
     painter.drawRect(x, y, rectW*xscale, rectH);
     painter.drawLine(x + rectW*xscale, y, x, y + rectH);
     qstr = "Pv";
@@ -925,7 +939,7 @@ void MainWindow::drawNVUHeader(QPainter& painter, int& y)
 
     //Draw RSBN column
     x+=30;
-    xscale = 8;
+    xscale = 7;
     painter.drawRect(x, y, rectW*xscale, rectH);
     qstr = "VORDME / RSBN";
     dx = fM.boundingRect(qstr).width();
@@ -957,6 +971,17 @@ void MainWindow::drawNVUHeader(QPainter& painter, int& y)
     dx = fM.boundingRect(qstr).width();
     dx = (rectW*xscale)/2 - dx/2;
     painter.drawText(x + dx, y + rectH - 50, qstr);
+    x+=rectW*xscale;
+
+    //Draw Atrg and Dtrg
+    xscale = 2.4;
+    painter.drawRect(x, y, rectW*xscale, rectH);
+    qstr = "A targ";
+    dy = fM.boundingRect(qstr).height();
+    painter.drawText(x + 50, y + dy + 10, qstr);
+    qstr = "D targ";
+    dx = fM.boundingRect(qstr).width();
+    painter.drawText(x + rectW*xscale - dx - 50, y + rectH - 50, qstr);
     x+=rectW*xscale;
 
     //Draw Spas and Srem
@@ -1132,7 +1157,7 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     font.setPixelSize(fSize);
     fM = QFontMetrics(font);
     painter.setFont(font);
-    xscale = 2.1;
+    xscale = 1.9;
     painter.drawRect(x, y, rectW*xscale, rectH);
     painter.drawLine(x + rectW*xscale, y, x, y + rectH);
     qstr = QString::number(wp->Pv, 'f', 1);
@@ -1160,7 +1185,7 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     //Draw RSBN column
     qstr = "";
     x+=30;
-    xscale = 8;
+    xscale = 7;
     painter.drawRect(x, y, rectW*xscale, rectH);
     font.setPixelSize(fSize*0.75);
     fM = QFontMetrics(font);
@@ -1210,6 +1235,18 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     dx = fM.boundingRect(qstr).width();
     dx = (rectW*xscale)/2 - dx/2;
     if(!isArr && wp->rsbn) painter.drawText(x + dx, y + fHOffset, qstr);
+    x+=rectW*xscale;
+
+    //Draw Atrg and Dtrg
+    qstr = "";
+    xscale = 2.4;
+    painter.drawRect(x, y, rectW*xscale, rectH);
+    if(!isArr && wp->rsbn) qstr = QString::number(wp->Atrg, 'f', 1);
+    dy = fM.boundingRect(qstr).height();
+    painter.drawText(x + 50, y + dy + 10, qstr);
+    if(!isArr && wp->rsbn) qstr = QString::number(wp->Dtrg, 'f', 1);
+    dx = fM.boundingRect(qstr).width();
+    painter.drawText(x + rectW*xscale - dx - 50, y + rectH - 50, qstr);
     x+=rectW*xscale;
 
     //Draw Spas and Srem
