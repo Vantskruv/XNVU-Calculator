@@ -66,7 +66,7 @@
 	selection-color: rgb(0, 0, 0);
 }
 
-#pushButtonInsertAfter, #pushButtonInsertBefore, #pushButtonReplace, #pushButtonRouteInsertAfter, #pushButtonRouteReplace, #pushButtonRouteInsertBefore, #pushButton_ClearFlightplan
+#pushButtonInsertAfter, #pushButtonInsertBefore, #pushButtonReplace, #pushButtonRouteInsertAfter, #pushButtonRouteReplace, #pushButtonRouteInsertBefore, #pushButton_ClearFlightplan, #pushButton_showAIRAC_Airports, #pushButton_showAIRAC_Airways, #pushButton_showAIRAC_Navaids, #pushButton_showAIRAC_Fixes, #pushButton_showAirports, #pushButton_showDME, #pushButton_showEarthNav, #pushButton_showFix, #pushButton_showNDB, #pushButton_showRSBN, #pushButton_showVOR, #pushButton_showVORDME, #pushButton_showXNVU
 {
 	background-color: rgb(73, 163, 0);
 	color: rgb(0, 0, 0);
@@ -86,7 +86,180 @@
     <string notr="true"/>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="14" column="0" colspan="5">
+    <item row="2" column="5" rowspan="2">
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="1">
+       <widget class="QPushButton" name="pushButton_showAIRAC_Navaids">
+        <property name="text">
+         <string>AIRAC Navaids</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QPushButton" name="pushButton_showAIRAC_Fixes">
+        <property name="text">
+         <string>AIRAC FIxes</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QPushButton" name="pushButton_showAIRAC_Airways">
+        <property name="text">
+         <string>AIRAC Airways</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QPushButton" name="pushButton_showAIRAC_Airports">
+        <property name="text">
+         <string>AIRAC Airports</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="pushButton_showRSBN">
+        <property name="text">
+         <string>RSBN</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QPushButton" name="pushButton_showEarthNav">
+        <property name="text">
+         <string>EarthNav</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QPushButton" name="pushButton_showXNVU">
+        <property name="text">
+         <string>XNVU</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QPushButton" name="pushButton_showNDB">
+        <property name="text">
+         <string>NDB</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QPushButton" name="pushButton_showVOR">
+        <property name="text">
+         <string>VOR</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QPushButton" name="pushButton_showVORDME">
+        <property name="text">
+         <string>VOR/DME</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QPushButton" name="pushButton_showDME">
+        <property name="text">
+         <string>DME</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QPushButton" name="pushButton_showFix">
+        <property name="text">
+         <string>Fix</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QPushButton" name="pushButton_showAirports">
+        <property name="text">
+         <string>Airports</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="16" column="0" colspan="5">
      <widget class="QLineEdit" name="lineEditRoute">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -154,7 +327,7 @@
       </property>
      </widget>
     </item>
-    <item row="15" column="0">
+    <item row="17" column="0">
      <widget class="QPushButton" name="pushButtonRouteInsertAfter">
       <property name="maximumSize">
        <size>
@@ -170,7 +343,7 @@
       </property>
      </widget>
     </item>
-    <item row="15" column="1">
+    <item row="17" column="1">
      <widget class="QPushButton" name="pushButtonRouteReplace">
       <property name="maximumSize">
        <size>
@@ -186,7 +359,7 @@
       </property>
      </widget>
     </item>
-    <item row="15" column="2">
+    <item row="17" column="2">
      <widget class="QPushButton" name="pushButtonRouteInsertBefore">
       <property name="maximumSize">
        <size>
@@ -202,17 +375,72 @@
       </property>
      </widget>
     </item>
+    <item row="1" column="0" rowspan="14" colspan="5">
+     <widget class="QFlightplanTable" name="tableWidget">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>1</horstretch>
+        <verstretch>1</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::SingleSelection</enum>
+      </property>
+      <property name="selectionBehavior">
+       <enum>QAbstractItemView::SelectRows</enum>
+      </property>
+      <property name="columnCount">
+       <number>21</number>
+      </property>
+      <attribute name="horizontalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="horizontalHeaderHighlightSections">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="verticalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+     </widget>
+    </item>
     <item row="1" column="5">
      <widget class="QFrameClickable" name="frameDescription">
       <property name="minimumSize">
        <size>
-        <width>0</width>
+        <width>510</width>
         <height>200</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
-        <width>16777215</width>
+        <width>510</width>
         <height>200</height>
        </size>
       </property>
@@ -401,62 +629,7 @@
       </widget>
      </widget>
     </item>
-    <item row="1" column="0" rowspan="12" colspan="5">
-     <widget class="QFlightplanTable" name="tableWidget">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>1</horstretch>
-        <verstretch>1</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
-      <property name="editTriggers">
-       <set>QAbstractItemView::NoEditTriggers</set>
-      </property>
-      <property name="selectionMode">
-       <enum>QAbstractItemView::SingleSelection</enum>
-      </property>
-      <property name="selectionBehavior">
-       <enum>QAbstractItemView::SelectRows</enum>
-      </property>
-      <property name="columnCount">
-       <number>21</number>
-      </property>
-      <attribute name="horizontalHeaderVisible">
-       <bool>false</bool>
-      </attribute>
-      <attribute name="horizontalHeaderHighlightSections">
-       <bool>false</bool>
-      </attribute>
-      <attribute name="verticalHeaderVisible">
-       <bool>false</bool>
-      </attribute>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-     </widget>
-    </item>
-    <item row="15" column="4">
+    <item row="17" column="4">
      <widget class="QPushButton" name="pushButton_ClearFlightplan">
       <property name="maximumSize">
        <size>
@@ -504,7 +677,7 @@
       </item>
      </layout>
     </item>
-    <item row="2" column="5" rowspan="14">
+    <item row="4" column="5" rowspan="14">
      <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0,0">
       <item row="12" column="2">
        <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -605,8 +778,8 @@
         </item>
        </layout>
       </item>
-      <item row="8" column="2" rowspan="2">
-       <widget class="QListWidget" name="listWidget">
+      <item row="1" column="2" rowspan="9">
+       <widget class="QSearchList" name="listWidget">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>1</horstretch>
@@ -728,6 +901,11 @@
    <extends>QFrame</extends>
    <header>qframeclickable.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>QSearchList</class>
+   <extends>QListWidget</extends>
+   <header>qsearchlist.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

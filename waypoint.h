@@ -9,26 +9,26 @@
 class WAYPOINT
 {
 	public:
-        static const int ORIGIN_AIRAC_AIRPORTS;
-        static const int ORIGIN_AIRAC_NAVAIDS;
-        static const int ORIGIN_AIRAC_WAYPOINTS;
-        static const int ORIGIN_AIRAC_ATS;
-        static const int ORIGIN_FMS;
-        static const int ORIGIN_EARTHNAV;
-        static const int ORIGIN_RSBN;
-        static const int ORIGIN_XNVU_FLIGHTPLAN;
-        static const int ORIGIN_XNVU;
-        static const int ORIGIN_XNVU_TEMP;
+        static constexpr int ORIGIN_AIRAC_AIRPORTS = 1;
+        static constexpr int ORIGIN_AIRAC_NAVAIDS = 2;
+        static constexpr int ORIGIN_AIRAC_WAYPOINTS = 3;
+        static constexpr int ORIGIN_AIRAC_ATS = 4;
+        static constexpr int ORIGIN_FMS = 5;
+        static constexpr int ORIGIN_EARTHNAV = 6;
+        static constexpr int ORIGIN_RSBN = 7;
+        static constexpr int ORIGIN_XNVU_FLIGHTPLAN = 8;
+        static constexpr int ORIGIN_XNVU = 9;
+        static constexpr int ORIGIN_XNVU_TEMP = 10;
 
-        static const int TYPE_AIRPORT;
-        static const int TYPE_NDB;
-        static const int TYPE_VORDME;
-        static const int TYPE_VOR;
-        static const int TYPE_DME;
-        static const int TYPE_RSBN;
-        static const int TYPE_FIX;
-        static const int TYPE_LATLON;
-        static const int TYPE_AIRWAY;
+        static constexpr int TYPE_AIRPORT = 1;
+        static constexpr int TYPE_NDB = 2;
+        static constexpr int TYPE_VORDME = 3;
+        static constexpr int TYPE_VOR = 4;
+        static constexpr int TYPE_DME = 5;
+        static constexpr int TYPE_RSBN = 6;
+        static constexpr int TYPE_FIX = 7;
+        static constexpr int TYPE_LATLON = 8;
+        static constexpr int TYPE_AIRWAY = 9;
 
 
         CPoint latlon;

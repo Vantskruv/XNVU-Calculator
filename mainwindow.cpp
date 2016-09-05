@@ -179,9 +179,6 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
         return;
     }
 
-
-
-
     selectedItem = fpMenu.exec(globalPos);
     if (selectedItem)
     {
@@ -237,6 +234,7 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
         }
     }
 }
+
 
 void MainWindow::showXPlaneSettings()
 {
@@ -433,6 +431,9 @@ void MainWindow::tableGoDown()
 void MainWindow::on_lineEdit_textChanged(const QString &arg1)
 {
     QString sSearch = ui->lineEdit->text();
+    ui->listWidget->search(sSearch, true);
+
+    /*
     sSearch = sSearch.toUpper();
     std::vector<NVUPOINT*> lWP = XFMS_DATA::search(sSearch);
 
@@ -448,7 +449,7 @@ void MainWindow::on_lineEdit_textChanged(const QString &arg1)
         newItem->nvupoint = lWP[i];
         ui->listWidget->addItem(newItem);
     }
-
+    */
 }
 
 void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *_item)
@@ -1501,7 +1502,6 @@ void MainWindow::on_frameDescription_clicked()
         {
             AIRWAY* ats = (AIRWAY*) iD->nvupoint->data;
             ui->listWidget->clear();
-
             for(int i=0; i<ats->lATS.size(); i++)
             {
                 NVUPOINT* wp = (NVUPOINT*) ats->lATS[i];
@@ -1511,7 +1511,7 @@ void MainWindow::on_frameDescription_clicked()
                 if(!wp->country.isEmpty()) qstr = qstr + " [" + wp->country + "]";
                 newItem->setText(qstr);
                 newItem->nvupoint = wp;
-                ui->listWidget->addItem(newItem);
+                ui->listWidget->addItem(newItem, false);
             }//for
         }//if
     }//if
@@ -1550,4 +1550,82 @@ void MainWindow::on_actionXNVU_library_triggered()
         refreshFlightplan();
 
     }
+}
+
+void MainWindow::on_pushButton_showAIRAC_Airports_clicked()
+{
+    ui->listWidget->showOrigin(WAYPOINT::ORIGIN_AIRAC_AIRPORTS, ui->pushButton_showAIRAC_Airports->isChecked());
+    ui->listWidget->refreshSearch();
+}
+
+void MainWindow::on_pushButton_showAIRAC_Navaids_clicked()
+{
+    ui->listWidget->showOrigin(WAYPOINT::ORIGIN_AIRAC_NAVAIDS, ui->pushButton_showAIRAC_Navaids->isChecked());
+    ui->listWidget->refreshSearch();
+}
+
+void MainWindow::on_pushButton_showAIRAC_Fixes_clicked()
+{
+    ui->listWidget->showOrigin(WAYPOINT::ORIGIN_AIRAC_WAYPOINTS, ui->pushButton_showAIRAC_Fixes->isChecked());
+    ui->listWidget->refreshSearch();
+}
+
+void MainWindow::on_pushButton_showAIRAC_Airways_clicked()
+{
+    ui->listWidget->showOrigin(WAYPOINT::ORIGIN_AIRAC_ATS, ui->pushButton_showAIRAC_Airways->isChecked());
+    ui->listWidget->refreshSearch();
+}
+
+void MainWindow::on_pushButton_showEarthNav_clicked()
+{
+    ui->listWidget->showOrigin(WAYPOINT::ORIGIN_EARTHNAV, ui->pushButton_showEarthNav->isChecked());
+    ui->listWidget->refreshSearch();
+}
+
+void MainWindow::on_pushButton_showRSBN_clicked()
+{
+    ui->listWidget->showOrigin(WAYPOINT::ORIGIN_RSBN, ui->pushButton_showRSBN->isChecked());
+    ui->listWidget->refreshSearch();
+}
+
+void MainWindow::on_pushButton_showXNVU_clicked()
+{
+    ui->listWidget->showOrigin(WAYPOINT::ORIGIN_XNVU, ui->pushButton_showXNVU->isChecked());
+    ui->listWidget->refreshSearch();
+}
+
+void MainWindow::on_pushButton_showNDB_clicked()
+{
+    ui->listWidget->showOrigin(WAYPOINT::TYPE_NDB, ui->pushButton_showNDB->isChecked());
+    ui->listWidget->refreshSearch();
+}
+
+void MainWindow::on_pushButton_showVOR_clicked()
+{
+    ui->listWidget->showOrigin(WAYPOINT::TYPE_VOR, ui->pushButton_showVOR->isChecked());
+    ui->listWidget->refreshSearch();
+}
+
+void MainWindow::on_pushButton_showVORDME_clicked()
+{
+    ui->listWidget->showOrigin(WAYPOINT::TYPE_VORDME, ui->pushButton_showVORDME->isChecked());
+    ui->listWidget->refreshSearch();
+}
+
+void MainWindow::on_pushButton_showDME_clicked()
+{
+    ui->listWidget->showOrigin(WAYPOINT::TYPE_DME, ui->pushButton_showDME->isChecked());
+    ui->listWidget->refreshSearch();
+}
+
+void MainWindow::on_pushButton_showFix_clicked()
+{
+    ui->listWidget->showOrigin(WAYPOINT::TYPE_FIX, ui->pushButton_showFix->isChecked());
+    ui->listWidget->refreshSearch();
+}
+
+void MainWindow::on_pushButton_showAirports_clicked()
+{
+    ui->listWidget->showOrigin(WAYPOINT::TYPE_AIRPORT, ui->pushButton_showAirports->isChecked());
+    ui->listWidget->refreshSearch();
 }

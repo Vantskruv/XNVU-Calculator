@@ -79,6 +79,32 @@ private slots:
 
     void on_actionXNVU_library_triggered();
 
+    void on_pushButton_showAIRAC_Airports_clicked();
+
+    void on_pushButton_showAIRAC_Navaids_clicked();
+
+    void on_pushButton_showAIRAC_Fixes_clicked();
+
+    void on_pushButton_showAIRAC_Airways_clicked();
+
+    void on_pushButton_showEarthNav_clicked();
+
+    void on_pushButton_showRSBN_clicked();
+
+    void on_pushButton_showXNVU_clicked();
+
+    void on_pushButton_showNDB_clicked();
+
+    void on_pushButton_showVOR_clicked();
+
+    void on_pushButton_showVORDME_clicked();
+
+    void on_pushButton_showDME_clicked();
+
+    void on_pushButton_showFix_clicked();
+
+    void on_pushButton_showAirports_clicked();
+
 private:
     Ui::MainWindow *ui;
 };

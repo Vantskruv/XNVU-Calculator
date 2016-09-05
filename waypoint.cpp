@@ -1,5 +1,6 @@
 #include "waypoint.h"
 
+/*
 const int WAYPOINT::ORIGIN_AIRAC_AIRPORTS = 1;
 const int WAYPOINT::ORIGIN_AIRAC_NAVAIDS = 2;
 const int WAYPOINT::ORIGIN_AIRAC_WAYPOINTS = 3;
@@ -20,6 +21,7 @@ const int WAYPOINT::TYPE_RSBN = 6;
 const int WAYPOINT::TYPE_FIX = 7;
 const int WAYPOINT::TYPE_LATLON = 8;
 const int WAYPOINT::TYPE_AIRWAY = 9;
+*/
 
 bool WAYPOINT::compare(WAYPOINT *p)
 {
