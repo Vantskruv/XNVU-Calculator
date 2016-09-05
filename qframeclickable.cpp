@@ -1,6 +1,6 @@
 #include "qframeclickable.h"
 
-QFrameClickable::QFrameClickable(QWidget *&parent) : QFrame(parent)
+QFrameClickable::QFrameClickable(QWidget *parent) : QFrame(parent)
 {
 
 }

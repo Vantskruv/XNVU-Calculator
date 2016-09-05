@@ -8,7 +8,7 @@ class QFrameClickable : public QFrame
 {
     Q_OBJECT
     public:
-    QFrameClickable(QWidget*&parent);
+    QFrameClickable(QWidget*parent);
     ~QFrameClickable();
 
     protected:
