@@ -26,6 +26,9 @@ private slots:
     void exportFMS();
     void loadNVUFlightplan();
     void saveNVUFlightPlan();
+    void clearFlightplan();
+    void refreshRow(int row, NVUPOINT* waypoint = NULL);
+    void refreshFlightplan();
     void tableGoUp();
     void tableGoDown();
     void updateDistanceAndN();
@@ -73,6 +76,8 @@ private slots:
     void on_actionOptions_triggered();
 
     void on_frameDescription_clicked();
+
+    void on_actionXNVU_library_triggered();
 
 private:
     Ui::MainWindow *ui;

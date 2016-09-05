@@ -18,6 +18,7 @@
 
 std::multimap<QString, NVUPOINT*> XFMS_DATA::lWP;
 std::multimap<QString, NVUPOINT*> XFMS_DATA::lWP2;
+std::vector<NVUPOINT*> XFMS_DATA::lXNVURemove;
 int XFMS_DATA::dat;
 //Loaded from i.e. navigraph
 std::vector<NVUPOINT*> XFMS_DATA::lAirports;
@@ -437,6 +438,46 @@ void XFMS_DATA::addXNVUWaypoint(NVUPOINT* lP)
 void XFMS_DATA::addXNVUWaypointTempory(NVUPOINT* lP)
 {
     lXNVUTemp.push_back(lP);
+}
+
+void XFMS_DATA::removeWPSPoints(const std::vector<NVUPOINT*>& pR)
+{
+    std::vector<NVUPOINT*>::iterator iL;
+    std::multimap<QString, NVUPOINT*>::iterator iM;
+
+    lXNVURemove = pR;
+
+    for(int i=0; i<pR.size(); i++)
+    {
+        //Remove points from lXNVU
+        for(iL = lXNVU.begin(); iL!=lXNVU.end(); iL++)
+        {
+            if(*iL == pR[i])
+            {
+                lXNVU.erase(iL);
+                break;
+            }
+        }
+
+        //Remove points from lWP and lWP2
+        for(iM = lWP.begin(); iM!=lWP.end(); iM++)
+        {
+            if((*iM).second == pR[i])
+            {
+                lWP.erase(iM);
+                break;
+            }//if
+        }
+
+        for(iM = lWP2.begin(); iM!=lWP2.end(); iM++)
+        {
+            if((*iM).second == pR[i])
+            {
+                lWP2.erase(iM);
+                break;
+            }//if
+        }
+    }//for
 }
 
 
@@ -1149,11 +1190,9 @@ int XFMS_DATA::saveXNVUData()
 
 int XFMS_DATA::saveXNVUFlightplan(const QString& file, std::vector<NVUPOINT*> lN)
 {
-
     //Type | ID | NAME | COUNTRY | LAT | LON | ELEV | FREQ | RANGE | AD | TALT | TLVL | LRWY | RSBN_ORIGIN | RSBN_ID | RSBN_NAME | RSBN_FREQ | RSBN_LAT | RSBN_LON
     QFile outfile(file);
     if(!outfile.open(QIODevice::WriteOnly | QIODevice::Text)) return 0;
-
 
     QTextStream out(&outfile);
 

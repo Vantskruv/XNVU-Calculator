@@ -664,6 +664,7 @@
     </property>
     <addaction name="actionX_Plane_folder"/>
     <addaction name="actionOptions"/>
+    <addaction name="actionXNVU_library"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSettings"/>
@@ -707,6 +708,11 @@
   <action name="actionOptions">
    <property name="text">
     <string>Options...</string>
+   </property>
+  </action>
+  <action name="actionXNVU_library">
+   <property name="text">
+    <string>XNVU library...</string>
    </property>
   </action>
  </widget>

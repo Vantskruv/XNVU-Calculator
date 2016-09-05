@@ -14,6 +14,7 @@ class XFMS_DATA
 	private:
         static std::multimap<QString, NVUPOINT*> lWP;
         static std::multimap<QString, NVUPOINT*> lWP2;
+        static std::vector<NVUPOINT*> lXNVURemove;
         static void validate_airport(const QStringList& record);
         static void validate_navaid(const QStringList& record);
         static void validate_waypoint(const QStringList &record);
@@ -72,6 +73,7 @@ class XFMS_DATA
         static QString load(int dat);
         static int _load(const QString& file, int _type);
         static int saveXNVUData();
+        static void removeWPSPoints(const std::vector<NVUPOINT *> &pR);
 
         static int loadFMS(const QString& file);
         static int saveFMS(const QString& file, std::vector<NVUPOINT*> lN);

@@ -30,7 +30,8 @@ SOURCES += main.cpp\
     qflightplantable.cpp \
     dialogrsbn.cpp \
     dialogoptions.cpp \
-    qframeclickable.cpp
+    qframeclickable.cpp \
+    dialogwpsedit.cpp
 
 HEADERS  += mainwindow.h \
     coremag.h \
@@ -47,10 +48,12 @@ HEADERS  += mainwindow.h \
     qflightplantable.h \
     dialogrsbn.h \
     dialogoptions.h \
-    qframeclickable.h
+    qframeclickable.h \
+    dialogwpsedit.h
 
 FORMS    += mainwindow.ui \
     dialogsettings.ui \
     dialogwaypointedit.ui \
     dialogrsbn.ui \
-    dialogoptions.ui
+    dialogoptions.ui \
+    dialogwpsedit.ui

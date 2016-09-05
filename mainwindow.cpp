@@ -12,6 +12,7 @@
 #include "dialogwaypointedit.h"
 #include "dialogrsbn.h"
 #include "dialogoptions.h"
+#include "dialogwpsedit.h"
 
 #define XNVU_VERSION    "XNVU version 0.24"
 #define XPLANE_DIR  "/media/sda3/Documents/Utveckling/cc/XNVU_calc/"
@@ -159,7 +160,7 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
         selectedItem = fpMenu.exec(globalPos);
         if(selectedItem)
         {
-            DialogWaypointEdit dEdit(NULL);
+            DialogWaypointEdit dEdit(NULL, true);
             int dr = dEdit.exec();
             if(dr == QDialog::Rejected) return;
             if(dr==2)
@@ -205,7 +206,7 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
         }
         else if(selectedItem == fpMenu.actions()[2])
         {
-            DialogWaypointEdit dEdit(wp);
+            DialogWaypointEdit dEdit(wp, true);
             int dr = dEdit.exec();
             if(dr == QDialog::Rejected) return;
 
@@ -458,6 +459,73 @@ void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *_item)
     ui->tableWidget->selectRow(ui->tableWidget->rowCount()-1);
 }
 
+void MainWindow::refreshRow(int row, NVUPOINT* waypoint)
+{
+    if(row>=ui->tableWidget->rowCount()) return;
+
+
+    QString qstr;
+    QTableWidgetItemData* itemD;
+
+    itemD = (QTableWidgetItemData*) ui->tableWidget->item(row, 0);
+    itemD->setText(QString::number(row));
+    if(waypoint==NULL) waypoint = itemD->nvupoint;
+    itemD->nvupoint = (NVUPOINT*) waypoint;
+    ui->tableWidget->item(row, 1)->setText(waypoint->name);
+
+    qstr = WAYPOINT::getTypeStr(waypoint);
+    if(waypoint->type == WAYPOINT::TYPE_NDB ||
+       waypoint->type == WAYPOINT::TYPE_RSBN)
+    {
+        qstr = qstr + " Ch" + QString::number((int) waypoint->freq);
+    }//if
+    else if(waypoint->type == WAYPOINT::TYPE_VOR ||
+            waypoint->type == WAYPOINT::TYPE_DME ||
+            waypoint->type == WAYPOINT::TYPE_VORDME)
+    {
+        qstr = qstr + " " + QString::number(waypoint->freq, 'f', 3);
+    }//if
+    ui->tableWidget->item(row, 2)->setText(qstr);
+
+    double l1, l2;
+    l1 = fabs(modf(waypoint->latlon.x, &l2)*60.0);
+    int i2 = (int) fabs(l2);
+    ui->tableWidget->item(row, 3)->setText((waypoint->latlon.x < 0 ? "S" : "N") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2));
+
+    l1 = fabs(modf(waypoint->latlon.y, &l2)*60.0);
+    i2 = (int) fabs(l2);
+    itemD->setText((waypoint->latlon.y < 0 ? "W" : "E") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2));
+    ui->tableWidget->item(row, 4)->setText((waypoint->latlon.y < 0 ? "W" : "E") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2));
+
+    ui->tableWidget->item(row, 5)->setText("");
+    ui->tableWidget->item(row, 6)->setText("");
+
+    if(waypoint->rsbn)
+    {
+        double d = LMATH::calc_distance(waypoint->latlon, waypoint->rsbn->latlon);
+        qstr =        waypoint->rsbn->name +
+                      (waypoint->rsbn->country.isEmpty() ? "" : + " (" + waypoint->rsbn->country + ")") +
+                      (waypoint->rsbn->name2.isEmpty() ? "" : "  " + waypoint->rsbn->name2) +
+                      " (" + QString::number(d, 'f', 0) + " KM)";
+    }
+    else qstr = "NO CORRECTION";
+    ui->tableWidget->item(row, 7)->setText(qstr);
+    //updateDistanceAndN();
+}
+
+void MainWindow::insertTableWidgetWaypoint(NVUPOINT* waypoint, int row)
+{
+    ui->tableWidget->insertRow(row);
+    for(int i=0; i<8; i++)
+    {
+        ui->tableWidget->setItem(row, i, new QTableWidgetItemData);
+    }
+
+    refreshRow(row, waypoint);
+    updateDistanceAndN();
+}
+
+/*
 void MainWindow::insertTableWidgetWaypoint(NVUPOINT* waypoint, int row)
 {
     ui->tableWidget->insertRow(row);
@@ -536,6 +604,7 @@ void MainWindow::insertTableWidgetWaypoint(NVUPOINT* waypoint, int row)
 
     updateDistanceAndN();
 }
+*/
 
 
 void MainWindow::printPreview(QPrinter* printer)
@@ -1272,8 +1341,6 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     painter.drawText(x + dx, y + fHOffset, qstr);
     x+= rectW*xscale;
 
-
-
     y+=rectH;
 }
 
@@ -1319,7 +1386,7 @@ void MainWindow::on_tableWidget_itemSelectionChanged()
 void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
 {
     QTableWidgetItemData* itemD = (QTableWidgetItemData*) ui->tableWidget->item(row, 0);
-    DialogWaypointEdit dEdit(itemD->nvupoint);
+    DialogWaypointEdit dEdit(itemD->nvupoint, true);
     int dr = dEdit.exec();
     if(dr == QDialog::Rejected) return;
 
@@ -1337,10 +1404,29 @@ void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
 
 void MainWindow::on_pushButton_ClearFlightplan_clicked()
 {
+    clearFlightplan();
+}
+
+void MainWindow::clearFlightplan()
+{
     while(ui->tableWidget->rowCount()>0) ui->tableWidget->removeRow(0);
     XFMS_DATA::removeFMS();
     XFMS_DATA::removeXNVUFlightplan();
 }
+
+void MainWindow::refreshFlightplan()
+{
+    int i=0;
+    for(int i=0; i<ui->tableWidget->rowCount(); i++)
+    {
+        refreshRow(i);
+    }
+
+    updateDistanceAndN();
+}
+
+
+
 
 void MainWindow::on_pushButtonRouteInsertAfter_clicked()
 {
@@ -1429,4 +1515,39 @@ void MainWindow::on_frameDescription_clicked()
             }//for
         }//if
     }//if
+}
+
+void MainWindow::on_actionXNVU_library_triggered()
+{
+    DialogWPSEdit dEdit;
+
+    int rv = dEdit.exec();
+
+    if(rv == QDialog::Accepted)
+    {
+        if(dEdit.lRemove.size())
+        {
+            //Copy flightplan WPS points and set them as tempory
+            for(int i=0; i<ui->tableWidget->rowCount(); i++)
+            {
+                QTableWidgetItemData* cI = (QTableWidgetItemData*) ui->tableWidget->item(i, 0);
+                NVUPOINT* cP = cI->nvupoint;
+                for(int k=0; k<dEdit.lRemove.size(); k++)
+                {
+                    if(cP == dEdit.lRemove[k])
+                    {
+                        NVUPOINT* nP = new NVUPOINT(*cP);
+                        nP->wpOrigin = WAYPOINT::ORIGIN_XNVU_TEMP;
+                        cI->nvupoint = nP;
+                        break;
+                    }
+                }
+            }
+
+            XFMS_DATA::removeWPSPoints(dEdit.lRemove);
+        }
+
+        refreshFlightplan();
+
+    }
 }

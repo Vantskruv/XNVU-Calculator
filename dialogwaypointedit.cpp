@@ -1,12 +1,19 @@
 #include "dialogwaypointedit.h"
 #include "ui_dialogwaypointedit.h"
 
-DialogWaypointEdit::DialogWaypointEdit(NVUPOINT* _nvuPoint, QWidget *parent) :   QDialog(parent),
+//constexpr int DialogWaypointEdit::CANCEL = 0;
+//constexpr int DialogWaypointEdit::SAVE_CURRENT = 1;
+//constexpr int DialogWaypointEdit::CREATE_NEW = 2;
+//constexpr int DialogWaypointEdit::CREATE_TEMP = 3;
+
+DialogWaypointEdit::DialogWaypointEdit(NVUPOINT* _nvuPoint, bool enableTemp, QWidget *parent) :   QDialog(parent),
     ui(new Ui::DialogWaypointEdit)
 {
     ui->setupUi(this);
 
     bool isNULL = (_nvuPoint ? false : true);   //Ugly lazy hack
+
+    if(!enableTemp) ui->pushButton_CreateTemp->setVisible(false);
 
     nvupoint = _nvuPoint;
     if(isNULL)
@@ -103,7 +110,7 @@ void DialogWaypointEdit::on_comboBox_Type_currentIndexChanged(int index)
 
 void DialogWaypointEdit::on_pushButton_Cancel_clicked()
 {
-    this->done(QDialog::Rejected);
+    done(CANCEL);
 }
 
 void DialogWaypointEdit::on_pushButton_SaveCurrent_clicked()
@@ -131,7 +138,7 @@ void DialogWaypointEdit::on_pushButton_SaveCurrent_clicked()
     nvupoint->trans_level = ui->spinBox_TransLevel->value();
     nvupoint->longest_runway = ui->spinBox_LongestRwy->value();
 
-    done(1);
+    done(SAVE_CURRENT);
 }
 
 void DialogWaypointEdit::on_pushButton_CreateNew_clicked()
@@ -158,7 +165,7 @@ void DialogWaypointEdit::on_pushButton_CreateNew_clicked()
 
     nvupoint = new_nvupoint;
 
-    done(2);
+    done(CREATE_NEW);
 }
 
 void DialogWaypointEdit::on_pushButton_CreateTemp_clicked()
@@ -185,5 +192,5 @@ void DialogWaypointEdit::on_pushButton_CreateTemp_clicked()
 
     nvupoint = new_nvupoint;
 
-    done(3);
+    done(CREATE_TEMP);
 }

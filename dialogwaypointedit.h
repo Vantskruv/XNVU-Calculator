@@ -13,7 +13,7 @@ class DialogWaypointEdit : public QDialog
     Q_OBJECT
 
 public:
-    explicit DialogWaypointEdit(NVUPOINT*, QWidget *parent = 0);
+    explicit DialogWaypointEdit(NVUPOINT*, bool enableTemp, QWidget *parent = 0);
     ~DialogWaypointEdit();
 
 private:
@@ -21,6 +21,10 @@ private:
 
 public:
     NVUPOINT* nvupoint = NULL;
+    constexpr static int CANCEL = 0;
+    constexpr static int SAVE_CURRENT = 1;
+    constexpr static int CREATE_NEW = 2;
+    constexpr static int CREATE_TEMP = 3;
 
 private slots:
     void on_comboBox_Type_currentIndexChanged(int index);
