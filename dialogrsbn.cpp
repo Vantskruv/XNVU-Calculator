@@ -59,23 +59,22 @@ void DialogRSBN::initializeList()
 
 void DialogRSBN::setWaypointDescription(const NVUPOINT* wp)
 {
-    ui->labelIWPName->setText("");
     ui->labelIWPName2->setText("");
     ui->labelWPType->setText("");
+    ui->labelWPType2->setText("");
     ui->labelWPMagVar->setText("");
     ui->labelWPLatlon->setText("");
     ui->labelWPNote->setText("");
 
-    if(wp == NULL) return;
+    if(!wp) return;
 
-    QString qstr = wp->name;
-
-    if(!wp->country.isEmpty()) qstr = qstr + " [" + wp->country + "]";
-    ui->labelIWPName->setText(qstr);
-
-    if(!wp->name2.isEmpty()) ui->labelIWPName->setText(wp->name2);
-
+    QString qstr;
     qstr = WAYPOINT::getTypeStr(wp);
+    ui->labelWPType2->setText(qstr);
+
+    qstr = wp->name;
+    if(!wp->country.isEmpty()) qstr = qstr + " [" + wp->country + "]";
+
     if(wp->type == WAYPOINT::TYPE_NDB ||
        wp->type == WAYPOINT::TYPE_RSBN)
     {
@@ -89,18 +88,37 @@ void DialogRSBN::setWaypointDescription(const NVUPOINT* wp)
     }//if
     ui->labelWPType->setText(qstr);
 
-    double l1, l2;
-    l1 = fabs(modf(wp->latlon.x, &l2)*60.0);
-    int i2 = (int) fabs(l2);
-    qstr = "";
-    qstr = qstr + "Lat:  " + (wp->latlon.x < 0 ? "S" : "N") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2) + "\n";
-    l1 = fabs(modf(wp->latlon.y, &l2)*60.0);
-    i2 = (int) fabs(l2);
-    qstr = qstr + "Lon:  " + (wp->latlon.y < 0 ? "W" : "E") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2);
-    ui->labelWPLatlon->setText(qstr);
+    if(wp->type == WAYPOINT::TYPE_AIRWAY)
+    {
+        AIRWAY* ats = (AIRWAY*) wp->data;
+        ui->labelIWPName2->setText("[" + ats->lATS[0]->name + "] ---> [" + ats->lATS[ats->lATS.size()-1]->name + "]");
+    }
+    else if(!wp->name2.isEmpty()) ui->labelIWPName2->setText(wp->name2);
+
+    if(wp->type == WAYPOINT::TYPE_AIRWAY)
+    {
+        AIRWAY* ats = (AIRWAY*) wp->data;
+        ui->labelWPLatlon->setText("Fixes: " + QString::number(ats->lATS.size()) + "    Dist: " + QString::number(ats->distance, 'f', 1) + " KM");
+    }
+    else
+    {
+        double l1, l2;
+        l1 = fabs(modf(wp->latlon.x, &l2)*60.0);
+        int i2 = (int) fabs(l2);
+        qstr = "";
+        qstr = qstr + "Lat:   " + (wp->latlon.x < 0 ? "S" : "N") + (i2<10 ? "0" : "") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2) + "       ";
+        l1 = fabs(modf(wp->latlon.y, &l2)*60.0);
+        i2 = (int) fabs(l2);
+        qstr = qstr + "Lon:  " + (wp->latlon.y < 0 ? "W" : "E") + (i2<100 ? (i2<10 ? "00" : "0") : "") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2);
+        ui->labelWPLatlon->setText(qstr);
+    }//else
 
 
-    ui->labelWPMagVar->setText("Magnetic Declination: " + QString::number(wp->MD, 'f', 1));
+    if(wp->type==WAYPOINT::TYPE_AIRWAY)
+    {
+        ui->labelWPMagVar->setText("CLICK TO SHOW WAYPOINTS");
+    }
+    else ui->labelWPMagVar->setText("Magnetic Declination: " + QString::number(wp->MD, 'f', 1));
 
 
     if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_AIRPORTS)
@@ -109,11 +127,15 @@ void DialogRSBN::setWaypointDescription(const NVUPOINT* wp)
     }
     else if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_NAVAIDS)
     {
-        ui->labelWPNote->setText("Source: navaids.txt (GNS430 AIRAC");
+        ui->labelWPNote->setText("Source: navaids.txt (GNS430 AIRAC)");
     }
     else if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_WAYPOINTS)
     {
         ui->labelWPNote->setText("Source: AIRAC waypoints.txt (GNS430 AIRAC)");
+    }
+    else if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_ATS)
+    {
+        ui->labelWPNote->setText("Source: AIRAC ats.txt (GNS430 AIRAC)");
     }
     else if(wp->wpOrigin == WAYPOINT::ORIGIN_FMS)
     {
@@ -121,11 +143,15 @@ void DialogRSBN::setWaypointDescription(const NVUPOINT* wp)
     }
     else if(wp->wpOrigin == WAYPOINT::ORIGIN_EARTHNAV)
     {
-        ui->labelWPNote->setText("Source: X-Plane earth_nav.dat (for VOR/DME correction)");
+        ui->labelWPNote->setText("Source: earth_nav.dat (X-Plane)");
     }
     else if(wp->wpOrigin == WAYPOINT::ORIGIN_XNVU)
     {
         ui->labelWPNote->setText("Source: xnvu_wps.txt (XNVU local library)");
+    }
+    else if(wp->wpOrigin == WAYPOINT::ORIGIN_XNVU_TEMP)
+    {
+        ui->labelWPNote->setText("Source: Custom user tempory waypoint");
     }
     else if(wp->wpOrigin == WAYPOINT::ORIGIN_RSBN)
     {
