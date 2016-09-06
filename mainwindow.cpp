@@ -14,7 +14,7 @@
 #include "dialogoptions.h"
 #include "dialogwpsedit.h"
 
-#define XNVU_VERSION    "XNVU version 0.24"
+#define XNVU_VERSION    "XNVU version 0.25"
 #define XPLANE_DIR  "/media/sda3/Documents/Utveckling/cc/XNVU_calc/"
 
 //XFMS_DATA xdata;
@@ -28,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    setWindowTitle(XNVU_VERSION);
     ui->tableWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
     //Setup shortcuts
@@ -1596,36 +1597,36 @@ void MainWindow::on_pushButton_showXNVU_clicked()
 
 void MainWindow::on_pushButton_showNDB_clicked()
 {
-    ui->listWidget->showOrigin(WAYPOINT::TYPE_NDB, ui->pushButton_showNDB->isChecked());
+    ui->listWidget->showType(WAYPOINT::TYPE_NDB, ui->pushButton_showNDB->isChecked());
     ui->listWidget->refreshSearch();
 }
 
 void MainWindow::on_pushButton_showVOR_clicked()
 {
-    ui->listWidget->showOrigin(WAYPOINT::TYPE_VOR, ui->pushButton_showVOR->isChecked());
+    ui->listWidget->showType(WAYPOINT::TYPE_VOR, ui->pushButton_showVOR->isChecked());
     ui->listWidget->refreshSearch();
 }
 
 void MainWindow::on_pushButton_showVORDME_clicked()
 {
-    ui->listWidget->showOrigin(WAYPOINT::TYPE_VORDME, ui->pushButton_showVORDME->isChecked());
+    ui->listWidget->showType(WAYPOINT::TYPE_VORDME, ui->pushButton_showVORDME->isChecked());
     ui->listWidget->refreshSearch();
 }
 
 void MainWindow::on_pushButton_showDME_clicked()
 {
-    ui->listWidget->showOrigin(WAYPOINT::TYPE_DME, ui->pushButton_showDME->isChecked());
+    ui->listWidget->showType(WAYPOINT::TYPE_DME, ui->pushButton_showDME->isChecked());
     ui->listWidget->refreshSearch();
 }
 
 void MainWindow::on_pushButton_showFix_clicked()
 {
-    ui->listWidget->showOrigin(WAYPOINT::TYPE_FIX, ui->pushButton_showFix->isChecked());
+    ui->listWidget->showType(WAYPOINT::TYPE_FIX, ui->pushButton_showFix->isChecked());
     ui->listWidget->refreshSearch();
 }
 
 void MainWindow::on_pushButton_showAirports_clicked()
 {
-    ui->listWidget->showOrigin(WAYPOINT::TYPE_AIRPORT, ui->pushButton_showAirports->isChecked());
+    ui->listWidget->showType(WAYPOINT::TYPE_AIRPORT, ui->pushButton_showAirports->isChecked());
     ui->listWidget->refreshSearch();
 }
