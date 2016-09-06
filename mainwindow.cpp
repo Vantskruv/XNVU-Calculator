@@ -393,7 +393,7 @@ void MainWindow::updateDistanceAndN()
         currentDistance+=legDistance;
     }
 
-    if(ui->tableWidget->rowCount()>=0) ui->tableWidget->item(ui->tableWidget->rowCount()-1, 6)->setText(QString::number(currentDistance, 'f', 1));
+    if(ui->tableWidget->rowCount()>0) ui->tableWidget->item(ui->tableWidget->rowCount()-1, 6)->setText(QString::number(currentDistance, 'f', 1));
 }
 
 void MainWindow::tableGoUp()
