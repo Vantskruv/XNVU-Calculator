@@ -65,6 +65,7 @@ void NVU::generate(const std::vector< std::pair<NVUPOINT*, NVUPOINT*> > _lWPs, l
 	for(int i=0; i<_lWPs.size(); i++)
 	{
         NVUPOINT* nvup = new NVUPOINT(*_lWPs[i].first);
+        nvup->MD = calc_magvar(nvup->latlon.x, nvup->latlon.y, dat, (double(nvup->alt)/1000.0));
         nvup->rsbn = _lWPs[i].second;
 		lWPs.push_back(nvup);
 	}//for
@@ -72,7 +73,7 @@ void NVU::generate(const std::vector< std::pair<NVUPOINT*, NVUPOINT*> > _lWPs, l
 
     NVUPOINT& wp1= *lWPs[0];
     NVUPOINT& wp2 = *lWPs[lWPs.size()-1];
-    NVU_FORK = LMATH::calc_fork(wp1.latlon.x, wp1.latlon.y, wp2.latlon.x, wp2.latlon.y, dat);
+    NVU_FORK = LMATH::calc_fork(wp1.latlon.x, wp1.latlon.y, wp1.alt, wp2.latlon.x, wp2.latlon.y, wp2.alt, dat);
 
 	double Spas = 0;
 	double e = 0;
@@ -100,7 +101,6 @@ void NVU::generate(const std::vector< std::pair<NVUPOINT*, NVUPOINT*> > _lWPs, l
         }
 
 
-        lWPs[i]->MD = calc_magvar(a.x, a.y, dat);
         lWPs[i]->IPU = LMATH::calc_bearing(a, b);
         lWPs[i]->MPU = LMATH::angleTo360(lWPs[i]->IPU - lWPs[i]->MD);
         lWPs[i]->OZMPUv = LMATH::angleTo360(lWPs[i]->IPU - lWPs[0]->MD);
@@ -133,7 +133,6 @@ void NVU::generate(const std::vector< std::pair<NVUPOINT*, NVUPOINT*> > _lWPs, l
 	
     lWPs[i]->S = 0;
     lWPs[i]->Spas = Spas;
-    lWPs[i]->MD = calc_magvar(lWPs[i]->latlon.x, lWPs[i]->latlon.y, dat);
 
 	for(i=0 ; i<lWPs.size()-1; i++)
 	{

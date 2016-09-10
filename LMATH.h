@@ -3,15 +3,19 @@
 
 #include <CPoint.h>
 
+
+
 namespace LMATH
 {
+
+    static const double feetToMeter(int f){ return 0.3048*f;};
     static const int KM_RADIUS = 6371.009;
 	bool GetLineIntersection(const CPoint& A, const CPoint & B, const CPoint& C, const CPoint& D, double& mua);
 	double GetClosestPointOnVector(const CPoint& _p, const CPoint& _v);
 	CPoint latlonToVector(const CPoint& p);
 	CPoint vectorToLatlon(const CPoint& p);
 	CPoint bearingToVector(const CPoint& p, const double& b);
-    double calc_fork(double lat1, double lon1, double lat2, double lon2, long dat);
+    double calc_fork(double lat1, double lon1, int h1, double lat2, double lon2, int h2, long dat);
     double calc_bearing(const CPoint& _a, const CPoint& _b);
     double angleTo360(double);
     double calc_bearing_radial(const CPoint& a, const CPoint& b );

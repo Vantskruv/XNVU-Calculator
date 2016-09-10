@@ -575,8 +575,7 @@
     <enum>Qt::LeftToRight</enum>
    </property>
    <property name="text">
-    <string>Waypoint can be created/saved to XNVU:s library,
-or just tempory created for this instance.</string>
+    <string>Waypoint can be cloned and added to XNVU library.</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -629,7 +628,7 @@ or just tempory created for this instance.</string>
     </size>
    </property>
    <property name="text">
-    <string>Save Current</string>
+    <string>Save</string>
    </property>
   </widget>
   <widget class="QPushButton" name="pushButton_CreateNew">
@@ -637,49 +636,24 @@ or just tempory created for this instance.</string>
     <rect>
      <x>30</x>
      <y>510</y>
-     <width>140</width>
+     <width>180</width>
      <height>27</height>
     </rect>
    </property>
    <property name="minimumSize">
     <size>
-     <width>140</width>
+     <width>180</width>
      <height>0</height>
     </size>
    </property>
    <property name="maximumSize">
     <size>
-     <width>140</width>
+     <width>180</width>
      <height>16777215</height>
     </size>
    </property>
    <property name="text">
-    <string>Create New</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton_CreateTemp">
-   <property name="geometry">
-    <rect>
-     <x>180</x>
-     <y>510</y>
-     <width>140</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="minimumSize">
-    <size>
-     <width>140</width>
-     <height>0</height>
-    </size>
-   </property>
-   <property name="maximumSize">
-    <size>
-     <width>140</width>
-     <height>16777215</height>
-    </size>
-   </property>
-   <property name="text">
-    <string>Create Tempory</string>
+    <string>Add to XNVU library</string>
    </property>
   </widget>
  </widget>

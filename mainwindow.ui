@@ -33,7 +33,7 @@
 }
 
 
-#frameDescription, #labelFork
+#frameDescription, #labelFork, #labelAltitude
 {
 	background-color: rgb(0, 30, 0);
 	color: rgb(107, 239, 0);
@@ -41,7 +41,7 @@
 	border-color: rgb(73, 163, 0);
 }
 
-#labelIWPName2, #labelWPLatlon, #labelWPMagVar, #labelWPNote, #labelWPType, #labelWPType2
+#labelIWPName2, #labelWPLatlon, #labelWPMagVar, #labelWPNote, #labelWPType, #labelWPType2, #labelFlightLevel
 {
 	color: rgb(107, 239, 0);
 }
@@ -66,13 +66,13 @@
 	selection-color: rgb(0, 0, 0);
 }
 
-#pushButtonInsertAfter, #pushButtonInsertBefore, #pushButtonReplace, #pushButtonRouteInsertAfter, #pushButtonRouteReplace, #pushButtonRouteInsertBefore, #pushButton_ClearFlightplan, #pushButton_showAIRAC_Airports, #pushButton_showAIRAC_Airways, #pushButton_showAIRAC_Navaids, #pushButton_showAIRAC_Fixes, #pushButton_showAirports, #pushButton_showDME, #pushButton_showEarthNav, #pushButton_showFix, #pushButton_showNDB, #pushButton_showRSBN, #pushButton_showVOR, #pushButton_showVORDME, #pushButton_showXNVU
+#pushButtonInsertAfter, #pushButtonInsertBefore, #pushButtonReplace, #pushButtonRouteInsertAfter, #pushButtonRouteReplace, #pushButtonRouteInsertBefore, #pushButton_ClearFlightplan, #pushButton_showAIRAC_Airports, #pushButton_showAIRAC_Airways, #pushButton_showAIRAC_Navaids, #pushButton_showAIRAC_Fixes, #pushButton_showAirports, #pushButton_showDME, #pushButton_showEarthNav, #pushButton_showFix, #pushButton_showNDB, #pushButton_showRSBN, #pushButton_showVOR, #pushButton_showVORDME, #pushButton_showXNVU, #pushButtonSetFL
 {
 	background-color: rgb(73, 163, 0);
 	color: rgb(0, 0, 0);
 }
 
-#lineEdit, #lineEditRoute
+#lineEdit, #lineEditRoute, #lineEdit_FlightLevel, #spinBoxFL
 {
 	background-color: rgb(0, 30, 0);
 	color: rgb(107, 239, 0);
@@ -299,31 +299,6 @@
       </property>
       <property name="clearButtonEnabled">
        <bool>false</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="labelFork">
-      <property name="maximumSize">
-       <size>
-        <width>175</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="font">
-       <font>
-        <family>Gentium Basic</family>
-        <pointsize>16</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
-        <kerning>true</kerning>
-       </font>
-      </property>
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
-      <property name="text">
-       <string>Fork   0.0</string>
       </property>
      </widget>
     </item>
@@ -803,6 +778,127 @@
         </property>
         <property name="viewMode">
          <enum>QListView::ListMode</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="0" column="0" colspan="5">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item alignment="Qt::AlignLeft">
+       <widget class="QLabel" name="labelFork">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>175</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Gentium Basic</family>
+          <pointsize>16</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+          <kerning>true</kerning>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string>Fork   0.0</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelFlightLevel">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>29</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Gentium Basic</family>
+          <pointsize>13</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+          <kerning>true</kerning>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string>Flight level:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="spinBoxFL">
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>13</pointsize>
+         </font>
+        </property>
+        <property name="specialValueText">
+         <string>test</string>
+        </property>
+        <property name="suffix">
+         <string> m</string>
+        </property>
+        <property name="prefix">
+         <string/>
+        </property>
+        <property name="minimum">
+         <number>-999999</number>
+        </property>
+        <property name="maximum">
+         <number>999999</number>
+        </property>
+        <property name="singleStep">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButtonSetFL">
+        <property name="maximumSize">
+         <size>
+          <width>75</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>SET</string>
         </property>
        </widget>
       </item>

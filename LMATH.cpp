@@ -67,10 +67,10 @@ CPoint LMATH::bearingToVector(const CPoint& p, const double& b)
 }
 
 
-double LMATH::calc_fork(double lat1, double lon1, double lat2, double lon2, long dat)
+double LMATH::calc_fork(double lat1, double lon1, int h1, double lat2, double lon2, int h2, long dat)
 {
-    double m1 = calc_magvar(lat1, lon1, dat);
-    double m2 = calc_magvar(lat2, lon2, dat);
+    double m1 = calc_magvar(lat1, lon1, dat, double(h1)/1000.0);
+    double m2 = calc_magvar(lat2, lon2, dat, double(h2)/1000.0);
     double lat = (lat1 + lat2)*0.5*M_PI/180.0;
 
     return m1 - m2  + (lon2 - lon1)*sin(lat);

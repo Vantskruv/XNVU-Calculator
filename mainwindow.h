@@ -105,6 +105,8 @@ private slots:
 
     void on_pushButton_showAirports_clicked();
 
+    void on_pushButtonSetFL_clicked();
+
 private:
     Ui::MainWindow *ui;
 };

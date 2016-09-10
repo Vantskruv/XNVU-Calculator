@@ -50,16 +50,17 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     //Setup columns and horizontal header
-    ui->tableWidget->setColumnCount(8);
-    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "N" << "Identifier" << "Type" << "Latitude" << "Longitude" << "S" << "Spas"<< "RSBN and/or VORDME");
+    ui->tableWidget->setColumnCount(9);
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "N" << "Identifier" << "Type" << "Altitude" << "Latitude" << "Longitude" << "S" << "Spas"<< "RSBN and/or VORDME");
     ui->tableWidget->setColumnWidth(0, 50);
     ui->tableWidget->setColumnWidth(1, 100);
     ui->tableWidget->setColumnWidth(2, 100);
-    ui->tableWidget->setColumnWidth(3, 150);
+    ui->tableWidget->setColumnWidth(3, 100);
     ui->tableWidget->setColumnWidth(4, 150);
-    ui->tableWidget->setColumnWidth(5, 75);
+    ui->tableWidget->setColumnWidth(5, 150);
     ui->tableWidget->setColumnWidth(6, 75);
-    ui->tableWidget->setColumnWidth(7, 360);
+    ui->tableWidget->setColumnWidth(7, 75);
+    ui->tableWidget->setColumnWidth(8, 360);
     ui->tableWidget->horizontalHeader()->show();
     ui->tableWidget->verticalHeader()->setDefaultSectionSize(20);
 
@@ -341,14 +342,14 @@ void MainWindow::deleteWaypoint(int row)
 
     if(row  == (ui->tableWidget->rowCount() - 1)) //We change the distance of previous point, as that point will be the last one.
     {
-        if(row>0) ui->tableWidget->item(row-1, 5)->setText("0.0");
+        if(row>0) ui->tableWidget->item(row-1, 6)->setText("0.0");
     }
     else if(row>0)                                //We set distance between previous and next waypoint, at the previous point
     {
         pItem = (QTableWidgetItemData*) ui->tableWidget->item(row-1, 0);
         nItem = (QTableWidgetItemData*) ui->tableWidget->item(row+1, 0);
         double d = LMATH::calc_distance(pItem->nvupoint->latlon, nItem->nvupoint->latlon);
-        ui->tableWidget->item(row - 1, 5)->setText(QString::number(d, 'f', 1));
+        ui->tableWidget->item(row - 1, 6)->setText(QString::number(d, 'f', 1));
     }
 
     ui->tableWidget->removeRow(row);
@@ -371,13 +372,13 @@ void MainWindow::updateDistanceAndN()
 
     if(ui->tableWidget->rowCount()>0)
     {
-        ui->tableWidget->item(0, 6)->setText("0.0");
-        ui->tableWidget->item(ui->tableWidget->rowCount()-1, 6)->setText(QString::number(currentDistance, 'f', 1));
+        ui->tableWidget->item(0, 7)->setText("0.0");
+        ui->tableWidget->item(ui->tableWidget->rowCount()-1, 7)->setText(QString::number(currentDistance, 'f', 1));
         ui->tableWidget->item(ui->tableWidget->rowCount()-1, 0)->setText(QString::number(ui->tableWidget->rowCount()));
 
         iN = (QTableWidgetItemData*) ui->tableWidget->item(0, 0);
         iC = (QTableWidgetItemData*) ui->tableWidget->item(ui->tableWidget->rowCount()-1, 0);
-        double f = LMATH::calc_fork(iN->nvupoint->latlon.x, iN->nvupoint->latlon.y, iC->nvupoint->latlon.x, iC->nvupoint->latlon.y, dat);
+        double f = LMATH::calc_fork(iN->nvupoint->latlon.x, iN->nvupoint->latlon.y, iN->nvupoint->alt, iC->nvupoint->latlon.x, iC->nvupoint->latlon.y, iC->nvupoint->alt, dat);
         ui->labelFork->setText("Fork   " + QString::number(f, 'f', 1));
     }
     else ui->labelFork->setText("Fork   0.0");
@@ -388,13 +389,13 @@ void MainWindow::updateDistanceAndN()
         iN = (QTableWidgetItemData*) ui->tableWidget->item(i+1, 0);
 
         legDistance = LMATH::calc_distance(iN->nvupoint->latlon, iC->nvupoint->latlon);
-        ui->tableWidget->item(i, 5)->setText(QString::number(legDistance, 'f', 1));
-        ui->tableWidget->item(i, 6)->setText(QString::number(currentDistance, 'f', 1));
+        ui->tableWidget->item(i, 6)->setText(QString::number(legDistance, 'f', 1));
+        ui->tableWidget->item(i, 7)->setText(QString::number(currentDistance, 'f', 1));
         ui->tableWidget->item(i, 0)->setText(QString::number(i+1));
         currentDistance+=legDistance;
     }
 
-    if(ui->tableWidget->rowCount()>0) ui->tableWidget->item(ui->tableWidget->rowCount()-1, 6)->setText(QString::number(currentDistance, 'f', 1));
+    if(ui->tableWidget->rowCount()>0) ui->tableWidget->item(ui->tableWidget->rowCount()-1, 7)->setText(QString::number(currentDistance, 'f', 1));
 }
 
 void MainWindow::tableGoUp()
@@ -489,18 +490,20 @@ void MainWindow::refreshRow(int row, NVUPOINT* waypoint)
     }//if
     ui->tableWidget->item(row, 2)->setText(qstr);
 
+    ui->tableWidget->item(row, 3)->setText(QString::number(waypoint->alt));//LMATH::feetToMeter(waypoint->alt)));
+
     double l1, l2;
     l1 = fabs(modf(waypoint->latlon.x, &l2)*60.0);
     int i2 = (int) fabs(l2);
-    ui->tableWidget->item(row, 3)->setText((waypoint->latlon.x < 0 ? "S" : "N") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2));
+    ui->tableWidget->item(row, 4)->setText((waypoint->latlon.x < 0 ? "S" : "N") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2));
 
     l1 = fabs(modf(waypoint->latlon.y, &l2)*60.0);
     i2 = (int) fabs(l2);
     itemD->setText((waypoint->latlon.y < 0 ? "W" : "E") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2));
-    ui->tableWidget->item(row, 4)->setText((waypoint->latlon.y < 0 ? "W" : "E") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2));
+    ui->tableWidget->item(row, 5)->setText((waypoint->latlon.y < 0 ? "W" : "E") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2));
 
-    ui->tableWidget->item(row, 5)->setText("");
     ui->tableWidget->item(row, 6)->setText("");
+    ui->tableWidget->item(row, 7)->setText("");
 
     if(waypoint->rsbn)
     {
@@ -511,14 +514,14 @@ void MainWindow::refreshRow(int row, NVUPOINT* waypoint)
                       " (" + QString::number(d, 'f', 0) + " KM)";
     }
     else qstr = "NO CORRECTION";
-    ui->tableWidget->item(row, 7)->setText(qstr);
+    ui->tableWidget->item(row, 8)->setText(qstr);
     //updateDistanceAndN();
 }
 
 void MainWindow::insertTableWidgetWaypoint(NVUPOINT* waypoint, int row)
 {
     ui->tableWidget->insertRow(row);
-    for(int i=0; i<8; i++)
+    for(int i=0; i<9; i++)
     {
         ui->tableWidget->setItem(row, i, new QTableWidgetItemData);
     }
@@ -1352,12 +1355,6 @@ void MainWindow::on_pushButtonPrint_clicked()
     for(int i=0; i<ui->tableWidget->rowCount(); i++)
     {
         QTableWidgetItemData* itemD = (QTableWidgetItemData*) ui->tableWidget->item(i, 0);
-        /*
-        QComboBox* comboBox = (QComboBox*) ui->tableWidget->cellWidget(i, 5);
-        int cI = comboBox->currentIndex();
-        NVUPOINT* rsbn = NULL;
-        if(cI>0 && cI< itemD->lRSBN_Dist.size()) rsbn = itemD->lRSBN_Dist[cI].first;
-        */
         lWP.push_back(std::make_pair(itemD->nvupoint, (NVUPOINT*) itemD->nvupoint->rsbn));
     }
 
@@ -1629,4 +1626,19 @@ void MainWindow::on_pushButton_showAirports_clicked()
 {
     ui->listWidget->showType(WAYPOINT::TYPE_AIRPORT, ui->pushButton_showAirports->isChecked());
     ui->listWidget->refreshSearch();
+}
+
+void MainWindow::on_pushButtonSetFL_clicked()
+{
+    ui->tableWidget->horizontalHeader()->hideSection(4);
+    for(int i=0; i<ui->tableWidget->rowCount(); i++)
+    {
+        QTableWidgetItemData* iD = (QTableWidgetItemData* ) ui->tableWidget->item(i, 0);
+        NVUPOINT* p = iD->nvupoint;
+        if(i==0 || i == (ui->tableWidget->rowCount()-1)) p->alt = p->elev;
+        else p->alt = ui->spinBoxFL->value();
+
+    }
+
+    refreshFlightplan();
 }
