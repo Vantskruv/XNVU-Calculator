@@ -22,8 +22,8 @@ class XFMS_DATA
         static void validate_earthnav(const QStringList& record);
         static void validate_RSBN(const QStringList& record);
         static void validate_xnvu(const QStringList& record);
-        static void validate_fms(const QStringList& record);
-        static void validate_xnvuflightplan(const QStringList& record);
+        static void validate_fms(std::vector<NVUPOINT*>& lFMS, const QStringList& record);
+        static void validate_xnvuflightplan(std::vector<NVUPOINT*>& lXNVUFlightplan, const QStringList& record);
 
 
     public:
@@ -50,15 +50,6 @@ class XFMS_DATA
         //Loaded from XNVU local library xnvu.dat
         static std::vector<NVUPOINT*> lXNVU;
 
-        //Tempory created waypoints for this instance (not added to search function, hence lWP and lWP2 list).
-        static std::vector<NVUPOINT*> lXNVUTemp;
-
-        //Loaded from user *.fms
-        static std::vector<NVUPOINT*> lFMS;
-
-        //loaded from user *.wps
-        static std::vector<NVUPOINT*> lXNVUFlightplan;
-
         static NVUPOINT* validate_custom_point(const NVUPOINT* wpRef, const QString& record);
 
         static QString getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVUPOINT* wpB, std::vector<NVUPOINT *> &lA, bool allowOpposite);
@@ -75,13 +66,13 @@ class XFMS_DATA
         static int saveXNVUData();
         static void removeWPSPoints(const std::vector<NVUPOINT *> &pR);
 
-        static int loadFMS(const QString& file);
-        static int saveFMS(const QString& file, std::vector<NVUPOINT*> lN);
+        static std::vector<NVUPOINT*> loadFMS(const QString& file);
+        static int saveFMS(const QString& file, const std::vector<NVUPOINT *> lN);
         static void removeFMS();
         static int FMSToXNVUType(int _type);
         static int XNVUToFMSType(int _type);
 
-        static int loadXNVUFlightplan(const QString& file);
+        static std::vector<NVUPOINT*> loadXNVUFlightplan(const QString& file);
         static int saveXNVUFlightplan(const QString& file, std::vector<NVUPOINT*> lN);
         static void removeXNVUFlightplan();
 

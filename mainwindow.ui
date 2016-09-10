@@ -371,7 +371,7 @@
        <enum>QAbstractItemView::SelectRows</enum>
       </property>
       <property name="columnCount">
-       <number>21</number>
+       <number>9</number>
       </property>
       <attribute name="horizontalHeaderVisible">
        <bool>false</bool>
@@ -382,18 +382,6 @@
       <attribute name="verticalHeaderVisible">
        <bool>false</bool>
       </attribute>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
       <column/>
       <column/>
       <column/>
@@ -935,8 +923,15 @@
     <addaction name="actionOptions"/>
     <addaction name="actionXNVU_library"/>
    </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="actionShow_feet"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSettings"/>
+   <addaction name="menuView"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionImport_X_Plane_FMS">
@@ -982,6 +977,14 @@
   <action name="actionXNVU_library">
    <property name="text">
     <string>XNVU library...</string>
+   </property>
+  </action>
+  <action name="actionShow_feet">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show feet</string>
    </property>
   </action>
  </widget>

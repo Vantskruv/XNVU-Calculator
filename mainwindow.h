@@ -26,17 +26,18 @@ private slots:
     void exportFMS();
     void loadNVUFlightplan();
     void saveNVUFlightPlan();
-    void clearFlightplan();
-    void refreshRow(int row, NVUPOINT* waypoint = NULL);
-    void refreshFlightplan();
     void tableGoUp();
     void tableGoDown();
-    void updateDistanceAndN();
-    void insertRoute(std::vector<NVUPOINT*> route, int row, int offset);
-    void insertWaypoint(NVUPOINT* wp, int row, int offset);
-    void insertTableWidgetWaypoint(NVUPOINT* waypoint, int row);
+
+    //void clearFlightplan();
+    //void refreshFlightplan();
+    //void insertRoute(std::vector<NVUPOINT*> route, int row, int offset);
+    //void updateDistanceAndN();
+    //void refreshRow(int row, NVUPOINT* waypoint = NULL);
+    //void insertWaypoint(NVUPOINT* wp, int row, int offset);
+    //void insertTableWidgetWaypoint(NVUPOINT* waypoint, int row);
     //void replaceTableWidgetWaypoint(NVUPOINT* nvupoint, int row);
-    void deleteWaypoint(int row);
+    //void deleteWaypoint(int row);
     void deleteCurrentWaypoint();
     void setWaypointDescription(NVUPOINT* wp);
 

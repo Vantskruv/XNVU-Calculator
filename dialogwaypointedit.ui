@@ -557,30 +557,6 @@
     <string>Position</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label_6">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>460</y>
-     <width>621</width>
-     <height>51</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <italic>true</italic>
-    </font>
-   </property>
-   <property name="layoutDirection">
-    <enum>Qt::LeftToRight</enum>
-   </property>
-   <property name="text">
-    <string>Waypoint can be cloned and added to XNVU library.</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
   <widget class="QPushButton" name="pushButton_Cancel">
    <property name="geometry">
     <rect>
@@ -634,26 +610,26 @@
   <widget class="QPushButton" name="pushButton_CreateNew">
    <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>10</x>
      <y>510</y>
-     <width>180</width>
+     <width>240</width>
      <height>27</height>
     </rect>
    </property>
    <property name="minimumSize">
     <size>
-     <width>180</width>
+     <width>240</width>
      <height>0</height>
     </size>
    </property>
    <property name="maximumSize">
     <size>
-     <width>180</width>
+     <width>240</width>
      <height>16777215</height>
     </size>
    </property>
    <property name="text">
-    <string>Add to XNVU library</string>
+    <string>Save and add to XNVU library</string>
    </property>
   </widget>
  </widget>

@@ -31,9 +31,247 @@ QFlightplanTable::QFlightplanTable(QWidget *&w) : QTableWidget(w)
     horizontalScrollBar()->setStyleSheet(styleSheet);
     verticalScrollBar()->setStyleSheet(styleSheet);
     horizontalHeader()->setStyleSheet(styleSheet);
-    horizontalHeader()->show();
+    //horizontalHeader()->show();
     verticalHeader()->setHidden(true);
+
+
+    //Setup columns and horizontal header
+    setColumnCount(9);
+    setHorizontalHeaderLabels(QStringList() << "N" << "Identifier" << "Type" << "Altitude" << "Latitude" << "Longitude" << "S" << "Spas"<< "RSBN and/or VORDME");
+    setColumnWidth(0, 50);
+    setColumnWidth(1, 100);
+    setColumnWidth(2, 100);
+    setColumnWidth(3, 100);
+    setColumnWidth(4, 150);
+    setColumnWidth(5, 150);
+    setColumnWidth(6, 75);
+    setColumnWidth(7, 75);
+    setColumnWidth(8, 360);
+    //horizontalHeader()->show() //Does not work???
+    verticalHeader()->setDefaultSectionSize(20);
+    horizontalHeader()->setStretchLastSection(true);
 }
+
+void QFlightplanTable::deleteWaypoint(int row)
+{
+    if(row<0 || row>=rowCount()) return;
+
+    QTableWidgetItemData* pItem;
+    QTableWidgetItemData* nItem;
+
+
+    if(row  == (rowCount() - 1)) //We change the distance of previous point, as that point will be the last one.
+    {
+        if(row>0) item(row-1, 6)->setText("0.0");
+    }
+    else if(row>0)                                //We set distance between previous and next waypoint, at the previous point
+    {
+        pItem = (QTableWidgetItemData*) item(row-1, 0);
+        nItem = (QTableWidgetItemData*) item(row+1, 0);
+        double d = LMATH::calc_distance(pItem->nvupoint->latlon, nItem->nvupoint->latlon);
+        item(row - 1, 6)->setText(QString::number(d, 'f', 1));
+    }
+
+    pItem = (QTableWidgetItemData*) item(row, 0);
+    delete pItem->nvupoint;
+
+    removeRow(row);
+
+    updateDistanceAndN();
+}
+
+void QFlightplanTable::insertWaypoint(NVUPOINT* wp, int row, int offset)
+{
+    if(wp->type == WAYPOINT::TYPE_AIRWAY) return;
+    if(row<0) row = 0;
+
+    if(offset<0)
+    {
+        insertWaypoint(wp, row);
+        selectRow(row);
+    }
+    else if(offset>0)
+    {
+        if(currentRow()<0) row = 0;
+        else row++;
+        if(row > rowCount()) row = rowCount();
+        insertWaypoint(wp, row);
+        selectRow(row);
+    }
+    else
+    {
+        refreshRow(row, wp);
+        //removeRow(row);
+        //insertWaypoint(wp, row);
+        selectRow(row);
+    }
+}
+
+void QFlightplanTable::insertWaypoint(NVUPOINT* wp, int row)
+{
+    insertRow(row);
+    for(int i=0; i<9; i++)
+    {
+        setItem(row, i, new QTableWidgetItemData);
+    }
+
+    refreshRow(row, wp);
+
+}
+
+void QFlightplanTable::insertRoute(std::vector<NVUPOINT*> route, int row, int offset)
+{
+    row = row -  (offset < 0 ? 1 : 0);
+    for(int i=0; i<route.size(); i++)
+    {
+        if(i == 0 && offset==0) insertWaypoint(route[i], row, 0);
+        else insertWaypoint(route[i], row, 1);
+        row = currentRow();
+    }
+}
+
+void QFlightplanTable::moveWaypoint(int row, bool up)
+{
+    if(row<0 || row>=rowCount()) return;
+
+    QTableWidgetItemData* pItem;
+    QTableWidgetItemData* nItem;
+
+    pItem = (QTableWidgetItemData*) item(row, 0);
+    NVUPOINT* mP = pItem->nvupoint;
+
+    if(row  == (rowCount() - 1)) //We change the distance of previous point, as that point will be the last one.
+    {
+        if(row>0) item(row-1, 6)->setText("0.0");
+    }
+    else if(row>0)                                //We set distance between previous and next waypoint, at the previous point
+    {
+        pItem = (QTableWidgetItemData*) item(row-1, 0);
+        nItem = (QTableWidgetItemData*) item(row+1, 0);
+        double d = LMATH::calc_distance(pItem->nvupoint->latlon, nItem->nvupoint->latlon);
+        item(row - 1, 6)->setText(QString::number(d, 'f', 1));
+    }
+    removeRow(row);
+
+    if(up)
+    {
+        insertWaypoint(mP, row-1, -1);
+        selectRow(row - 1);
+    }//if
+    else
+    {
+        insertWaypoint(mP, row, 1);
+        selectRow(row + 1);
+    }//else
+}
+
+void QFlightplanTable::refreshRow(int row, NVUPOINT* waypoint)
+{
+    if(row>=rowCount()) return;
+
+    QString qstr;
+    QTableWidgetItemData* itemD;
+
+    itemD = (QTableWidgetItemData*) item(row, 0);
+    itemD->setText(QString::number(row));
+    if(waypoint==NULL) waypoint = itemD->nvupoint;
+    else itemD->nvupoint = waypoint;
+
+    item(row, 1)->setText(waypoint->name);
+
+    qstr = WAYPOINT::getTypeStr(waypoint);
+    if(waypoint->type == WAYPOINT::TYPE_NDB ||
+       waypoint->type == WAYPOINT::TYPE_RSBN)
+    {
+        qstr = qstr + " Ch" + QString::number((int) waypoint->freq);
+    }//if
+    else if(waypoint->type == WAYPOINT::TYPE_VOR ||
+            waypoint->type == WAYPOINT::TYPE_DME ||
+            waypoint->type == WAYPOINT::TYPE_VORDME)
+    {
+        qstr = qstr + " " + QString::number(waypoint->freq, 'f', 3);
+    }//if
+    item(row, 2)->setText(qstr);
+
+    item(row, 3)->setText(QString::number((showMeters ? LMATH::feetToMeter(waypoint->alt) : waypoint->alt)));
+
+    double l1, l2;
+    l1 = fabs(modf(waypoint->latlon.x, &l2)*60.0);
+    int i2 = (int) fabs(l2);
+    item(row, 4)->setText((waypoint->latlon.x < 0 ? "S" : "N") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2));
+
+    l1 = fabs(modf(waypoint->latlon.y, &l2)*60.0);
+    i2 = (int) fabs(l2);
+    item(row, 5)->setText((waypoint->latlon.y < 0 ? "W" : "E") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2));
+
+    item(row, 6)->setText("");
+    item(row, 7)->setText("");
+
+    if(waypoint->rsbn)
+    {
+        double d = LMATH::calc_distance(waypoint->latlon, waypoint->rsbn->latlon);
+        qstr =        waypoint->rsbn->name +
+                      (waypoint->rsbn->country.isEmpty() ? "" : + " (" + waypoint->rsbn->country + ")") +
+                      (waypoint->rsbn->name2.isEmpty() ? "" : "  " + waypoint->rsbn->name2) +
+                      " (" + QString::number(d, 'f', 0) + " KM)";
+    }
+    else qstr = "NO CORRECTION";
+    item(row, 8)->setText(qstr);
+
+    updateDistanceAndN();
+}
+
+void QFlightplanTable::refreshFlightplan()
+{
+    for(int i=0; i<rowCount(); i++) refreshRow(i);
+}
+
+
+void QFlightplanTable::updateDistanceAndN()
+{
+    QTableWidgetItemData* iN;
+    QTableWidgetItemData* iC;
+    double currentDistance = 0.0;
+    double legDistance;
+
+    if(rowCount()>0)
+    {
+        item(0, 7)->setText("0.0");
+        item(rowCount()-1, 7)->setText(QString::number(currentDistance, 'f', 1));
+        item(rowCount()-1, 0)->setText(QString::number(rowCount()));
+
+        iN = (QTableWidgetItemData*) item(0, 0);
+        iC = (QTableWidgetItemData*) item(rowCount()-1, 0);
+        fork = LMATH::calc_fork(iN->nvupoint->latlon.x, iN->nvupoint->latlon.y, iN->nvupoint->alt, iC->nvupoint->latlon.x, iC->nvupoint->latlon.y, iC->nvupoint->alt, dat);
+        qFork->setText("Fork   " + QString::number(fork, 'f', 1));
+    }
+    else qFork->setText("Fork   0.0");
+
+    for(int i=0; i<rowCount() - 1; i++)
+    {
+        iC = (QTableWidgetItemData*) item(i, 0);
+        iN = (QTableWidgetItemData*) item(i+1, 0);
+
+        legDistance = LMATH::calc_distance(iN->nvupoint->latlon, iC->nvupoint->latlon);
+        item(i, 6)->setText(QString::number(legDistance, 'f', 1));
+        item(i, 7)->setText(QString::number(currentDistance, 'f', 1));
+        item(i, 0)->setText(QString::number(i+1));
+        currentDistance+=legDistance;
+    }
+
+    if(rowCount()>0) item(rowCount()-1, 7)->setText(QString::number(currentDistance, 'f', 1));
+}
+
+void QFlightplanTable::clearFlightplan()
+{
+    while(rowCount()>0)
+    {
+        QTableWidgetItemData* cI = (QTableWidgetItemData*) item(0, 0);
+        delete cI->nvupoint;
+        removeRow(0);
+    }
+}
+
 
 /*
 void QFlightplanTable::insertWaypoint(NVUPOINT* wp, int row)

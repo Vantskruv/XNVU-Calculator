@@ -46,6 +46,26 @@ class NVUPOINT: public WAYPOINT
             wpOrigin = wp.wpOrigin;
 		}
 
+        void clone(const NVUPOINT& wp)
+        {
+            latlon = wp.latlon;
+            type = wp.type;
+            name = wp.name;
+            name2 = wp.name2;
+            range = wp.range;
+            freq = wp.freq;
+            alt = wp.alt;
+            elev = wp.elev;
+            trans_alt = wp.trans_alt;
+            trans_level = wp.trans_level;
+            longest_runway = wp.longest_runway;
+            country = wp.country;
+            MD = wp.MD;
+            ADEV = wp.ADEV;
+            wpOrigin = wp.wpOrigin;
+            rsbn = wp.rsbn;
+        }
+
         void calc_rsbn_corr(CPoint p2R);
 		
         virtual ~NVUPOINT(){}

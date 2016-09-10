@@ -170,14 +170,15 @@ void DialogWPSEdit::on_pushButton_Edit_clicked()
 
     switch(rv)
     {
-        case DialogWaypointEdit::SAVE_CURRENT:
-            initializeList(dEdit.nvupoint);
+        case DialogWaypointEdit::SAVE:
+            initializeList(new NVUPOINT(dEdit.nvupoint));
         break;
 
-        case DialogWaypointEdit::CREATE_NEW:
-            XFMS_DATA::addXNVUWaypoint(dEdit.nvupoint);
-            lXNVUTemp.push_back(dEdit.nvupoint);
-            initializeList(dEdit.nvupoint);
+        case DialogWaypointEdit::ADD_XNVU:
+            NVUPOINT* nP = new NVUPOINT(dEdit.nvupoint);
+            XFMS_DATA::addXNVUWaypoint(nP);
+            lXNVUTemp.push_back(nP);
+            initializeList(nP);
         break;
     }
 }
@@ -211,10 +212,11 @@ void DialogWPSEdit::on_pushButton_clicked()
 
     switch(rv)
     {
-        case DialogWaypointEdit::CREATE_NEW:
-            XFMS_DATA::addXNVUWaypoint(dEdit.nvupoint);
-            lXNVUTemp.push_back(dEdit.nvupoint);
-            initializeList(dEdit.nvupoint);
+        case DialogWaypointEdit::ADD_XNVU:
+            NVUPOINT* nP = new NVUPOINT(dEdit.nvupoint);
+            XFMS_DATA::addXNVUWaypoint(nP);
+            lXNVUTemp.push_back(nP);
+            initializeList(nP);
         break;
     }
 }

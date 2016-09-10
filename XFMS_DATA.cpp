@@ -41,15 +41,6 @@ std::vector<NVUPOINT*> XFMS_DATA::lRSBN;
 //Loaded from xnvu.dat
 std::vector<NVUPOINT*> XFMS_DATA::lXNVU;
 
-//Tempory user custom created waypoints for this instance (not added to search function, hence lWP and lWP2 list).
-std::vector<NVUPOINT*> XFMS_DATA::lXNVUTemp;
-
-//Loaded from user fms file
-std::vector<NVUPOINT*> XFMS_DATA::lFMS;
-
-//Loaded from user xnvu.wps file
-std::vector<NVUPOINT*> XFMS_DATA::lXNVUFlightplan;
-
 XFMS_DATA::XFMS_DATA()
 {
 
@@ -78,8 +69,6 @@ void XFMS_DATA::clear()
     lRSBN.clear();
 
     lXNVU.clear();
-    lFMS.clear();
-    lXNVUFlightplan.clear();
 
     lWP2.clear();
     std::multimap<QString, NVUPOINT*>::iterator it = lWP.begin();
@@ -88,9 +77,6 @@ void XFMS_DATA::clear()
         delete it->second;
     }
     lWP.clear();
-
-    for(int i=0; i<lXNVUTemp.size(); i++) delete lXNVUTemp[i];
-    lXNVUTemp.clear();
 }
 
 std::vector<NVUPOINT*> XFMS_DATA::search(const QString& _name)
@@ -433,11 +419,6 @@ void XFMS_DATA::addXNVUWaypoint(NVUPOINT* lP)
     lXNVU.push_back(lP);
     lWP.insert(std::make_pair(lP->name, lP));
     lWP2.insert(std::make_pair(lP->name2, lP));
-}
-
-void XFMS_DATA::addXNVUWaypointTempory(NVUPOINT* lP)
-{
-    lXNVUTemp.push_back(lP);
 }
 
 void XFMS_DATA::removeWPSPoints(const std::vector<NVUPOINT*>& pR)
@@ -1218,11 +1199,11 @@ int XFMS_DATA::saveXNVUFlightplan(const QString& file, std::vector<NVUPOINT*> lN
     return 1;
 }
 
-int XFMS_DATA::loadXNVUFlightplan(const QString& file)
+std::vector<NVUPOINT*> XFMS_DATA::loadXNVUFlightplan(const QString& file)
 {
-    std::vector<NVUPOINT*> lN;
+    std::vector<NVUPOINT*> lWPS;
     QFile infile(file);
-    if(!infile.open(QIODevice::ReadOnly | QIODevice::Text)) return 0;
+    if(!infile.open(QIODevice::ReadOnly | QIODevice::Text)) return lWPS;
 
     NVUPOINT* p;
     while(!infile.atEnd())
@@ -1230,40 +1211,15 @@ int XFMS_DATA::loadXNVUFlightplan(const QString& file)
         QString line = infile.readLine();
         QStringList list;
         list = line.split('|');//QString::SkipEmptyParts);
-        validate_xnvuflightplan(list);
+        validate_xnvuflightplan(lWPS, list);
     }//while
 
     infile.close();
 
-    return 1;
+    return lWPS;
 }
 
-void XFMS_DATA::removeXNVUFlightplan()
-{
-    /*
-    std::pair<std::multimap<QString, NVUPOINT*>::iterator, std::multimap<QString, NVUPOINT*>::iterator> ret = lWP.equal_range(_name);
-    std::multimap<QString, NVUPOINT*>::iterator iWp;
-    for(int i=0; i<lXNVUFlightplan.size(); i++)
-    {
-        ret = lWP.equal_range(lXNVUFlightplan[i]->name);
-        for(iWp=ret.first; iWp!=ret.second; iWp++)
-        {
-            if(iWp.second == lXNVUFlightplan[i]) lWP.erase(iWp);
-        }
-
-        ret = lWP2.equal_range(lXNVUFlightplan[i]->name2);
-        for(iWp=ret.first; iWp!=ret.second; iWp++)
-        {
-            if(iWp.second == lXNVUFlightplan[i]) lWP.erase(iWp);
-        }
-    }
-    */
-
-    for(int i=0; i<lXNVUFlightplan.size(); i++) delete lXNVUFlightplan[i];
-    lXNVUFlightplan.clear();
-}
-
-void XFMS_DATA::validate_xnvuflightplan(const QStringList& RAW)
+void XFMS_DATA::validate_xnvuflightplan(std::vector<NVUPOINT*>& lXNVUFlightplan, const QStringList& RAW)
 {
     //std::printf("XMFS_DATA::validate_xnvuflightplan %d\n", RAW.size());
     if(RAW.size()<19) return;
@@ -1373,10 +1329,12 @@ void XFMS_DATA::validate_xnvuflightplan(const QStringList& RAW)
 }
 
 
-int XFMS_DATA::loadFMS(const QString& file)
+std::vector<NVUPOINT*> XFMS_DATA::loadFMS(const QString& file)
 {
+    std::vector<NVUPOINT*> lFMS;
+
     QFile infile(file);
-    if(!infile.open(QIODevice::ReadOnly | QIODevice::Text)) return 0;
+    if(!infile.open(QIODevice::ReadOnly | QIODevice::Text)) return lFMS;
 
     while(!infile.atEnd())
     {
@@ -1386,16 +1344,16 @@ int XFMS_DATA::loadFMS(const QString& file)
 
         if(list.size() == 5)
         {
-            validate_fms(list);
+            validate_fms(lFMS, list);
         }
 
     }//while
 
     infile.close();
-    return 1;
+    return lFMS;
 }//void load
 
-int XFMS_DATA::saveFMS(const QString& file, std::vector<NVUPOINT*> lN)
+int XFMS_DATA::saveFMS(const QString& file, const std::vector<NVUPOINT*> lN)
 {
     //Type | ID | ALT | LAT | LON
     QFile outfile(file);
@@ -1416,7 +1374,7 @@ int XFMS_DATA::saveFMS(const QString& file, std::vector<NVUPOINT*> lN)
     return 1;
 }
 
-void XFMS_DATA::validate_fms(const QStringList& RAW)
+void XFMS_DATA::validate_fms(std::vector<NVUPOINT*>& lFMS, const QStringList& RAW)
 {
     NVUPOINT wp;
 
@@ -1457,12 +1415,6 @@ void XFMS_DATA::validate_fms(const QStringList& RAW)
     //lWP.insert(std::make_pair(nwp->name, nwp));
     //lWP2.insert(std::make_pair(nwp->name2, nwp));
     lFMS.push_back(nwp);
-}
-
-void XFMS_DATA::removeFMS()
-{
-    for(int i=0; i<lFMS.size(); i++) delete lFMS[i];
-    lFMS.clear();
 }
 
 int XFMS_DATA::FMSToXNVUType(int _type)
