@@ -187,6 +187,7 @@ QString XFMS_DATA::getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVU
     return sError;
 }
 
+//Allocates and returns a list of waypoints. Caller needs to delete the waypoints when not used anymore.
 QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
 {
     QStringList record = _qstr.split(' ', QString::SkipEmptyParts);
@@ -203,7 +204,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
     {
         qstr = record[i];
 
-        //Search for identifier in database
+        //Search for identifier in database, if not found, add if this is a custom waypoint.
         sWaypoint = XFMS_DATA::search(qstr);
         if(sWaypoint.size() == 0)
         {
@@ -256,11 +257,24 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
             //Return error
             if(!sError.isEmpty()) return sError;
 
-            for(int k=0; k<lA.size(); k++) route.push_back(lA[k]);
+            for(int k=0; k<lA.size(); k++)
+            {
+                NVUPOINT* cP = new NVUPOINT(*lA[k]);
+                cP->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
+                route.push_back(cP);
+            }//for
             continue; //Do not push the airway itself to the list
         }//if
+        else if(wp->type==WAYPOINT::ORIGIN_FLIGHTPLAN)
+        {
+            route.push_back(wp);
+            continue;
+        }
 
-        route.push_back(wp);
+        NVUPOINT* cP = new NVUPOINT(*wp);
+        cP->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
+
+        route.push_back(cP);
     }//for
 
     return "";
@@ -505,7 +519,7 @@ void XFMS_DATA::validate_airport(const QStringList& record)
 	}//for
 
     wp->wpOrigin = WAYPOINT::ORIGIN_AIRAC_AIRPORTS;
-    wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat);
+    wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat, (double(LMATH::feetToMeter(wp->elev))/1000.0));
     lWP.insert(std::make_pair(wp->name, wp));
     lWP2.insert(std::make_pair(wp->name2, wp));
     lAirports.push_back(wp);
@@ -560,7 +574,7 @@ void XFMS_DATA::validate_navaid(const QStringList &record)
 	}//for
 
     wp->wpOrigin = WAYPOINT::ORIGIN_AIRAC_NAVAIDS;
-    wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat);
+    wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat, (double(LMATH::feetToMeter(wp->elev))/1000.0));
     lWP.insert(std::make_pair(wp->name, wp));
     lWP2.insert(std::make_pair(wp->name2, wp));
 
@@ -685,7 +699,7 @@ void XFMS_DATA::validate_earthnav(const QStringList &record)
         }//switch
     }//for
     wp->wpOrigin = WAYPOINT::ORIGIN_EARTHNAV;
-    wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat);
+    wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat, (double(LMATH::feetToMeter(wp->elev))/1000.0));
 
 
     if(DialogSettings::distAlignEarthNav)
@@ -801,7 +815,7 @@ NVUPOINT* XFMS_DATA::validate_custom_point(const NVUPOINT* wpRef, const QString&
         newPoint->name = record;
         newPoint->type = WAYPOINT::TYPE_LATLON;
         newPoint->MD = calc_magvar(newPoint->latlon.x, newPoint->latlon.y, dat);
-        newPoint->wpOrigin = WAYPOINT::ORIGIN_XNVU_TEMP;
+        newPoint->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
 
         return newPoint;
     }
@@ -902,7 +916,7 @@ NVUPOINT* XFMS_DATA::validate_custom_point(const NVUPOINT* wpRef, const QString&
     newPoint->name = record;
     newPoint->type = WAYPOINT::TYPE_LATLON;
     newPoint->MD = calc_magvar(newPoint->latlon.x, newPoint->latlon.y, dat);
-    newPoint->wpOrigin = WAYPOINT::ORIGIN_XNVU_TEMP;
+    newPoint->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
 
     return newPoint;
 }
@@ -1138,7 +1152,7 @@ void XFMS_DATA::validate_xnvu(const QStringList& RAW)
         }//Switch
     }//for
     wp.wpOrigin = WAYPOINT::ORIGIN_XNVU;
-    wp.MD = calc_magvar(wp.latlon.x, wp.latlon.y, dat);
+    wp.MD = calc_magvar(wp.latlon.x, wp.latlon.y, dat, (double(LMATH::feetToMeter(wp.elev))/1000.0));
 
     NVUPOINT* nwp = new NVUPOINT(wp);
 
@@ -1171,7 +1185,7 @@ int XFMS_DATA::saveXNVUData()
 
 int XFMS_DATA::saveXNVUFlightplan(const QString& file, std::vector<NVUPOINT*> lN)
 {
-    //Type | ID | NAME | COUNTRY | LAT | LON | ELEV | FREQ | RANGE | AD | TALT | TLVL | LRWY | RSBN_ORIGIN | RSBN_ID | RSBN_NAME | RSBN_FREQ | RSBN_LAT | RSBN_LON
+    //Type | ID | NAME | COUNTRY | LAT | LON | ALT | ELEV | FREQ | RANGE | AD | TALT | TLVL | LRWY | RSBN_ORIGIN | RSBN_ID | RSBN_NAME | RSBN_FREQ | RSBN_LAT | RSBN_LON
     QFile outfile(file);
     if(!outfile.open(QIODevice::WriteOnly | QIODevice::Text)) return 0;
 
@@ -1181,7 +1195,7 @@ int XFMS_DATA::saveXNVUFlightplan(const QString& file, std::vector<NVUPOINT*> lN
     {
         NVUPOINT* p = lN[i];
         out << qSetRealNumberPrecision(16)
-            << p->type << '|' << p->name << '|' << p->name2 << '|' << p->country << '|' << p->latlon.x << '|' << p->latlon.y << '|'
+            << p->type << '|' << p->name << '|' << p->name2 << '|' << p->country << '|' << p->latlon.x << '|' << p->latlon.y << '|' << p->alt << '|'
             << p->elev << '|' << p->freq << '|' << p->range << '|' << p->ADEV << '|'
             << p->trans_alt << '|' << p->trans_level << '|' << p->longest_runway << '|';
         if(p->rsbn)
@@ -1250,43 +1264,46 @@ void XFMS_DATA::validate_xnvuflightplan(std::vector<NVUPOINT*>& lXNVUFlightplan,
             case 5: //Long
                 wp.latlon.y = qstr.toDouble();
             break;
-            case 6: //Elev
+            case 6: //Altitude
+                wp.alt = qstr.toInt();
+            break;
+            case 7: //Elev
                 wp.elev = qstr.toInt();
             break;
-            case 7: //Freq
+            case 8: //Freq
                 wp.freq = qstr.toDouble();
             break;
-            case 8: //Range
+            case 9: //Range
                 wp.range = qstr.toInt();
             break;
-            case 9: //Angle Deviation
+            case 10: //Angle Deviation
                 wp.ADEV = qstr.toDouble();
             break;
-            case 10: //Transition Alt
+            case 11: //Transition Alt
                 wp.trans_alt = qstr.toInt();
             break;
-            case 11: //Tansition Level
+            case 12: //Tansition Level
                 wp.trans_level = qstr.toInt();
             break;
-            case 12: //Longest Runway
+            case 13: //Longest Runway
                 wp.longest_runway = qstr.toInt();
             break;
-            case 13: //RSBN origin
+            case 14: //RSBN origin
                 rsbn.wpOrigin = qstr.toInt();
             break;
-            case 14: //Identifier
+            case 15: //Identifier
                 rsbn.name = qstr;
             break;
-            case 15: //Name
+            case 16: //Name
                 rsbn.name2 = qstr;
             break;
-            case 16: //Freq
+            case 17: //Freq
                 rsbn.freq = qstr.toDouble();
             break;
-            case 17: //Lat
+            case 18: //Lat
                 rsbn.latlon.x = qstr.toDouble();
             break;
-            case 18: //Long
+            case 19: //Long
                 rsbn.latlon.y = qstr.toDouble();
             break;
         }//Switch
@@ -1310,8 +1327,8 @@ void XFMS_DATA::validate_xnvuflightplan(std::vector<NVUPOINT*>& lXNVUFlightplan,
         }
     }
 
-    wp.wpOrigin = WAYPOINT::ORIGIN_XNVU_FLIGHTPLAN;
-    wp.MD = calc_magvar(wp.latlon.x, wp.latlon.y, dat);
+    wp.wpOrigin = WAYPOINT::ORIGIN_WPS;
+    wp.MD = calc_magvar(wp.latlon.x, wp.latlon.y, dat, (double(LMATH::feetToMeter(wp.alt))/1000.0));
 
     NVUPOINT* nwp = NULL;
     if(DialogSettings::distAlignWPS)
@@ -1402,7 +1419,7 @@ void XFMS_DATA::validate_fms(std::vector<NVUPOINT*>& lFMS, const QStringList& RA
         }//Switch
     }//for
     wp.wpOrigin = WAYPOINT::ORIGIN_FMS;
-    wp.MD = calc_magvar(wp.latlon.x, wp.latlon.y, dat);
+    wp.MD = calc_magvar(wp.latlon.x, wp.latlon.y, dat, (double(LMATH::feetToMeter(wp.alt))/1000.0));
 
     NVUPOINT* nwp;
     if(DialogSettings::distAlignFMS)
