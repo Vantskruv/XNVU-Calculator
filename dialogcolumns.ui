@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DialogColumns</class>
+ <widget class="QDialog" name="DialogColumns">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>880</width>
+    <height>325</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Show columns</string>
+  </property>
+  <widget class="QDialogButtonBox" name="buttonBox">
+   <property name="geometry">
+    <rect>
+     <x>520</x>
+     <y>280</y>
+     <width>341</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+   <property name="standardButtons">
+    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxN">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>50</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Waypoint number</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxID">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>80</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Identifier</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxType">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>110</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Type</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxAlt">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>140</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Altitude</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxLat">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>170</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Latitude</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxLon">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>200</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Longitude</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxMD">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>50</y>
+     <width>241</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Magnetic declination</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxOZMPUv">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>80</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>OZMPUv</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxOZMPUp">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>110</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>OZMPUp</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxPv">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>140</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Pv</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxMPU">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>200</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>MPU</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxIPU">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>230</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>IPU</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxS">
+   <property name="geometry">
+    <rect>
+     <x>520</x>
+     <y>50</y>
+     <width>131</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>S</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxSpas">
+   <property name="geometry">
+    <rect>
+     <x>520</x>
+     <y>80</y>
+     <width>131</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Spas</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxSrem">
+   <property name="geometry">
+    <rect>
+     <x>520</x>
+     <y>110</y>
+     <width>131</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Srem</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxRSBN">
+   <property name="geometry">
+    <rect>
+     <x>660</x>
+     <y>50</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>RSBN/VORDME</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxSm">
+   <property name="geometry">
+    <rect>
+     <x>660</x>
+     <y>80</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Sm</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxZm">
+   <property name="geometry">
+    <rect>
+     <x>660</x>
+     <y>110</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Zm</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxMapAngle">
+   <property name="geometry">
+    <rect>
+     <x>660</x>
+     <y>140</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Map angle</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxAtarg">
+   <property name="geometry">
+    <rect>
+     <x>660</x>
+     <y>170</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>A target</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxDtarg">
+   <property name="geometry">
+    <rect>
+     <x>660</x>
+     <y>200</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>D target</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>191</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+     <underline>true</underline>
+    </font>
+   </property>
+   <property name="text">
+    <string>Position</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>10</y>
+     <width>191</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+     <underline>true</underline>
+    </font>
+   </property>
+   <property name="text">
+    <string>Bearing</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_3">
+   <property name="geometry">
+    <rect>
+     <x>520</x>
+     <y>10</y>
+     <width>131</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+     <underline>true</underline>
+    </font>
+   </property>
+   <property name="text">
+    <string>Distance</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="geometry">
+    <rect>
+     <x>660</x>
+     <y>10</y>
+     <width>201</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+     <underline>true</underline>
+    </font>
+   </property>
+   <property name="text">
+    <string>RSBN correction</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxPp">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>170</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Pp</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>DialogColumns</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>DialogColumns</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
