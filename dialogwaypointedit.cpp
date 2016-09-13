@@ -6,12 +6,10 @@
 //constexpr int DialogWaypointEdit::CREATE_NEW = 2;
 //constexpr int DialogWaypointEdit::CREATE_TEMP = 3;
 
-DialogWaypointEdit::DialogWaypointEdit(const NVUPOINT* _nvuPoint, bool enableXNVU, QWidget *parent) :   QDialog(parent),
+DialogWaypointEdit::DialogWaypointEdit(const NVUPOINT* _nvuPoint, bool isSave, QWidget *parent) :   QDialog(parent),
     ui(new Ui::DialogWaypointEdit)
 {
     ui->setupUi(this);
-
-    bool isNULL = (_nvuPoint ? false : true);   //Ugly lazy hack
 
     if(_nvuPoint) nvupoint = *_nvuPoint;
 
@@ -27,9 +25,8 @@ DialogWaypointEdit::DialogWaypointEdit(const NVUPOINT* _nvuPoint, bool enableXNV
     ui->spinBox_TransAlt->setDisabled(true);
     ui->spinBox_TransLevel->setDisabled(true);
     ui->spinBox_LongestRwy->setDisabled(true);
-    ui->pushButton_SaveCurrent->setDisabled(false);
-    //if(nvupoint.wpOrigin == WAYPOINT::ORIGIN_XNVU || nvupoint.wpOrigin == WAYPOINT::ORIGIN_XNVU_TEMP) ui->pushButton_SaveCurrent->setDisabled(false);
-    //else ui->pushButton_SaveCurrent->setDisabled(true);
+    if(isSave) ui->pushButton_SaveCurrent->setDisabled(false);
+    else ui->pushButton_SaveCurrent->setDisabled(true);
 
 
     std::vector<QString> lTypes = WAYPOINT::getTypeStrList();
@@ -42,8 +39,20 @@ DialogWaypointEdit::DialogWaypointEdit(const NVUPOINT* _nvuPoint, bool enableXNV
     ui->doubleSpinBox_Lat->setValue(nvupoint.latlon.x);
     ui->doubleSpinBox_Lon->setValue(nvupoint.latlon.y);
     ui->spinBox_Elev->setValue(nvupoint.elev);
+    ui->spinBox_Alt->setValue(nvupoint.alt);
 
     ui->comboBox_Type->setCurrentIndex(nvupoint.type-1);
+    if(nvupoint.type == WAYPOINT::TYPE_AIRPORT ||
+       nvupoint.type == WAYPOINT::TYPE_NDB ||
+       nvupoint.type == WAYPOINT::TYPE_VORDME ||
+       nvupoint.type == WAYPOINT::TYPE_VOR ||
+       nvupoint.type == WAYPOINT::TYPE_DME ||
+       nvupoint.type == WAYPOINT::TYPE_RSBN ||
+       nvupoint.type == WAYPOINT::TYPE_FIX ||
+       nvupoint.type == WAYPOINT::TYPE_LATLON ||
+       nvupoint.type == WAYPOINT::TYPE_AIRWAY) ui->comboBox_Type->setCurrentIndex(nvupoint.type-1);
+    else ui->comboBox_Type->setCurrentIndex(WAYPOINT::TYPE_FIX-1);
+
     ui->doubleSpinBox_Freq->setValue(nvupoint.freq);
     ui->spinBox_Range->setValue(nvupoint.range);
     ui->doubleSpinBox_AngleDev->setValue(nvupoint.ADEV);
@@ -108,6 +117,7 @@ void DialogWaypointEdit::on_pushButton_SaveCurrent_clicked()
     nvupoint.latlon.x = ui->doubleSpinBox_Lat->value();
     nvupoint.latlon.y = ui->doubleSpinBox_Lon->value();
     nvupoint.elev = ui->spinBox_Elev->value();
+    nvupoint.alt = ui->spinBox_Alt->value();
 
     nvupoint.type = ui->comboBox_Type->currentIndex() + 1;
     nvupoint.freq = ui->doubleSpinBox_Freq->value();
@@ -130,6 +140,7 @@ void DialogWaypointEdit::on_pushButton_CreateNew_clicked()
     nvupoint.latlon.x = ui->doubleSpinBox_Lat->value();
     nvupoint.latlon.y = ui->doubleSpinBox_Lon->value();
     nvupoint.elev = ui->spinBox_Elev->value();
+    nvupoint.alt = ui->spinBox_Alt->value();
 
     nvupoint.type = ui->comboBox_Type->currentIndex() + 1;
     nvupoint.freq = ui->doubleSpinBox_Freq->value();

@@ -13,7 +13,7 @@ class DialogWaypointEdit : public QDialog
     Q_OBJECT
 
 public:
-    explicit DialogWaypointEdit(const NVUPOINT *, bool enableXNVU, QWidget *parent = 0);
+    explicit DialogWaypointEdit(const NVUPOINT *, bool isSave, QWidget *parent = 0);
     ~DialogWaypointEdit();
 
 private:

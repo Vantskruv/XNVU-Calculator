@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>633</width>
-    <height>550</height>
+    <height>602</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -123,7 +123,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>330</y>
+     <y>380</y>
      <width>611</width>
      <height>131</height>
     </rect>
@@ -370,7 +370,7 @@
      <x>10</x>
      <y>190</y>
      <width>611</width>
-     <height>71</height>
+     <height>131</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -496,6 +496,44 @@
      <number>0</number>
     </property>
    </widget>
+   <widget class="QSpinBox" name="spinBox_Alt">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>90</y>
+      <width>141</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>-100000</number>
+    </property>
+    <property name="maximum">
+     <number>100000</number>
+    </property>
+    <property name="value">
+     <number>0</number>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_11">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>70</y>
+      <width>111</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Altitude (ft)</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QLabel" name="label_13">
    <property name="geometry">
@@ -521,7 +559,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>290</y>
+     <y>340</y>
      <width>541</width>
      <height>31</height>
     </rect>
@@ -561,7 +599,7 @@
    <property name="geometry">
     <rect>
      <x>480</x>
-     <y>510</y>
+     <y>560</y>
      <width>140</width>
      <height>27</height>
     </rect>
@@ -586,7 +624,7 @@
    <property name="geometry">
     <rect>
      <x>330</x>
-     <y>510</y>
+     <y>560</y>
      <width>140</width>
      <height>27</height>
     </rect>
@@ -611,7 +649,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>510</y>
+     <y>560</y>
      <width>240</width>
      <height>27</height>
     </rect>
@@ -633,6 +671,25 @@
    </property>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>lineEdit_Identifier</tabstop>
+  <tabstop>lineEdit_Name</tabstop>
+  <tabstop>lineEdit_Country</tabstop>
+  <tabstop>doubleSpinBox_Lat</tabstop>
+  <tabstop>doubleSpinBox_Lon</tabstop>
+  <tabstop>spinBox_Elev</tabstop>
+  <tabstop>spinBox_Alt</tabstop>
+  <tabstop>comboBox_Type</tabstop>
+  <tabstop>doubleSpinBox_Freq</tabstop>
+  <tabstop>spinBox_Range</tabstop>
+  <tabstop>doubleSpinBox_AngleDev</tabstop>
+  <tabstop>spinBox_TransAlt</tabstop>
+  <tabstop>spinBox_TransLevel</tabstop>
+  <tabstop>spinBox_LongestRwy</tabstop>
+  <tabstop>pushButton_SaveCurrent</tabstop>
+  <tabstop>pushButton_CreateNew</tabstop>
+  <tabstop>pushButton_Cancel</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
