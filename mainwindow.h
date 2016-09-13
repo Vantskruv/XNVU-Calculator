@@ -42,9 +42,9 @@ private slots:
     void setWaypointDescription(NVUPOINT* wp);
 
     void printPreview(QPrinter*);
-    void drawNVUHeader(QPainter& painter, int& y);
+    void drawNVUHeader(QPainter& painter, NVUPOINT *dep, NVUPOINT *arr, double fork, int& y);
     void painterDrawNVUPoint(QPainter& painter, NVUPOINT*wp, int wpNumber, bool isArr, int &y);
-
+    void clearFlightplanTimeout();
 
 
     void on_lineEdit_textChanged(const QString &arg1);
@@ -107,6 +107,12 @@ private slots:
     void on_pushButton_showAirports_clicked();
 
     void on_pushButtonSetFL_clicked();
+
+    void on_actionShow_feet_triggered();
+
+    void on_pushButtonDeleteWaypoint_clicked();
+
+    void on_actionColumns_2_triggered();
 
 private:
     Ui::MainWindow *ui;

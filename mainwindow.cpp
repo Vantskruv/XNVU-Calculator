@@ -13,14 +13,15 @@
 #include "dialogrsbn.h"
 #include "dialogoptions.h"
 #include "dialogwpsedit.h"
+#include "dialogcolumns.h"
 
-#define XNVU_VERSION    "XNVU version 0.25"
-#define XPLANE_DIR  "/media/sda3/Documents/Utveckling/cc/XNVU_calc/"
+#define XNVU_VERSION    "XNVU version 0.30"
 
 //XFMS_DATA xdata;
-NVU nvu;
 int dat;
 QLabel* labelWarning;
+QTimer clearFlightplan_timer;
+int clearFlightplan_countdown = -1;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -47,10 +48,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(quit()));
     connect(ui->tableWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showFlightplanContextMenu(const QPoint&)));
     connect(ui->frameDescription, SIGNAL(clicked(QPoint)), this, SLOT(on_frameDescription_clicked()));
+    connect(&clearFlightplan_timer, SIGNAL(timeout()), this, SLOT(clearFlightplanTimeout()));
 
-    //Give tablewidget a reference to labelFork.
+    //Give tablewidget a reference to labelFork and set its size
+    ui->tableWidget->setColumnCount(QFlightplanTable::COL::_SIZE);
     ui->tableWidget->qFork = ui->labelFork;
     ui->tableWidget->horizontalHeader()->show();
+
 
     //Set color for status bar
     QPalette pal = ui->statusBar->palette();
@@ -75,7 +79,14 @@ MainWindow::MainWindow(QWidget *parent) :
     dat = yymmdd_to_julian_days(now->tm_year, now->tm_mon+1, now->tm_mday);
     ui->tableWidget->dat = dat;
     DialogSettings::loadSettings();
-    this->resize(QSize(DialogSettings::windowWidth, DialogSettings::windowHeight));
+    //this->resize(QSize(DialogSettings::windowWidth, DialogSettings::windowHeight));
+    ui->actionShow_feet->setChecked(DialogSettings::showFeet);
+    ui->tableWidget->showFeet = DialogSettings::showFeet;
+    if(DialogSettings::showFeet)
+    {
+        ui->spinBoxFL->setSuffix(" ft");
+    }//if
+    else ui->spinBoxFL->setSuffix(" m");
 
     QString sError = XFMS_DATA::load(dat);
     if(!sError.isEmpty())
@@ -92,16 +103,73 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->label_alignEarthNav->setVisible(DialogSettings::distAlignEarthNav);
     ui->label_alignWPS->setVisible(DialogSettings::distAlignWPS);
     ui->label_alignFMS->setVisible(DialogSettings::distAlignFMS);
+
+    //ui->tableWidget->updateShownColumns();
+
+    this->resize(DialogSettings::windowSize);
+    this->move(DialogSettings::windowPos);
+    ui->tableWidget->horizontalHeader()->restoreState(DialogSettings::tableState);
 }
 
 MainWindow::~MainWindow()
 {
-    DialogSettings::windowWidth = size().width();
-    DialogSettings::windowHeight = size().height();
-
+    DialogSettings::windowSize = size();
+    DialogSettings::windowPos = pos();
+    DialogSettings::tableState = ui->tableWidget->horizontalHeader()->saveState();
+    DialogSettings::showFeet = ui->actionShow_feet->isChecked();
     DialogSettings::saveSettings();
+/*
+    //Save section position and size of QTableFlightplan
+    DialogSettings::showN_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::N);
+    DialogSettings::showID_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ID);
+    DialogSettings::showType_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::TYPE);
+    DialogSettings::showAlt_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ALT);
+    DialogSettings::showLat_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::LAT);
+    DialogSettings::showLon_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::LON);
+    DialogSettings::showS_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::S);
+    DialogSettings::showSpas_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::SPAS);
+    DialogSettings::showSrem_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::SREM);
+    DialogSettings::showMD_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::MD);
+    DialogSettings::showOZMPUv_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::OZMPUV);
+    DialogSettings::showOZMPUp_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::OZMPUP);
+    DialogSettings::showPv_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::PV);
+    DialogSettings::showPp_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::PP);
+    DialogSettings::showMPU_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::MPU);
+    DialogSettings::showIPU_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::IPU);
+    DialogSettings::showRSBN_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::RSBN);
+    DialogSettings::showSm_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::SM);
+    DialogSettings::showZm_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ZM);
+    DialogSettings::showMapAngle_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::MAPA);
+    DialogSettings::showAtarg_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ATRG);
+    DialogSettings::showDtarg_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::DTRG);
+
+
+    DialogSettings::showN_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::N);
+    DialogSettings::showID_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ID);
+    DialogSettings::showType_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::TYPE);
+    DialogSettings::showAlt_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ALT);
+    DialogSettings::showLat_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::LAT);
+    DialogSettings::showLon_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::LON);
+    DialogSettings::showS_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::S);
+    DialogSettings::showSpas_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::SPAS);
+    DialogSettings::showSrem_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::SREM);
+    DialogSettings::showMD_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::MD);
+    DialogSettings::showOZMPUv_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::OZMPUV);
+    DialogSettings::showOZMPUp_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::OZMPUP);
+    DialogSettings::showPv_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::PV);
+    DialogSettings::showPp_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::PP);
+    DialogSettings::showMPU_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::MPU);
+    DialogSettings::showIPU_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::IPU);
+    DialogSettings::showRSBN_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::RSBN);
+    DialogSettings::showSm_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::SM);
+    DialogSettings::showZm_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ZM);
+    DialogSettings::showMapAngle_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::MAPA);
+    DialogSettings::showAtarg_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ATRG);
+    DialogSettings::showDtarg_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::DTRG);
+*/
+
     XFMS_DATA::saveXNVUData();
-    nvu.clear();
+    //nvu.clear();
     XFMS_DATA::clear();
     delete ui;
 }
@@ -118,8 +186,7 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
     // for QAbstractScrollArea and derived classes you would use:
     // QPoint globalPos = myWidget->viewport()->mapToGlobal(pos);
 
-    int row = ui->tableWidget->rowAt(pos.y());
-    QTableWidgetItemData* itemD = (QTableWidgetItemData*) ui->tableWidget->item(row, 0);
+
 
     QMenu fpMenu;
     QAction* selectedItem;
@@ -129,7 +196,8 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
                          "selected-color: rgb(0, 0, 0);";
     fpMenu.setStyleSheet(styleSheet);
 
-    if(itemD)
+    int row = ui->tableWidget->rowAt(pos.y());
+    if(row>=0)
     {
         fpMenu.addAction("Move up");
         fpMenu.addAction("Move down");
@@ -137,6 +205,58 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
         fpMenu.addAction("Set correction beacon...");
         fpMenu.addSeparator();
         fpMenu.addAction("Delete");
+
+        selectedItem = fpMenu.exec(globalPos);
+        if(selectedItem)
+        {
+            NVUPOINT* wp = ui->tableWidget->getWaypoint(row);
+            if(selectedItem == fpMenu.actions()[0])
+            {
+                if(row>0)
+                {
+                    ui->tableWidget->moveWaypoint(row, true);
+                }
+            }
+            else if(selectedItem == fpMenu.actions()[1])
+            {
+                if(row<(ui->tableWidget->rowCount()-1))
+                {
+                    ui->tableWidget->moveWaypoint(row, false);
+                }
+            }
+            else if(selectedItem == fpMenu.actions()[2])
+            {
+                DialogWaypointEdit dEdit(wp, true);
+                int dr = dEdit.exec();
+                if(dr == QDialog::Rejected || dr == DialogWaypointEdit::CANCEL) return;
+
+                if(dr==DialogWaypointEdit::ADD_XNVU) //Create new
+                {
+                    XFMS_DATA::addXNVUWaypoint(new NVUPOINT(dEdit.nvupoint));
+                    ui->tableWidget->replaceWaypoint(new NVUPOINT(dEdit.nvupoint), row);
+                }
+                else if(dr==DialogWaypointEdit::SAVE)
+                {
+                    WAYPOINT* rsbn = wp->rsbn;
+                    wp->clone(dEdit.nvupoint);
+                    wp->rsbn = rsbn;
+                    ui->tableWidget->refreshFlightplan();
+                }
+            }
+            else if(selectedItem == fpMenu.actions()[3])
+            {
+                DialogRSBN dRSBN(wp);
+                int dr = dRSBN.exec();
+                if(dr == QDialog::Rejected) return;
+
+                wp->rsbn = dRSBN.rsbn;
+                ui->tableWidget->refreshFlightplan();
+            }
+            else if(selectedItem == fpMenu.actions()[5])
+            {
+                ui->tableWidget->deleteWaypoint(row);
+            }
+        }
     }//if
     else
     {
@@ -151,70 +271,15 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
             if(dr == DialogWaypointEdit::ADD_XNVU)
             {
                 XFMS_DATA::addXNVUWaypoint(new NVUPOINT(dEdit.nvupoint));
-                ui->tableWidget->insertWaypoint(new NVUPOINT(dEdit.nvupoint), ui->tableWidget->rowCount(), 0);
+                ui->tableWidget->insertWaypoint(new NVUPOINT(dEdit.nvupoint), ui->tableWidget->rowCount());
             }
             else if(dr==DialogWaypointEdit::SAVE)
             {
-                ui->tableWidget->insertWaypoint(new NVUPOINT(dEdit.nvupoint), ui->tableWidget->rowCount(), 0);
+                ui->tableWidget->insertWaypoint(new NVUPOINT(dEdit.nvupoint), ui->tableWidget->rowCount());
             }
-            else return;
-            //dEdit.nvupoint->rsbn = NULL;
-            //insertWaypoint(dEdit.nvupoint, ui->tableWidget->rowCount(), 0);
         }
 
         return;
-    }
-
-    selectedItem = fpMenu.exec(globalPos);
-    if (selectedItem)
-    {
-        NVUPOINT* wp = itemD->nvupoint;
-        if(selectedItem == fpMenu.actions()[0])
-        {
-            if(row>0)
-            {
-                ui->tableWidget->moveWaypoint(row, true);
-            }
-        }
-        else if(selectedItem == fpMenu.actions()[1])
-        {
-            if(row<(ui->tableWidget->rowCount()-1))
-            {
-                ui->tableWidget->moveWaypoint(row, false);
-            }
-        }
-        else if(selectedItem == fpMenu.actions()[2])
-        {
-            DialogWaypointEdit dEdit(wp, true);
-            int dr = dEdit.exec();
-            if(dr == QDialog::Rejected || dr == DialogWaypointEdit::CANCEL) return;
-
-            if(dr==DialogWaypointEdit::ADD_XNVU) //Create new
-            {
-                XFMS_DATA::addXNVUWaypoint(new NVUPOINT(dEdit.nvupoint));
-                ui->tableWidget->insertWaypoint(new NVUPOINT(dEdit.nvupoint), row, 0);
-            }
-            else if(dr==DialogWaypointEdit::SAVE)
-            {
-                WAYPOINT* rsbn = wp->rsbn;
-                wp->clone(dEdit.nvupoint);
-                wp->rsbn = rsbn;
-                ui->tableWidget->refreshRow(row);
-            }
-        }
-        else if(selectedItem == fpMenu.actions()[3])
-        {
-            DialogRSBN dRSBN(wp);
-            int dr = dRSBN.exec();
-            if(dr == QDialog::Rejected) return;
-
-            wp->rsbn = dRSBN.rsbn;
-            ui->tableWidget->refreshRow(row);
-        }
-        else if(selectedItem == fpMenu.actions()[5])
-        {
-            ui->tableWidget->deleteWaypoint(row);
-        }
     }
 }
 
@@ -246,142 +311,44 @@ void MainWindow::showXPlaneSettings()
 
 void MainWindow::importFMS()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, "Import FMS flightplan", XPLANE_DIR, "FMS Files (*.fms)");
+    QString fileName = QFileDialog::getOpenFileName(this, "Import FMS flightplan", "FMS Files (*.fms);;All files (*.*)");
     if(fileName.isEmpty()) return;
-
-    //on_pushButton_ClearFlightplan_clicked();
-    //XFMS_DATA::removeFMS();
-    //XFMS_DATA::removeXNVUFlightplan();
-
     ui->tableWidget->clearFlightplan();
     std::vector<NVUPOINT*> lFMS = XFMS_DATA::loadFMS(fileName);
-    qDebug() << "FMS size: " << lFMS.size();
-
-    for(int i=0; i<lFMS.size(); i++)
-    {
-        ui->tableWidget->insertWaypoint(lFMS[i], ui->tableWidget->rowCount(), 1);
-    }
+    ui->tableWidget->insertRoute(lFMS, 0);
 }
 
 void MainWindow::exportFMS()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "Export FMS flightplan", XPLANE_DIR, "FMS Files (*.fms)");
+    QString fileName = QFileDialog::getSaveFileName(this, "Export FMS flightplan", "FMS Files (*.fms);;All files (*.*)");
     if(fileName.isEmpty()) return;
-
-    std::vector<NVUPOINT*> lFMS;
-
-    QTableWidgetItemData* iD;
-    for(int i=0; i<ui->tableWidget->rowCount(); i++)
-    {
-        iD = (QTableWidgetItemData*) ui->tableWidget->item(i, 0);
-        lFMS.push_back(iD->nvupoint);
-    }
-
-    XFMS_DATA::saveFMS(fileName, lFMS);
+    XFMS_DATA::saveFMS(fileName, ui->tableWidget->getWaypoints());
 }
 
 void MainWindow::loadNVUFlightplan()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, "Load XNVU flightplan", XPLANE_DIR, "XWP Files (*.xwp)");
+    QString fileName = QFileDialog::getOpenFileName(this, "Load XNVU flightplan", "", "XWP Files (*.xwp);;All files (*.*)");
     if(fileName.isEmpty()) return;
-
-    //on_pushButton_ClearFlightplan_clicked();
-    //XFMS_DATA::removeFMS();
-    //XFMS_DATA::removeXNVUFlightplan();
-
+    ui->tableWidget->clearFlightplan();
     std::vector<NVUPOINT*> lXNVU = XFMS_DATA::loadXNVUFlightplan(fileName);
-
-    for(int i=0; i<lXNVU.size(); i++)
-    {
-        ui->tableWidget->insertWaypoint(lXNVU[i], ui->tableWidget->rowCount(), 1);
-    }
+    ui->tableWidget->insertRoute(lXNVU, 0);
 }
 
 void MainWindow::saveNVUFlightPlan()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "Save XNVU flightplan", XPLANE_DIR, "XWP Files (*.xwp)");
+    QString fileName = QFileDialog::getSaveFileName(this, "Save XNVU flightplan", "XWP Files (*.xwp);;All files (*.*)");
     if(fileName.isEmpty()) return;
-
-    std::vector<NVUPOINT*> lXWP;
-
-    for(int i=0; i<ui->tableWidget->rowCount(); i++)
-    {
-        QTableWidgetItemData* itemD = (QTableWidgetItemData*) ui->tableWidget->item(i, 0);
-        lXWP.push_back(itemD->nvupoint);
-    }
-
-    XFMS_DATA::saveXNVUFlightplan(fileName, lXWP);
+    XFMS_DATA::saveXNVUFlightplan(fileName, ui->tableWidget->getWaypoints());
 }
 
-/*
-void MainWindow::deleteWaypoint(int row)
-{
-    if(row<0 || row>=ui->tableWidget->rowCount()) return;
 
-    QTableWidgetItemData* pItem;
-    QTableWidgetItemData* nItem;
-
-
-    if(row  == (ui->tableWidget->rowCount() - 1)) //We change the distance of previous point, as that point will be the last one.
-    {
-        if(row>0) ui->tableWidget->item(row-1, 6)->setText("0.0");
-    }
-    else if(row>0)                                //We set distance between previous and next waypoint, at the previous point
-    {
-        pItem = (QTableWidgetItemData*) ui->tableWidget->item(row-1, 0);
-        nItem = (QTableWidgetItemData*) ui->tableWidget->item(row+1, 0);
-        double d = LMATH::calc_distance(pItem->nvupoint->latlon, nItem->nvupoint->latlon);
-        ui->tableWidget->item(row - 1, 6)->setText(QString::number(d, 'f', 1));
-    }
-
-    ui->tableWidget->removeRow(row);
-
-    updateDistanceAndN();
-}
-*/
 
 void MainWindow::deleteCurrentWaypoint()
 {
+    if(ui->tableWidget->currentRow()<0) return;
     ui->tableWidget->deleteWaypoint(ui->tableWidget->currentRow());
-    //deleteWaypoint(ui->tableWidget->currentRow());
 }
 
-/*
-void MainWindow::updateDistanceAndN()
-{
-    QTableWidgetItemData* iN;
-    QTableWidgetItemData* iC;
-    double currentDistance = 0.0;
-    double legDistance;
-
-    if(ui->tableWidget->rowCount()>0)
-    {
-        ui->tableWidget->item(0, 7)->setText("0.0");
-        ui->tableWidget->item(ui->tableWidget->rowCount()-1, 7)->setText(QString::number(currentDistance, 'f', 1));
-        ui->tableWidget->item(ui->tableWidget->rowCount()-1, 0)->setText(QString::number(ui->tableWidget->rowCount()));
-
-        iN = (QTableWidgetItemData*) ui->tableWidget->item(0, 0);
-        iC = (QTableWidgetItemData*) ui->tableWidget->item(ui->tableWidget->rowCount()-1, 0);
-        double f = LMATH::calc_fork(iN->nvupoint->latlon.x, iN->nvupoint->latlon.y, iN->nvupoint->alt, iC->nvupoint->latlon.x, iC->nvupoint->latlon.y, iC->nvupoint->alt, dat);
-        ui->labelFork->setText("Fork   " + QString::number(f, 'f', 1));
-    }
-    else ui->labelFork->setText("Fork   0.0");
-
-    for(int i=0; i<ui->tableWidget->rowCount() - 1; i++)
-    {
-        iC = (QTableWidgetItemData*) ui->tableWidget->item(i, 0);
-        iN = (QTableWidgetItemData*) ui->tableWidget->item(i+1, 0);
-
-        legDistance = LMATH::calc_distance(iN->nvupoint->latlon, iC->nvupoint->latlon);
-        ui->tableWidget->item(i, 6)->setText(QString::number(legDistance, 'f', 1));
-        ui->tableWidget->item(i, 7)->setText(QString::number(currentDistance, 'f', 1));
-        ui->tableWidget->item(i, 0)->setText(QString::number(i+1));
-        currentDistance+=legDistance;
-    }
-
-    if(ui->tableWidget->rowCount()>0) ui->tableWidget->item(ui->tableWidget->rowCount()-1, 7)->setText(QString::number(currentDistance, 'f', 1));
-}
-*/
 
 void MainWindow::tableGoUp()
 {
@@ -390,12 +357,6 @@ void MainWindow::tableGoUp()
     if(c<0) return;
 
     ui->tableWidget->selectRow(c);
-/*
-    QTableWidgetItemData* itemD = (QTableWidgetItemData*) ui->tableWidget->item(c, 0);
-    ui->lineEdit->setText("");
-    ui->lineEdit->setText(itemD->nvupoint->name);
-    setWaypointDescription(itemD->nvupoint);
-    */
 }
 
 void MainWindow::tableGoDown()
@@ -405,201 +366,19 @@ void MainWindow::tableGoDown()
     if(c>=ui->tableWidget->rowCount()) return;
 
     ui->tableWidget->selectRow(c);
-
-/*
-    QTableWidgetItemData* itemD = (QTableWidgetItemData*) ui->tableWidget->item(c, 0);
-    ui->lineEdit->setText("");
-    ui->lineEdit->setText(itemD->nvupoint->name);
-    setWaypointDescription(itemD->nvupoint);
-
-    */
 }
 
 void MainWindow::on_lineEdit_textChanged(const QString &arg1)
 {
     QString sSearch = ui->lineEdit->text();
     ui->listWidget->search(sSearch, true);
-
-    /*
-    sSearch = sSearch.toUpper();
-    std::vector<NVUPOINT*> lWP = XFMS_DATA::search(sSearch);
-
-    ui->listWidget->clear();
-    if(ui->lineEdit->text().length()<1) return;
-    for(int i=0; i<lWP.size(); i++)
-    {
-        QListWidgetItemData *newItem = new QListWidgetItemData;
-        QString qstr = lWP[i]->name;
-        if(!lWP[i]->name2.isEmpty()) qstr = qstr + " - " + lWP[i]->name2;
-        if(!lWP[i]->country.isEmpty()) qstr = qstr + " [" + lWP[i]->country + "]";
-        newItem->setText(qstr);
-        newItem->nvupoint = lWP[i];
-        ui->listWidget->addItem(newItem);
-    }
-    */
 }
 
 void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *_item)
 {
     QListWidgetItemData* itemData = (QListWidgetItemData*) _item;
-
-    ui->tableWidget->insertWaypoint(new NVUPOINT(*itemData->nvupoint), ui->tableWidget->rowCount(), 0);
-    //insertWaypoint(itemData->nvupoint, ui->tableWidget->rowCount(), 0);
-    ui->tableWidget->selectRow(ui->tableWidget->rowCount()-1);
+    ui->tableWidget->insertWaypoint(new NVUPOINT(*itemData->nvupoint), ui->tableWidget->rowCount());
 }
-
-/*
-void MainWindow::refreshRow(int row, NVUPOINT* waypoint)
-{
-    if(row>=ui->tableWidget->rowCount()) return;
-
-
-    QString qstr;
-    QTableWidgetItemData* itemD;
-
-    itemD = (QTableWidgetItemData*) ui->tableWidget->item(row, 0);
-    itemD->setText(QString::number(row));
-    if(waypoint==NULL) waypoint = itemD->nvupoint;
-    itemD->nvupoint = (NVUPOINT*) waypoint;
-    ui->tableWidget->item(row, 1)->setText(waypoint->name);
-
-    qstr = WAYPOINT::getTypeStr(waypoint);
-    if(waypoint->type == WAYPOINT::TYPE_NDB ||
-       waypoint->type == WAYPOINT::TYPE_RSBN)
-    {
-        qstr = qstr + " Ch" + QString::number((int) waypoint->freq);
-    }//if
-    else if(waypoint->type == WAYPOINT::TYPE_VOR ||
-            waypoint->type == WAYPOINT::TYPE_DME ||
-            waypoint->type == WAYPOINT::TYPE_VORDME)
-    {
-        qstr = qstr + " " + QString::number(waypoint->freq, 'f', 3);
-    }//if
-    ui->tableWidget->item(row, 2)->setText(qstr);
-
-    ui->tableWidget->item(row, 3)->setText(QString::number(waypoint->alt));//LMATH::feetToMeter(waypoint->alt)));
-
-    double l1, l2;
-    l1 = fabs(modf(waypoint->latlon.x, &l2)*60.0);
-    int i2 = (int) fabs(l2);
-    ui->tableWidget->item(row, 4)->setText((waypoint->latlon.x < 0 ? "S" : "N") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2));
-
-    l1 = fabs(modf(waypoint->latlon.y, &l2)*60.0);
-    i2 = (int) fabs(l2);
-    itemD->setText((waypoint->latlon.y < 0 ? "W" : "E") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2));
-    ui->tableWidget->item(row, 5)->setText((waypoint->latlon.y < 0 ? "W" : "E") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2));
-
-    ui->tableWidget->item(row, 6)->setText("");
-    ui->tableWidget->item(row, 7)->setText("");
-
-    if(waypoint->rsbn)
-    {
-        double d = LMATH::calc_distance(waypoint->latlon, waypoint->rsbn->latlon);
-        qstr =        waypoint->rsbn->name +
-                      (waypoint->rsbn->country.isEmpty() ? "" : + " (" + waypoint->rsbn->country + ")") +
-                      (waypoint->rsbn->name2.isEmpty() ? "" : "  " + waypoint->rsbn->name2) +
-                      " (" + QString::number(d, 'f', 0) + " KM)";
-    }
-    else qstr = "NO CORRECTION";
-    ui->tableWidget->item(row, 8)->setText(qstr);
-    //updateDistanceAndN();
-}
-*/
-
-/*
-void MainWindow::insertTableWidgetWaypoint(NVUPOINT* waypoint, int row)
-{
-    ui->tableWidget->insertRow(row);
-    for(int i=0; i<9; i++)
-    {
-        ui->tableWidget->setItem(row, i, new QTableWidgetItemData);
-    }
-
-    refreshRow(row, waypoint);
-    updateDistanceAndN();
-}
-*/
-
-/*
-void MainWindow::insertTableWidgetWaypoint(NVUPOINT* waypoint, int row)
-{
-    ui->tableWidget->insertRow(row);
-    QString qstr;
-    QFont font;
-
-    QTableWidgetItemData* itemD = new QTableWidgetItemData;
-    itemD->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-    itemD->setText(QString::number(row));
-    itemD->nvupoint = (NVUPOINT*) waypoint;
-    ui->tableWidget->setItem(row, 0, itemD);
-
-    itemD = new QTableWidgetItemData;
-    itemD->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    font = itemD->font();
-    font.setBold(true);
-    itemD->setFont(font);
-    itemD->setText(waypoint->name);
-    ui->tableWidget->setItem(row, 1, itemD);
-
-    QTableWidgetItemData* item = new QTableWidgetItemData;
-    item->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    qstr = WAYPOINT::getTypeStr(waypoint);
-    if(waypoint->type == WAYPOINT::TYPE_NDB ||
-       waypoint->type == WAYPOINT::TYPE_RSBN)
-    {
-        qstr = qstr + " Ch" + QString::number((int) waypoint->freq);
-    }//if
-    else if(waypoint->type == WAYPOINT::TYPE_VOR ||
-            waypoint->type == WAYPOINT::TYPE_DME ||
-            waypoint->type == WAYPOINT::TYPE_VORDME)
-    {
-        qstr = qstr + " " + QString::number(waypoint->freq, 'f', 3);
-    }//if
-
-    item->setText(qstr);
-    ui->tableWidget->setItem(row, 2, item);
-
-    item = new QTableWidgetItemData;
-    item->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    double l1, l2;
-    l1 = fabs(modf(waypoint->latlon.x, &l2)*60.0);
-    int i2 = (int) fabs(l2);
-    item->setText((waypoint->latlon.x < 0 ? "S" : "N") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2));
-    ui->tableWidget->setItem(row, 3, item);
-
-    item = new QTableWidgetItemData;
-    item->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    l1 = fabs(modf(waypoint->latlon.y, &l2)*60.0);
-    i2 = (int) fabs(l2);
-    item->setText((waypoint->latlon.y < 0 ? "W" : "E") + QString::number(i2) + "*" + (l1<10 ? "0" : "") + QString::number(l1, 'f', 2));
-    ui->tableWidget->setItem(row, 4, item);
-
-    item = new QTableWidgetItemData;
-    item->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    item->setText("0.0");
-    ui->tableWidget->setItem(row, 5, item);
-
-    item = new QTableWidgetItemData;
-    item->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    item->setText("");
-    ui->tableWidget->setItem(row, 6, item);
-
-    item = new QTableWidgetItemData;
-    item->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    if(waypoint->rsbn)
-    {
-        double d = LMATH::calc_distance(waypoint->latlon, waypoint->rsbn->latlon);
-        item->setText(waypoint->rsbn->name +
-                      (waypoint->rsbn->country.isEmpty() ? "" : + " (" + waypoint->rsbn->country + ")") +
-                      (waypoint->rsbn->name2.isEmpty() ? "" : "  " + waypoint->rsbn->name2) +
-                      " (" + QString::number(d, 'f', 0) + " KM)");
-    }
-    else item->setText("NO CORRECTION");
-    ui->tableWidget->setItem(row, 7, item);
-
-    updateDistanceAndN();
-}
-*/
 
 
 void MainWindow::printPreview(QPrinter* printer)
@@ -611,7 +390,12 @@ void MainWindow::printPreview(QPrinter* printer)
     //printer->setOutputFileName("output.pdf");
     //printer->setOutputFormat(QPrinter::PdfFormat); //you can use native format of system usin QPrinter::NativeFormat
 
-    if(nvu.lWPs.size()<1) return;
+    std::vector<NVUPOINT*> lWPs = ui->tableWidget->getWaypoints();
+    double fork;
+    if(lWPs.size()<1) return;
+
+    NVU::generate(lWPs, fork, dat);
+
     QPainter painter(printer); // create a painter which will paint 'on printer'.
 
 #ifdef _WIN32
@@ -619,18 +403,18 @@ void MainWindow::printPreview(QPrinter* printer)
 #endif
 
     int y=0;
-    drawNVUHeader(painter, y);
+    drawNVUHeader(painter, lWPs[0], lWPs[lWPs.size() - 1], fork, y);
     y+=30;
-    for(int i=0; i<nvu.lWPs.size(); i++)
+    for(int i=0; i<lWPs.size(); i++)
     {
         if(i==19)
         {
             printer->newPage();
             y = 0;
-            drawNVUHeader(painter, y);
+            drawNVUHeader(painter, lWPs[0], lWPs[lWPs.size() - 1], fork, y);
             y+=30;
         }
-        painterDrawNVUPoint(painter, nvu.lWPs[i], i+1, i == (nvu.lWPs.size() - 1), y);
+        painterDrawNVUPoint(painter, lWPs[i], i+1, i == (lWPs.size() - 1), y);
 
     }
 
@@ -640,102 +424,99 @@ void MainWindow::printPreview(QPrinter* printer)
 void MainWindow::on_pushButtonInsertBefore_clicked()
 {
     if(ui->listWidget->currentRow()<0) return;
-
     QListWidgetItemData* itemData = (QListWidgetItemData*)ui->listWidget->currentItem();
-    if(itemData==NULL) return;
 
-    ui->tableWidget->insertWaypoint(new NVUPOINT(*itemData->nvupoint), ui->tableWidget->currentRow(), -1);
-
-    /*
-    if(ui->tableWidget->currentRow()<0) return;
-    insertTableWidgetWaypoint(itemData->nvupoint, ui->tableWidget->currentRow());
-    ui->tableWidget->selectRow(ui->tableWidget->currentRow()-1);
-    */
+    int row = ui->tableWidget->currentRow();
+    if(row<0) row = 0;
+    ui->tableWidget->insertWaypoint(new NVUPOINT(*itemData->nvupoint), row);
 }
 
 void MainWindow::on_pushButtonReplace_clicked()
 {
+
     if(ui->listWidget->currentRow()<0) return;
     QListWidgetItemData* itemData = (QListWidgetItemData*)ui->listWidget->currentItem();
-    if(itemData==NULL) return;
-
-    ui->tableWidget->insertWaypoint(new NVUPOINT(*itemData->nvupoint), ui->tableWidget->currentRow(), 0);
-
-/*
-    if(ui->tableWidget->currentRow()<0) return;
-    int row = ui->tableWidget->currentRow();
-    replaceTableWidgetWaypoint(itemData->nvupoint, row);
-    */
+    ui->tableWidget->replaceWaypoint(new NVUPOINT(*itemData->nvupoint), ui->tableWidget->currentRow());
 }
 
 
 void MainWindow::on_pushButtonInsertAfter_clicked()
 {
-
     if(ui->listWidget->currentRow()<0) return;
     QListWidgetItemData* itemData = (QListWidgetItemData*)ui->listWidget->currentItem();
-    if(itemData==NULL) return;
 
-    ui->tableWidget->insertWaypoint(new NVUPOINT(*itemData->nvupoint), ui->tableWidget->currentRow(), 1);
-
-    /*
-    int row;
-    if(ui->tableWidget->currentRow()<0) row = ui->tableWidget->rowCount();
-    else row = ui->tableWidget->currentRow()+1;
-    insertTableWidgetWaypoint(itemData->nvupoint, row);
-    ui->tableWidget->selectRow(row);
-    */
-
+    int row = ui->tableWidget->currentRow();
+    if(row<0) row = ui->tableWidget->rowCount();
+    else row++;
+    ui->tableWidget->insertWaypoint(new NVUPOINT(*itemData->nvupoint), row);
 }
 
-/*
-void MainWindow::insertWaypoint(NVUPOINT* wp, int row, int offset)
+void MainWindow::on_pushButtonRouteInsertAfter_clicked()
 {
-    if(wp->type == WAYPOINT::TYPE_AIRWAY) return;
+    std::vector<NVUPOINT*> route;
+    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route);
+    if(!sError.isEmpty())
+    {
+        ui->statusBar->showMessage(sError, 10000);
+        return;
+    }
+
+    int row = ui->tableWidget->currentRow();
+    if(row<0) row = ui->tableWidget->rowCount();
+    else row++;
+
+    ui->tableWidget->insertRoute(route, row);
+}
+
+
+void MainWindow::on_pushButtonRouteInsertBefore_clicked()
+{
+    std::vector<NVUPOINT*> route;
+    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route);
+    if(!sError.isEmpty())
+    {
+        ui->statusBar->showMessage(sError, 10000);
+        return;
+    }
+
+    int row = ui->tableWidget->currentRow();
     if(row<0) row = 0;
 
-    if(offset<0)
-    {
-        insertTableWidgetWaypoint(wp, row);
-        ui->tableWidget->selectRow(row);
-    }
-    else if(offset>0)
-    {
-        if(ui->tableWidget->currentRow()<0) row = 0;
-        else row++;
-        if(row>ui->tableWidget->rowCount()) row = ui->tableWidget->rowCount();
-        insertTableWidgetWaypoint(wp, row);
-        ui->tableWidget->selectRow(row);
-    }
-    else
-    {
-        //if(row == ui->tableWidget->rowCount() && row>0) row++;
-        ui->tableWidget->removeRow(row);
-        insertTableWidgetWaypoint(wp, row);
-        ui->tableWidget->selectRow(row);
-    }
+    ui->tableWidget->insertRoute(route, row);
 }
-*/
+
+void MainWindow::on_pushButtonRouteReplace_clicked()
+{
+    std::vector<NVUPOINT*> route;
+    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route);
+    if(!sError.isEmpty())
+    {
+        ui->statusBar->showMessage(sError, 10000);
+        return;
+    }
+
+    int r = ui->tableWidget->currentRow();
+    if(r>=0) ui->tableWidget->deleteWaypoint(r);
+    else r = 0;
+    ui->tableWidget->insertRoute(route, r);
+}
+
 
 void MainWindow::on_tableWidget_clicked(const QModelIndex &index)
 {
+    ui->tableWidget->setFocus();
     if(ui->tableWidget->currentRow()<0) return;
 
-    QTableWidgetItemData* itemData = (QTableWidgetItemData*) ui->tableWidget->item(ui->tableWidget->currentRow(), 0);
-    if(itemData==NULL) return;
-
-    ui->lineEdit->setText("");
-    ui->lineEdit->setText(itemData->nvupoint->name);
-    setWaypointDescription(itemData->nvupoint);
+    NVUPOINT* wp = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
+    ui->lineEdit->setText(wp->name);
+    setWaypointDescription(wp);
 }
 
 void MainWindow::on_listWidget_currentRowChanged(int currentRow)
 {
     if(currentRow<0) return;
-
     QListWidgetItemData* itemD = (QListWidgetItemData*) ui->listWidget->item(currentRow);
     setWaypointDescription(itemD->nvupoint);
-
 }
 
 void MainWindow::setWaypointDescription(NVUPOINT* wp)
@@ -799,7 +580,6 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
     }
     else ui->labelWPMagVar->setText("Magnetic Declination: " + QString::number(wp->MD, 'f', 1));
 
-
     if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_AIRPORTS)
     {
         ui->labelWPNote->setText("Source: airports.txt (GNS430 AIRAC)");
@@ -828,21 +608,21 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
     {
         ui->labelWPNote->setText("Source: xnvu_wps.txt (XNVU local library)");
     }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_XNVU_TEMP)
-    {
-        ui->labelWPNote->setText("Source: Custom user tempory waypoint");
-    }
     else if(wp->wpOrigin == WAYPOINT::ORIGIN_RSBN)
     {
         ui->labelWPNote->setText("Source: rsbn.dat (RSBN library)");
     }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_XNVU_FLIGHTPLAN)
+    else if(wp->wpOrigin == WAYPOINT::ORIGIN_WPS)
     {
         ui->labelWPNote->setText("Source: Imported from XNVU flightplan");
     }
+    else if(wp->wpOrigin == WAYPOINT::ORIGIN_FLIGHTPLAN)
+    {
+        ui->labelWPNote->setText("Source: Current flightplan waypoint");
+    }
 }
 
-void MainWindow::drawNVUHeader(QPainter& painter, int& y)
+void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, double fork, int& y)
 {
     int fSize = 150;
     int fHOffset = 250;
@@ -868,10 +648,10 @@ void MainWindow::drawNVUHeader(QPainter& painter, int& y)
     painter.setFont(font);
 
     //Draw route name
-    QString routeName = nvu.lWPs[0]->name + " - " + nvu.lWPs[nvu.lWPs.size()-1]->name;
-    if(nvu.lWPs[0]->name2.length()>0 && nvu.lWPs[nvu.lWPs.size()-1]->name2.length()>0)
+    QString routeName = dep->name + " - " + arr->name;
+    if(dep->name2.length()>0 && arr->name2.length()>0)
     {
-        routeName = routeName + "   ( " + nvu.lWPs[0]->name2 + " - " + nvu.lWPs[nvu.lWPs.size()-1]->name2 + " )";
+        routeName = routeName + "   ( " + dep->name2 + " - " + arr->name2 + " )";
     }
     painter.drawText(x, y, routeName);
 
@@ -892,13 +672,13 @@ void MainWindow::drawNVUHeader(QPainter& painter, int& y)
     painter.drawText(10, y, "Distance, km.");
     font.setBold(true);
     painter.setFont(font);
-    painter.drawText(2000, y, QString::number(nvu.lWPs[0]->Srem, 'f', 1));
+    painter.drawText(2000, y, QString::number(dep->Srem, 'f', 1));
     font.setBold(false);
     painter.setFont(font);
     painter.drawText(4000, y, "Fork, deg.");
     font.setBold(true);
     painter.setFont(font);
-    painter.drawText(6000, y, QString::number(nvu.NVU_FORK, 'f', 1));
+    painter.drawText(6000, y, QString::number(fork, 'f', 1));
     y+=40;
     painter.drawRect(2000, y, 1000, 5);
     painter.drawRect(6000, y, 1000, 5);
@@ -1343,18 +1123,6 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
 
 void MainWindow::on_pushButtonPrint_clicked()
 {
-    std::vector< std::pair<NVUPOINT*, NVUPOINT*> > lWP;
-    for(int i=0; i<ui->tableWidget->rowCount(); i++)
-    {
-        QTableWidgetItemData* itemD = (QTableWidgetItemData*) ui->tableWidget->item(i, 0);
-        lWP.push_back(std::make_pair(itemD->nvupoint, (NVUPOINT*) itemD->nvupoint->rsbn));
-    }
-
-    nvu.clear();
-    nvu.generate(lWP, dat);
-    //if(nvu.lWPs.size()<2) return;
-
-
     QPrinter printer(QPrinter::HighResolution); //create your QPrinter (don't need to be high resolution, anyway)
     QPrintPreviewDialog dialog(&printer);
     dialog.setWindowFlags(Qt::Window);
@@ -1365,19 +1133,13 @@ void MainWindow::on_pushButtonPrint_clicked()
 
 void MainWindow::on_tableWidget_itemSelectionChanged()
 {
-    int c = ui->tableWidget->currentRow();
-    if(c<0 || c>=ui->tableWidget->rowCount()) return;
-
-    QTableWidgetItemData* itemD = (QTableWidgetItemData*) ui->tableWidget->item(c, 0);
-    //ui->lineEdit->setText("");
-    //ui->lineEdit->setText(itemD->nvupoint->name);
-    //setWaypointDescription(itemD->nvupoint);
+    //int c = ui->tableWidget->currentRow();
+    //setWaypointDescription(ui->tableWidget->getWaypoint(c));
 }
 
 void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
 {
-    QTableWidgetItemData* itemD = (QTableWidgetItemData*) ui->tableWidget->item(row, 0);
-    NVUPOINT* wp = itemD->nvupoint;
+    NVUPOINT* wp = ui->tableWidget->getWaypoint(row);
     DialogWaypointEdit dEdit(wp, true);
     int dr = dEdit.exec();
     if(dr == QDialog::Rejected || dr == DialogWaypointEdit::CANCEL) return;
@@ -1385,97 +1147,67 @@ void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
     if(dr==DialogWaypointEdit::ADD_XNVU) //Create new
     {
         XFMS_DATA::addXNVUWaypoint(new NVUPOINT(dEdit.nvupoint));
-        ui->tableWidget->insertWaypoint(new NVUPOINT(dEdit.nvupoint), row, 0);
+        WAYPOINT* rsbn = wp->rsbn;
+        wp->clone(dEdit.nvupoint);
+        wp->rsbn = rsbn;
+        ui->tableWidget->refreshFlightplan();
     }
     else if(dr==DialogWaypointEdit::SAVE)
     {
         WAYPOINT* rsbn = wp->rsbn;
         wp->clone(dEdit.nvupoint);
         wp->rsbn = rsbn;
-        ui->tableWidget->refreshRow(row);
+        ui->tableWidget->refreshFlightplan();
     }
 }
 
 void MainWindow::on_pushButton_ClearFlightplan_clicked()
 {
+    /*
+    QString styleSheet = "background-color: rgb(73, 163, 0);"
+                          "color: rgb(0, 0, 0);";
+    */
+
+    if(clearFlightplan_countdown < 0)
+    {
+        QString styleSheet = "background-color: rgb(255, 0, 0);"
+                             "color: rgb(255, 255, 255);";
+
+        ui->pushButton_ClearFlightplan->setText("CONFIRM: 10");
+        ui->pushButton_ClearFlightplan->setStyleSheet(styleSheet);
+
+        clearFlightplan_countdown = 10;
+        clearFlightplan_timer.start(1000);
+        return;
+    }
+
+    clearFlightplan_countdown = -1;
+    QString styleSheet = "background-color: rgb(73, 163, 0);"
+                          "color: rgb(0, 0, 0);";
+    ui->pushButton_ClearFlightplan->setText("Clear flightplan");
+    ui->pushButton_ClearFlightplan->setStyleSheet(styleSheet);
+
     ui->tableWidget->clearFlightplan();
 }
 
-/*
-void MainWindow::clearFlightplan()
+void MainWindow::clearFlightplanTimeout()
 {
-    while(ui->tableWidget->rowCount()>0) ui->tableWidget->removeRow(0);
-    XFMS_DATA::removeFMS();
-    XFMS_DATA::removeXNVUFlightplan();
-}
-*/
-
-/*
-void MainWindow::refreshFlightplan()
-{
-    int i=0;
-    for(int i=0; i<ui->tableWidget->rowCount(); i++)
+    if(clearFlightplan_countdown <= 0)
     {
-        refreshRow(i);
-    }
+        clearFlightplan_timer.stop();
 
-    updateDistanceAndN();
-}
-*/
-
-
-void MainWindow::on_pushButtonRouteInsertAfter_clicked()
-{
-    std::vector<NVUPOINT*> route;
-    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route);
-    if(!sError.isEmpty())
-    {
-        ui->statusBar->showMessage(sError, 10000);
+        QString styleSheet = "background-color: rgb(73, 163, 0);"
+                              "color: rgb(0, 0, 0);";
+        ui->pushButton_ClearFlightplan->setText("Clear flightplan");
+        ui->pushButton_ClearFlightplan->setStyleSheet(styleSheet);
+        clearFlightplan_countdown = -1;
         return;
     }
 
-    ui->tableWidget->insertRoute(route, ui->tableWidget->currentRow(), 1);
+    clearFlightplan_countdown--;
+    ui->pushButton_ClearFlightplan->setText("CONFIRM: " + QString::number(clearFlightplan_countdown));
+    clearFlightplan_timer.start(1000);
 }
-
-
-void MainWindow::on_pushButtonRouteInsertBefore_clicked()
-{
-    std::vector<NVUPOINT*> route;
-    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route);
-    if(!sError.isEmpty())
-    {
-        ui->statusBar->showMessage(sError, 10000);
-        return;
-    }
-
-    ui->tableWidget->insertRoute(route, ui->tableWidget->currentRow(), -1);
-}
-
-void MainWindow::on_pushButtonRouteReplace_clicked()
-{
-    std::vector<NVUPOINT*> route;
-    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route);
-    if(!sError.isEmpty())
-    {
-        ui->statusBar->showMessage(sError, 10000);
-        return;
-    }
-
-    ui->tableWidget->insertRoute(route, ui->tableWidget->currentRow(), 0);
-}
-
-/*
-void MainWindow::insertRoute(std::vector<NVUPOINT*> route, int row, int offset)
-{
-    row = row -  (offset < 0 ? 1 : 0);
-    for(int i=0; i<route.size(); i++)
-    {
-        if(i == 0 && offset==0) insertWaypoint(route[i], row, 0);
-        else insertWaypoint(route[i], row, 1);
-        row = ui->tableWidget->currentRow();
-    }
-}
-*/
 
 
 
@@ -1517,37 +1249,14 @@ void MainWindow::on_frameDescription_clicked()
 void MainWindow::on_actionXNVU_library_triggered()
 {
     DialogWPSEdit dEdit;
-
     int rv = dEdit.exec();
 
     if(rv == QDialog::Accepted)
     {
         if(dEdit.lRemove.size())
         {
-            /*
-            //Copy flightplan WPS points and set them as tempory
-            for(int i=0; i<ui->tableWidget->rowCount(); i++)
-            {
-                QTableWidgetItemData* cI = (QTableWidgetItemData*) ui->tableWidget->item(i, 0);
-                NVUPOINT* cP = cI->nvupoint;
-                for(int k=0; k<dEdit.lRemove.size(); k++)
-                {
-                    if(cP == dEdit.lRemove[k])
-                    {
-                        NVUPOINT* nP = new NVUPOINT(*cP);
-                        nP->wpOrigin = WAYPOINT::ORIGIN_XNVU_TEMP;
-                        cI->nvupoint = nP;
-                        break;
-                    }
-                }
-            }
-            */
-
-            XFMS_DATA::removeWPSPoints(dEdit.lRemove);
+           XFMS_DATA::removeWPSPoints(dEdit.lRemove);
         }
-
-        //refreshFlightplan();
-
     }
 }
 
@@ -1631,15 +1340,45 @@ void MainWindow::on_pushButton_showAirports_clicked()
 
 void MainWindow::on_pushButtonSetFL_clicked()
 {
-    //ui->tableWidget->horizontalHeader()->hideSection(4);
-    for(int i=0; i<ui->tableWidget->rowCount(); i++)
+    std::vector<NVUPOINT*> lP = ui->tableWidget->getWaypoints();
+    for(int i=0; i<lP.size(); i++)
     {
-        QTableWidgetItemData* iD = (QTableWidgetItemData* ) ui->tableWidget->item(i, 0);
-        NVUPOINT* p = iD->nvupoint;
-        if(i==0 || i == (ui->tableWidget->rowCount()-1)) p->alt = p->elev;
-        else p->alt = ui->spinBoxFL->value();
-
+        NVUPOINT* p = lP[i];
+        if(i==0 || i == (lP.size()-1)) p->alt = p->elev;
+        else p->alt = (ui->actionShow_feet->isChecked() ? ui->spinBoxFL->value() : LMATH::meterToFeet(ui->spinBoxFL->value()));
     }
 
     ui->tableWidget->refreshFlightplan();
+}
+
+void MainWindow::on_actionShow_feet_triggered()
+{
+    ui->tableWidget->showFeet = ui->actionShow_feet->isChecked();
+    if(ui->actionShow_feet->isChecked())
+    {
+        ui->spinBoxFL->setValue(LMATH::meterToFeet(ui->spinBoxFL->value()));
+        ui->spinBoxFL->setSuffix(" ft");
+    }
+    else
+    {
+        ui->spinBoxFL->setValue(LMATH::feetToMeter(ui->spinBoxFL->value()));
+        ui->spinBoxFL->setSuffix(" m");
+    }//else
+
+    ui->tableWidget->refreshFlightplan();
+}
+
+void MainWindow::on_pushButtonDeleteWaypoint_clicked()
+{
+    if(ui->tableWidget->currentRow()>=0) ui->tableWidget->deleteWaypoint(ui->tableWidget->currentRow());
+}
+
+void MainWindow::on_actionColumns_2_triggered()
+{
+    DialogColumns dCol(ui->tableWidget);
+    int rv = dCol.exec();
+
+    if(rv!=QDialog::Accepted) return;
+
+    //ui->tableWidget->updateShownColumns();
 }

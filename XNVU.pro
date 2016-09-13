@@ -32,7 +32,8 @@ SOURCES += main.cpp\
     dialogoptions.cpp \
     qframeclickable.cpp \
     dialogwpsedit.cpp \
-    qsearchlist.cpp
+    qsearchlist.cpp \
+    dialogcolumns.cpp
 
 HEADERS  += mainwindow.h \
     coremag.h \
@@ -51,11 +52,13 @@ HEADERS  += mainwindow.h \
     dialogoptions.h \
     qframeclickable.h \
     dialogwpsedit.h \
-    qsearchlist.h
+    qsearchlist.h \
+    dialogcolumns.h
 
 FORMS    += mainwindow.ui \
     dialogsettings.ui \
     dialogwaypointedit.ui \
     dialogrsbn.ui \
     dialogoptions.ui \
-    dialogwpsedit.ui
+    dialogwpsedit.ui \
+    dialogcolumns.ui
