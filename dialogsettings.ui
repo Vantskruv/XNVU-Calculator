@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>969</width>
-    <height>780</height>
+    <height>750</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>210</x>
-     <y>740</y>
+     <y>710</y>
      <width>341</width>
      <height>32</height>
     </rect>
@@ -246,19 +246,6 @@
    </property>
    <property name="text">
     <string>Manually set X-Plane files to load</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_7">
-   <property name="geometry">
-    <rect>
-     <x>110</x>
-     <y>710</y>
-     <width>741</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>WARNING: Selecting OK will reload the data, and therefore current flightplan needs to be erased.</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_8">
