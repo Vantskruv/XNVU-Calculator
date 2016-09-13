@@ -18,6 +18,8 @@ namespace LMATH
 	CPoint bearingToVector(const CPoint& p, const double& b);
     double calc_fork(double lat1, double lon1, int h1, double lat2, double lon2, int h2, long dat);
     double calc_bearing(const CPoint& _a, const CPoint& _b);
+    double bearingTo(const CPoint&, const CPoint&);
+    double finalBearingTo(const CPoint&, const CPoint&);
     double angleTo360(double);
     double calc_bearing_radial(const CPoint& a, const CPoint& b );
     double calc_distance(double lat1, double lon1, double lat2, double lon2);

@@ -67,14 +67,138 @@ CPoint LMATH::bearingToVector(const CPoint& p, const double& b)
 }
 
 
+/*
 double LMATH::calc_fork(double lat1, double lon1, int h1, double lat2, double lon2, int h2, long dat)
 {
     double m1 = calc_magvar(lat1, lon1, dat, double(h1)/1000.0);
     double m2 = calc_magvar(lat2, lon2, dat, double(h2)/1000.0);
     double lat = (lat1 + lat2)*0.5*M_PI/180.0;
-
     return m1 - m2  + (lon2 - lon1)*sin(lat);
 }
+*/
+
+double LMATH::bearingTo(const CPoint& dep, const CPoint& arr)
+{
+    double lat1 = dep.x*M_PI/180.0;
+    double lat2 = arr.x*M_PI/180.0;
+    double dlon = (dep.y - arr.y)*M_PI/180.0;
+
+    double y = sin(dlon)*cos(lat2);
+    double x = cos(lat1)*sin(lat2) - sin(lat1)*cos(lat2)*cos(dlon);
+    double a = std::remainder((atan2(y, x)*180.0/M_PI) + 360.0, 360.0);
+
+    return a;
+
+
+    /*
+    LatLon.prototype.bearingTo = function(point) {
+    if (!(point instanceof LatLon)) throw new TypeError('point is not LatLon object');
+
+    var φ1 = this.lat.toRadians(), φ2 = point.lat.toRadians();
+    var Δλ = (point.lon-this.lon).toRadians();
+
+    // see http://mathforum.org/library/drmath/view/55417.html
+    var y = Math.sin(Δλ) * Math.cos(φ2);
+    var x = Math.cos(φ1)*Math.sin(φ2) -
+            Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);
+    var θ = Math.atan2(y, x);
+
+    return (θ.toDegrees()+360) % 360;
+    */
+};
+
+double LMATH::finalBearingTo(const CPoint& dep, const CPoint& arr)
+{
+    return std::remainder(LMATH::bearingTo(dep, arr) + 180.0, 360.0);
+/*
+LatLon.prototype.finalBearingTo = function(point) {
+    if (!(point instanceof LatLon)) throw new TypeError('point is not LatLon object');
+
+    // get initial bearing from destination point to this point & reverse it by adding 180°
+    return ( point.bearingTo(this)+180 ) % 360;
+};
+*/
+
+}
+
+double LMATH::calc_fork(double lat1, double lon1, int h1, double lat2, double lon2, int h2, long dat)
+{
+    double m1 = calc_magvar(lat1, lon1, dat, double(h1)/1000.0);
+    double m2 = calc_magvar(lat2, lon2, dat, double(h2)/1000.0);
+
+    CPoint dep(lat1, lon1, 0.0);
+    CPoint arr(lat2, lon2, 0.0);
+
+    double to = calc_bearing(dep, arr);
+    double fr = std::remainder(calc_bearing(arr, dep) + 180.0, 360.0);
+
+    double fork = m1 - m2  + fr - to;
+    fork = std::remainder(fork, 360.0);
+
+    return fork;
+}
+
+
+/*
+double LMATH::calc_fork(double lat1, double lon1, int h1, double lat2, double lon2, int h2, long dat)
+{
+    double m1 = calc_magvar(lat1, lon1, dat, double(h1)/1000.0);
+    double m2 = calc_magvar(lat2, lon2, dat, double(h2)/1000.0);
+
+    lat1*=M_PI/180.0;
+    lon1*=M_PI/180.0;
+    lat2*=M_PI/180.0;
+    lon2*=M_PI/180.0;
+    double crs12, crs21;
+
+    double d = acos(sin(lat1)*sin(lat2)+cos(lat1)*cos(lat2)*cos(lon1-lon2));
+    if ((d==0.0) || (lat1==-(M_PI/180)*90.0))
+    {
+       crs12=2*M_PI;
+    }
+    else if (lat1==(M_PI/180)*90.0)
+    {
+       crs12=M_PI;
+    }
+    else
+    {
+       double argacos = (sin(lat2)-sin(lat1)*cos(d))/(sin(d)*cos(lat1));
+       if (sin(lon2-lon1) < 0)
+       {
+         crs12=acosf(argacos);
+       }
+       else
+       {
+         crs12=2*M_PI-acosf(argacos);
+       }
+    };
+
+    if ((d==0.0) || (lat2==-(M_PI/180)*90.0))
+    {
+       crs21=0.0;
+    }
+    else if(lat2==(M_PI/180)*90.0)
+    {
+       crs21=M_PI;
+    }
+    else
+    {
+       double argacos=(sin(lat1)-sin(lat2)*cos(d))/(sin(d)*cos(lat2));
+       if(sin(lon1-lon2)<0)
+       {
+         crs21 = acosf(argacos);
+       }
+       else
+       {
+         crs21 = 2*M_PI-acosf(argacos);
+       }
+    }
+
+    return (crs12 - crs21)*180/M_PI;
+
+
+}
+*/
 
 double LMATH::calc_bearing(const CPoint& _a, const CPoint& _b)
 {
