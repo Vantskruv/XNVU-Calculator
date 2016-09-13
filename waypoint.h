@@ -16,10 +16,9 @@ class WAYPOINT
         static constexpr int ORIGIN_FMS = 5;
         static constexpr int ORIGIN_EARTHNAV = 6;
         static constexpr int ORIGIN_RSBN = 7;
-        static constexpr int ORIGIN_XNVU_FLIGHTPLAN = 8;
+        static constexpr int ORIGIN_WPS = 8;
         static constexpr int ORIGIN_XNVU = 9;
-        static constexpr int ORIGIN_XNVU_TEMP = 10;
-        static constexpr int ORIGIN_NVUPLAN = 11;
+        static constexpr int ORIGIN_FLIGHTPLAN = 10;
 
         static constexpr int TYPE_AIRPORT = 1;
         static constexpr int TYPE_NDB = 2;
