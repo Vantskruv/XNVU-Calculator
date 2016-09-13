@@ -29,6 +29,7 @@ private slots:
     void on_listRSBN_itemSelectionChanged();
     void on_checkBoxVORDME_stateChanged(int arg1);
     void on_spinBox_valueChanged(int arg1);
+    void on_buttonBox_accepted();
 };
 
 #endif // DIALOGRSBN_H

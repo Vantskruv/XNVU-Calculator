@@ -3,6 +3,7 @@
 #include "XFMS_DATA.h"
 #include "qlistwidgetitemdata.h"
 #include "LMATH.h"
+#include <dialogsettings.h>
 
 #include <QDebug>
 
@@ -14,12 +15,12 @@ DialogRSBN::DialogRSBN(NVUPOINT* wp, QWidget *parent) :
     ui->setupUi(this);
 
     ui->listRSBN->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
-
-
-
     nvupoint = wp;
-    rsbn = nvupoint->rsbn;
 
+    ui->spinBox->setValue(DialogSettings::beaconDistance);
+    ui->checkBoxVORDME->setChecked(DialogSettings::correctionVORDME);
+
+    rsbn = nvupoint->rsbn;
     if(rsbn)
     {
         double d= LMATH::calc_distance(wp->latlon, rsbn->latlon);
@@ -149,15 +150,15 @@ void DialogRSBN::setWaypointDescription(const NVUPOINT* wp)
     {
         ui->labelWPNote->setText("Source: xnvu_wps.txt (XNVU local library)");
     }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_XNVU_TEMP)
+    else if(wp->wpOrigin == WAYPOINT::ORIGIN_FLIGHTPLAN)
     {
-        ui->labelWPNote->setText("Source: Custom user tempory waypoint");
+        ui->labelWPNote->setText("Source: Current flightplan waypoint");
     }
     else if(wp->wpOrigin == WAYPOINT::ORIGIN_RSBN)
     {
         ui->labelWPNote->setText("Source: rsbn.dat (RSBN library)");
     }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_XNVU_FLIGHTPLAN)
+    else if(wp->wpOrigin == WAYPOINT::ORIGIN_WPS)
     {
         ui->labelWPNote->setText("Source: Imported from XNVU flightplan");
     }
@@ -196,4 +197,10 @@ void DialogRSBN::on_checkBoxVORDME_stateChanged(int arg1)
 void DialogRSBN::on_spinBox_valueChanged(int arg1)
 {
     initializeList();
+}
+
+void DialogRSBN::on_buttonBox_accepted()
+{
+    DialogSettings::beaconDistance = ui->spinBox->value();
+    DialogSettings::correctionVORDME = ui->checkBoxVORDME->isChecked();
 }
