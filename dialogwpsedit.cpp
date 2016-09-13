@@ -132,15 +132,15 @@ void DialogWPSEdit::setWaypointDescription(const NVUPOINT* wp)
     {
         ui->labelWPNote->setText("Source: xnvu_wps.txt (XNVU local library)");
     }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_XNVU_TEMP)
+    else if(wp->wpOrigin == WAYPOINT::ORIGIN_FLIGHTPLAN)
     {
-        ui->labelWPNote->setText("Source: Custom user tempory waypoint");
+        ui->labelWPNote->setText("Source: Current flightplan waypoint");
     }
     else if(wp->wpOrigin == WAYPOINT::ORIGIN_RSBN)
     {
         ui->labelWPNote->setText("Source: rsbn.dat (RSBN library)");
     }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_XNVU_FLIGHTPLAN)
+    else if(wp->wpOrigin == WAYPOINT::ORIGIN_WPS)
     {
         ui->labelWPNote->setText("Source: Imported from XNVU flightplan");
     }
@@ -165,7 +165,7 @@ void DialogWPSEdit::on_pushButton_Edit_clicked()
 
     if(!iD) return;
 
-    DialogWaypointEdit dEdit(iD->nvupoint, false);
+    DialogWaypointEdit dEdit(iD->nvupoint, true);
     const int rv = dEdit.exec();
 
     switch(rv)
