@@ -12,7 +12,7 @@ public:
     //WAYPOINT* waypoint;
     //std::vector< std::pair<NVUPOINT*, double> > lRSBN_Dist;
 
-    QTableWidgetItemData();
+    QTableWidgetItemData(NVUPOINT*wp);
 };
 
 #endif // QTABLEWIDGETITEMDATA_H
