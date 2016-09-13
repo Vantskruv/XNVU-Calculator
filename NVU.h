@@ -75,11 +75,11 @@ class NVUPOINT: public WAYPOINT
 class NVU
 {
 	public:
-		double NVU_FORK;
-        std::vector<NVUPOINT*> lWPs;
-        void generate(const std::vector< std::pair<NVUPOINT*, NVUPOINT*> > wps, long dat);
-        void calc_rsbn_corr(NVUPOINT*, NVUPOINT*);    //Set RSBN for NVUPOINT and calculate correction
-        void clear();
+        //double NVU_FORK;
+        //std::vector<NVUPOINT*> lWPs;
+        static void generate(std::vector<NVUPOINT*>& wps, double &NVU_FORK, long dat);
+        //void calc_rsbn_corr(NVUPOINT*, NVUPOINT*);    //Set RSBN for NVUPOINT and calculate correction
+        //void clear();
         //void printWaypoints();
 };
 #endif
