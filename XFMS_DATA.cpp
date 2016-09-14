@@ -195,9 +195,10 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
     std::vector<NVUPOINT*> cRoute;
 
     QString qstr;
-    //NVUPOINT* wp = NULL;
+    QString sError;
     NVUPOINT* cwp;
     double dCurrent, dMin;
+
 
     route.clear();
     for(int i=0; i<record.size(); i++)
@@ -208,7 +209,11 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
         sWaypoint = XFMS_DATA::search(qstr);
         if(sWaypoint.size() == 0)
         {
-            if(cRoute.size() == 0) return "Route: [" + record[i] + "] is not found.";
+            if(cRoute.size() == 0)
+            {
+                sError = "Route: [" + record[i] + "] is not found, or custom waypoint cannot be first in route.";
+                goto rError;
+            }
             cwp = cRoute[cRoute.size() - 1];
             NVUPOINT* wp = validate_custom_point(cwp, qstr);
             if(wp)
@@ -216,7 +221,11 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
                 cRoute.push_back(wp);
                 continue;
             }
-            else return "Route: [" + record[i] + "] is not found.";
+            else
+            {
+                sError = "Route: [" + record[i] + "] is not found.";
+                goto rError;
+            }
          }//if
         //If more than 1 one is found, choose waypoint that is closest to the last one in current route
         //Though if this is an airway, it may be bidirectional, so currently we just store the closest beginning of the airway.
@@ -232,7 +241,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
             }
         }
 
-        cRoute.push_back(cwp);
+        cRoute.push_back(new NVUPOINT(*cwp));
     }
     sWaypoint.clear();
 
@@ -245,17 +254,28 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
         {
             AIRWAY* ats = (AIRWAY*) wp->data;
             //It is not valid if an airway starts or ends the route
-            if(i==0) return "Route: First point in route should not be an airway [" + ats->name + "].";
-            if(i==(cRoute.size()-1)) return "Route: Last point in route should not be an airway [" + ats->name + "].";
+            if(i==0)
+            {
+                sError = "Route: First point in route should not be an airway [" + ats->name + "].";
+                goto rError;
+            }
+            if(i==(cRoute.size()-1))
+            {
+                sError = "Route: Last point in route should not be an airway [" + ats->name + "].";
+                goto rError;
+            }//if
 
 
             std::vector<NVUPOINT*> lA;
             NVUPOINT* rPrev = cRoute[i-1];
             NVUPOINT* rNext = cRoute[i+1];
-            QString sError = XFMS_DATA::getAirwayWaypointsBetween(ats->name, rPrev, rNext, lA, true);
+            sError = XFMS_DATA::getAirwayWaypointsBetween(ats->name, rPrev, rNext, lA, true);
 
             //Return error
-            if(!sError.isEmpty()) return sError;
+            if(!sError.isEmpty())
+            {
+                goto rError;
+            }
 
             for(int k=0; k<lA.size(); k++)
             {
@@ -271,13 +291,19 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
             continue;
         }
 
-        NVUPOINT* cP = new NVUPOINT(*wp);
-        cP->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
+        wp->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
 
-        route.push_back(cP);
+        route.push_back(wp);
     }//for
 
     return "";
+
+    //Deallocate waypoints and return error.
+    rError:
+        for(int k=0; k<cRoute.size(); k++) delete cRoute[k];
+        cRoute.clear();
+        route.clear();
+        return sError;
 }
 
 NVUPOINT* XFMS_DATA::getClosestSimilarWaypoint(NVUPOINT* wp, double &distance)
