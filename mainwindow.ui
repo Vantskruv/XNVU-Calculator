@@ -877,7 +877,7 @@
         <property name="spacing">
          <number>7</number>
         </property>
-        <item alignment="Qt::AlignLeft">
+        <item>
          <widget class="QPushButton" name="pushButtonRouteInsertBefore">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -905,7 +905,7 @@
           </property>
          </widget>
         </item>
-        <item alignment="Qt::AlignLeft">
+        <item>
          <widget class="QPushButton" name="pushButtonRouteReplace">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
