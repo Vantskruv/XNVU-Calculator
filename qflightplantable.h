@@ -16,7 +16,9 @@ class QFlightplanTable : public QTableWidget
 
     public:
         enum COL{N, ID, TYPE, ALT, LAT, LON, MD, OZMPUV, OZMPUP, PV, PP, MPU, IPU, S, SPAS, SREM, RSBN, SM, ZM, MAPA, ATRG, DTRG, _SIZE};
-        const QStringList COL_STR  = (QStringList() << "N" << "ID" <<  "TYPE" <<  "ALT" <<  "LAT" <<  "LON" <<  "MD" <<  "OZMPUV" <<  "OZMPUP" <<  "PV" <<  "PP" <<  "MPU" <<  "IPU" <<  "S" <<  "SPAS" <<  "SREM" <<  "RSBN" <<  "SM" <<  "ZM" <<  "MAPA" <<  "ATRG" <<  "DTRG");
+        //const QStringList COL_STR  = (QStringList() << "N" << "ID" <<  "TYPE" <<  "ALT" <<  "LAT" <<  "LON" <<  "MD" <<  "OZMPUV" <<  "OZMPUP" <<  "PV" <<  "PP" <<  "MPU" <<  "IPU" <<  "S" <<  "SPAS" <<  "SREM" <<  "RSBN" <<  "SM" <<  "ZM" <<  "MAPA" <<  "ATRG" <<  "DTRG");
+        const QStringList COL_STR = (QStringList() << "N" << "Identifier" << "Type" << "Altitude" << "Latitude" << "Longitude" << "MD" << "OZMPUv" << "OZMPUp" << "Pv" << "Pp"
+                                                   << "MPU" << "IPU" << "S" << "Spas" << "Srem" << "RSBN and/or VORDME" << "Sm" << "Zm" << "Map Angle" << "A targ" << "D targ");
 /*
         static constexpr int COL_N = 0;
         static constexpr int COL_ID = 1;

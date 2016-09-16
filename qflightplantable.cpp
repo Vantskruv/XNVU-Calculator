@@ -22,6 +22,9 @@ QFlightplanTable::QFlightplanTable(QWidget *&w) : QTableWidget(w)
                          "color: rgb(107, 239, 0);";
     horizontalScrollBar()->setStyleSheet(styleSheet);
     verticalScrollBar()->setStyleSheet(styleSheet);
+    //horizontalHeader()->setStyleSheet(styleSheet);
+    styleSheet = "::section {background-color: rgb(0, 30, 0);"
+                         "color: rgb(107, 239, 0);}";
     horizontalHeader()->setStyleSheet(styleSheet);
     horizontalHeader()->setDefaultAlignment(Qt::AlignLeft);
     //horizontalHeader()->show();
@@ -32,8 +35,9 @@ QFlightplanTable::QFlightplanTable(QWidget *&w) : QTableWidget(w)
     setColumnCount(COL::_SIZE);
 
     //setHorizontalHeaderLabels(QStringList() << "N" << "Identifier" << "Type" << "Altitude" << "Latitude" << "Longitude" << "S" << "Spas"<< "RSBN and/or VORDME");
-    setHorizontalHeaderLabels(QStringList() << "N" << "Identifier" << "Type" << "Altitude" << "Latitude" << "Longitude" << "MD" << "OZMPUv" << "OZMPUp" << "Pv" << "Pp" <<
-                                               "MPU" << "IPU" << "S" << "Spas" << "Srem" << "RSBN and/or VORDME" << "Sm" << "Zm" << "Map Angle" << "A targ" << "D targ");
+    //setHorizontalHeaderLabels(QStringList() << "N" << "Identifier" << "Type" << "Altitude" << "Latitude" << "Longitude" << "MD" << "OZMPUv" << "OZMPUp" << "Pv" << "Pp" <<
+    //                                           "MPU" << "IPU" << "S" << "Spas" << "Srem" << "RSBN and/or VORDME" << "Sm" << "Zm" << "Map Angle" << "A targ" << "D targ");
+    setHorizontalHeaderLabels(COL_STR);
     setColumnWidth(COL::N, 50);
     setColumnWidth(COL::ID, 100);
     setColumnWidth(COL::TYPE, 100);
@@ -45,7 +49,6 @@ QFlightplanTable::QFlightplanTable(QWidget *&w) : QTableWidget(w)
     setColumnWidth(COL::RSBN, 360);
 
 
-    COL test;
     //horizontalHeader()->show() //Does not work???
     verticalHeader()->setDefaultSectionSize(20);
     horizontalHeader()->setStretchLastSection(true);
