@@ -981,6 +981,7 @@ void XFMS_DATA::validate_airways(QFile& infile)
                             {
                                 NVUPOINT* wpA = new NVUPOINT;
                                 wpA->type = WAYPOINT::TYPE_AIRWAY;
+                                wpA->wpOrigin = WAYPOINT::WAYPOINT::ORIGIN_AIRAC_ATS;
                                 wpA->name = ats->name;
                                 wpA->latlon = ats->lATS[0]->latlon;
                                 wpA->MD = ats->lATS[0]->MD;
@@ -1077,7 +1078,7 @@ void XFMS_DATA::validate_airways(QFile& infile)
             }//if
             ats->lATS.push_back(b);
         }//else
-    }
+    }//while
 }
 
 void XFMS_DATA::validate_RSBN(const QStringList &record)

@@ -3,6 +3,7 @@
 #include <QHeaderView>
 #include <waypoint.h>
 #include <XFMS_DATA.h>
+#include <QDebug>
 
 QSearchList::QSearchList(QWidget *&w)
 {
@@ -58,6 +59,7 @@ void QSearchList::addItem(QListWidgetItemData *wd, bool filter)
             return;
     }
 
+
     if(filter) switch(wd->nvupoint->wpOrigin)
     {
         case WAYPOINT::ORIGIN_AIRAC_AIRPORTS: if(showORIGIN_AIRAC_AIRPORTS); else return; break;
@@ -71,7 +73,6 @@ void QSearchList::addItem(QListWidgetItemData *wd, bool filter)
         default:
             return;
     }
-
 
     QListWidget::addItem(wd);
 }
