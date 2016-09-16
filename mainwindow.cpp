@@ -14,8 +14,9 @@
 #include "dialogoptions.h"
 #include "dialogwpsedit.h"
 #include "dialogcolumns.h"
+#include <ctime>
 
-#define XNVU_VERSION    "XNVU version 0.30"
+#define XNVU_VERSION    "XNVU version 0.31 beta"
 
 //XFMS_DATA xdata;
 int dat;
@@ -320,7 +321,14 @@ void MainWindow::importFMS()
 
 void MainWindow::exportFMS()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "Export FMS flightplan","", "FMS Files (*.fms);;All files (*.*)");
+    QString qstr = ".fms";
+    std::vector<NVUPOINT*> lP = ui->tableWidget->getWaypoints();
+    if(lP.size()>1)
+    {
+        qstr = lP[0]->name + "_" + lP[lP.size()-1]->name + qstr;
+    }
+
+    QString fileName = QFileDialog::getSaveFileName(this, "Export FMS flightplan", qstr, "FMS Files (*.fms);;All files (*.*)");
     if(fileName.isEmpty()) return;
     XFMS_DATA::saveFMS(fileName, ui->tableWidget->getWaypoints());
 }
@@ -336,7 +344,15 @@ void MainWindow::loadNVUFlightplan()
 
 void MainWindow::saveNVUFlightPlan()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "Save XNVU flightplan", "", "XWP Files (*.xwp);;All files (*.*)");
+    QString qstr = ".xwp";
+    std::vector<NVUPOINT*> lP = ui->tableWidget->getWaypoints();
+    if(lP.size()>1)
+    {
+        qstr = lP[0]->name + "_" + lP[lP.size()-1]->name + qstr;
+    }
+
+
+    QString fileName = QFileDialog::getSaveFileName(this, "Save XNVU flightplan", qstr, "XWP Files (*.xwp);;All files (*.*)");
     if(fileName.isEmpty()) return;
     XFMS_DATA::saveXNVUFlightplan(fileName, ui->tableWidget->getWaypoints());
 }
@@ -666,11 +682,6 @@ void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, 
     font.setBold(false);
     painter.setFont(font);
 
-    //Draw version
-    painter.drawText(11500*xscale, y, XNVU_VERSION);
-
-
-
     //Draw distance and fork
     xscale = 1;
     y+=260;
@@ -688,8 +699,12 @@ void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, 
     painter.drawRect(2000*xscale, y, 1000, 5);
     painter.drawRect(6000, y, 1000, 5);
 
+    /*
+    //Draw version
+    painter.drawText(11500*xscale, y, XNVU_VERSION);
     //Draw time and date
     painter.drawText(10900*xscale, y, QDateTime::currentDateTimeUtc().toString("yyyy/MM/dd    hh:mm:ss") + "   UTC");
+    */
 
 
     y+=90;
@@ -856,6 +871,16 @@ void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, 
     painter.drawText(x + dx, y + fHOffset, qstr);
     x+= rectW*xscale;
 
+
+    //Draw version
+    qstr = XNVU_VERSION;
+    dx = fM.boundingRect(XNVU_VERSION).width();
+
+    painter.drawText(x-dx, 0, XNVU_VERSION);
+    //Draw time and date
+    qstr = QDateTime::currentDateTimeUtc().toString("yyyy/MM/dd    hh:mm:ss") + "   UTC";
+    dx = fM.boundingRect(qstr).width();
+    painter.drawText(x - dx, 260, qstr);
 
 
     y+=rectH;
