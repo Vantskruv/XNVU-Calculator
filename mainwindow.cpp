@@ -633,19 +633,16 @@ void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, 
     //int yBegin = y;
     int x = xBegin;
     int dx, dy;
-    double xscale;
+    double xscale = 1;
     QString qstr;
-
-
-
     QPen gridPen(Qt::black, 0, Qt::SolidLine);
-    painter.setPen(gridPen);
-    painter.setBrush(QColor(207, 207, 207));
     QFont font = QFont("FreeSans");
     font.setBold(true);
     font.setPixelSize(fSize);
     QFontMetrics fM(font);
     painter.setFont(font);
+    painter.setPen(gridPen);
+
 
     //Draw route name
     QString routeName = dep->name + " - " + arr->name;
@@ -653,42 +650,39 @@ void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, 
     {
         routeName = routeName + "   ( " + dep->name2 + " - " + arr->name2 + " )";
     }
-    painter.drawText(x, y, routeName);
-
-
-
-
+    painter.drawText(x*xscale, y, routeName);
 
     font.setBold(false);
     painter.setFont(font);
 
     //Draw version
-    painter.drawText(11300, y, XNVU_VERSION);
+    painter.drawText(11500*xscale, y, XNVU_VERSION);
 
 
 
     //Draw distance and fork
+    xscale = 1;
     y+=260;
-    painter.drawText(10, y, "Distance, km.");
+    painter.drawText(10*xscale, y, "Distance, km.");
     font.setBold(true);
     painter.setFont(font);
-    painter.drawText(2000, y, QString::number(dep->Srem, 'f', 1));
+    painter.drawText(2000*xscale, y, QString::number(dep->Srem, 'f', 1));
     font.setBold(false);
     painter.setFont(font);
-    painter.drawText(4000, y, "Fork, deg.");
+    painter.drawText(4000*xscale, y, "Fork, deg.");
     font.setBold(true);
     painter.setFont(font);
-    painter.drawText(6000, y, QString::number(fork, 'f', 1));
+    painter.drawText(6000*xscale, y, QString::number(fork, 'f', 1));
     y+=40;
-    painter.drawRect(2000, y, 1000, 5);
+    painter.drawRect(2000*xscale, y, 1000, 5);
     painter.drawRect(6000, y, 1000, 5);
 
     //Draw time and date
-    painter.drawText(10900, y, QDateTime::currentDateTimeUtc().toString("yyyy/MM/dd    hh:mm:ss") + "   UTC");
+    painter.drawText(10900*xscale, y, QDateTime::currentDateTimeUtc().toString("yyyy/MM/dd    hh:mm:ss") + "   UTC");
 
 
     y+=90;
-
+    painter.setBrush(QColor(207, 207, 207));
     //Draw waypoint N
     xscale = 1;
     painter.drawRect(x, y, rectW*xscale, rectH);
@@ -772,7 +766,7 @@ void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, 
     x+=rectW*xscale;
 
     //Draw MPU and IPU
-    painter.setPen(Qt::black);
+    painter.setPen(gridPen);
     xscale = 2.1;
     painter.drawRect(x, y, rectW*xscale, rectH);
     qstr = "MPU";
@@ -867,10 +861,10 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     int yBegin = y;
     int x = xBegin;
     int dx, dy;
-    double xscale;
+    double xscale = 1;
     QString qstr;
-    QColor red(143, 30, 30);
-    QColor blue(6, 6, 131);
+    QColor red(143, 30, 30, 255);
+    QColor blue(6, 6, 131, 255);
 
 
     QPen gridPen(Qt::black, 0, Qt::SolidLine);
@@ -899,13 +893,32 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     //Draw waypoint ID column
     x+=30;
     xscale = 4.6;
-    font.setBold(true);
+    /*font.setBold(true);
     fM = QFontMetrics(font);
     painter.setFont(font);
     painter.drawRect(x, y, rectW*xscale, rectH);
     dx = fM.boundingRect(wp->name).width();
     dx = (rectW*xscale)/2 - dx/2;
     painter.drawText(x + dx, y + fHOffset, wp->name);
+    x+=rectW*xscale;*/
+    xscale = 4.6;
+    font.setBold(true);
+    fM = QFontMetrics(font);
+    painter.setFont(font);
+    painter.drawRect(x, y, rectW*xscale, rectH);
+    qstr = wp->name;
+    dx = fM.boundingRect(qstr).width();
+    dx = (rectW*xscale)/2 - dx/2;
+    dy = fM.boundingRect(qstr).height() + 10;
+    painter.drawText(x + dx, y + dy, qstr);
+    font.setPixelSize(fSize*0.75);
+    font.setBold(false);
+    fM = QFontMetrics(font);
+    painter.setFont(font);
+    qstr = (ui->actionShow_feet->isChecked() ? QString::number(wp->alt, 'f', 0) + " ft" : QString::number(LMATH::feetToMeter(wp->alt), 'f', 0) + " m");
+    //dx = fM.boundingRect(qstr).width();
+    //dx = (rectW*xscale/2 - dx/2);
+    painter.drawText(x + 50, y + rectH - 50, qstr);
     x+=rectW*xscale;
 
     //Draw waypoint type column
@@ -989,7 +1002,8 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     font.setPixelSize(fSize);
     fM = QFontMetrics(font);
     painter.setFont(font);
-    painter.setPen(QColor(0, 0, 0));
+    //painter.setPen(QColor(0, 0, 0, 255));
+    painter.setPen(gridPen);
     xscale = 2.1;
     painter.drawRect(x, y, rectW*xscale, rectH);
     qstr = QString::number(wp->S, 'f', 1);
@@ -1017,7 +1031,7 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     x+=rectW*xscale;
 
     //Draw MPU and IPU
-    painter.setPen(Qt::black);
+    painter.setPen(gridPen);
     xscale = 2.1;
     painter.drawRect(x, y, rectW*xscale, rectH);
     qstr = QString::number(wp->MPU, 'f', 1);
