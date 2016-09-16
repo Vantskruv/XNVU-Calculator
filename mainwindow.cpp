@@ -578,7 +578,18 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
     {
         ui->labelWPMagVar->setText("CLICK TO SHOW WAYPOINTS");
     }
-    else ui->labelWPMagVar->setText("Magnetic Declination: " + QString::number(wp->MD, 'f', 1));
+    else
+    {
+        qstr = "MD: " + QString::number(wp->MD, 'f', 1);
+        if(wp->type == WAYPOINT::TYPE_AIRPORT ||
+           wp->type == WAYPOINT::TYPE_DME ||
+           wp->type == WAYPOINT::TYPE_NDB ||
+           wp->type == WAYPOINT::TYPE_VOR ||
+           wp->type == WAYPOINT::TYPE_VORDME
+           ) qstr = qstr + "        Elev: " + (ui->actionShow_feet->isChecked() ? QString::number(wp->elev, 'f', 0) + " ft": QString::number(LMATH::feetToMeter(wp->elev), 'f', 0) + " m");
+
+        ui->labelWPMagVar->setText(qstr);
+    }
 
     if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_AIRPORTS)
     {
