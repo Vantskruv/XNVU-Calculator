@@ -311,7 +311,7 @@ void MainWindow::showXPlaneSettings()
 
 void MainWindow::importFMS()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, "Import FMS flightplan", "FMS Files (*.fms);;All files (*.*)");
+    QString fileName = QFileDialog::getOpenFileName(this, "Import FMS flightplan","", "FMS Files (*.fms);;All files (*.*)");
     if(fileName.isEmpty()) return;
     ui->tableWidget->clearFlightplan();
     std::vector<NVUPOINT*> lFMS = XFMS_DATA::loadFMS(fileName);
@@ -320,7 +320,7 @@ void MainWindow::importFMS()
 
 void MainWindow::exportFMS()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "Export FMS flightplan", "FMS Files (*.fms);;All files (*.*)");
+    QString fileName = QFileDialog::getSaveFileName(this, "Export FMS flightplan","", "FMS Files (*.fms);;All files (*.*)");
     if(fileName.isEmpty()) return;
     XFMS_DATA::saveFMS(fileName, ui->tableWidget->getWaypoints());
 }
@@ -336,7 +336,7 @@ void MainWindow::loadNVUFlightplan()
 
 void MainWindow::saveNVUFlightPlan()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "Save XNVU flightplan", "XWP Files (*.xwp);;All files (*.*)");
+    QString fileName = QFileDialog::getSaveFileName(this, "Save XNVU flightplan", "", "XWP Files (*.xwp);;All files (*.*)");
     if(fileName.isEmpty()) return;
     XFMS_DATA::saveXNVUFlightplan(fileName, ui->tableWidget->getWaypoints());
 }
