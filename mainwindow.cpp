@@ -421,14 +421,16 @@ void MainWindow::printPreview(QPrinter* printer)
     int y=0;
     drawNVUHeader(painter, lWPs[0], lWPs[lWPs.size() - 1], fork, y);
     y+=30;
-    for(int i=0; i<lWPs.size(); i++)
+    int j = 0;
+    for(int i=0; i<lWPs.size(); i++, j++)
     {
-        if(i==19)
+        if(j==19)
         {
             printer->newPage();
             y = 0;
             drawNVUHeader(painter, lWPs[0], lWPs[lWPs.size() - 1], fork, y);
             y+=30;
+            j = 0;
         }
         painterDrawNVUPoint(painter, lWPs[i], i+1, i == (lWPs.size() - 1), y);
 
