@@ -472,7 +472,8 @@ void MainWindow::on_pushButtonInsertAfter_clicked()
 void MainWindow::on_pushButtonRouteInsertAfter_clicked()
 {
     std::vector<NVUPOINT*> route;
-    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route);
+    NVUPOINT* wpRef = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
+    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route, wpRef);
     if(!sError.isEmpty())
     {
         ui->statusBar->showMessage(sError, 10000);
@@ -490,7 +491,8 @@ void MainWindow::on_pushButtonRouteInsertAfter_clicked()
 void MainWindow::on_pushButtonRouteInsertBefore_clicked()
 {
     std::vector<NVUPOINT*> route;
-    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route);
+    NVUPOINT* wpRef = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
+    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route, wpRef);
     if(!sError.isEmpty())
     {
         ui->statusBar->showMessage(sError, 10000);
@@ -506,7 +508,8 @@ void MainWindow::on_pushButtonRouteInsertBefore_clicked()
 void MainWindow::on_pushButtonRouteReplace_clicked()
 {
     std::vector<NVUPOINT*> route;
-    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route);
+    NVUPOINT* wpRef = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
+    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route, wpRef);
     if(!sError.isEmpty())
     {
         ui->statusBar->showMessage(sError, 10000);

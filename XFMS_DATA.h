@@ -51,10 +51,16 @@ class XFMS_DATA
         //Loaded from XNVU local library xnvu.dat
         static std::vector<NVUPOINT*> lXNVU;
 
-        static NVUPOINT* validate_custom_point(const NVUPOINT* wpRef, const QString& record);
+        //Returns a new allocated waypoint if successful. If waypoint is a bearing/distance waypoint, wpRef needs to be set.
+        //If error occurs, a description of error is returned.
+        static QString validate_custom_point(const NVUPOINT* wpRef, NVUPOINT *&rPoint, const QString& record);
 
         static QString getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVUPOINT* wpB, std::vector<NVUPOINT *> &lA, bool allowOpposite);
-        static QString getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route);
+        //Create a route defined by a string. Arguments are:
+        //_qstr: route string,
+        //route: returned route,
+        //wpRef: If set, align first point in route to the nearest of wpRef
+        static QString getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route, NVUPOINT *wpRef = NULL);
         static std::vector<NVUPOINT*> search(const QString& _name);
         static std::vector< std::pair<NVUPOINT*, double> > getClosestRSBN(const NVUPOINT* wp, int n, double d, bool includeVOR);
         static NVUPOINT* getClosestWaypointType(NVUPOINT* wp, double &distance); //Returns closest waypoint with same type and name and its distance. If not found, returns NULL.

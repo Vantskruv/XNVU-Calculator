@@ -190,7 +190,7 @@ QString XFMS_DATA::getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVU
 }
 
 //Allocates and returns a list of waypoints. Caller needs to delete the waypoints when not used anymore.
-QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
+QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route, NVUPOINT* wpRef)
 {
     QStringList record = _qstr.split(' ', QString::SkipEmptyParts);
     std::vector<NVUPOINT*> sWaypoint;
@@ -211,13 +211,12 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
         sWaypoint = XFMS_DATA::search(qstr);
         if(sWaypoint.size() == 0)
         {
-            if(cRoute.size() == 0)
-            {
-                sError = "Route: [" + record[i] + "] is not found, or custom waypoint cannot be first in route.";
-                goto rError;
-            }
-            cwp = cRoute[cRoute.size() - 1];
-            NVUPOINT* wp = validate_custom_point(cwp, qstr);
+            //TODO If there are more records, and this is the first one, set wpRef to next waypoint, and calculate later.
+            if(cRoute.size() == 0) cwp = wpRef;
+            else cwp = cRoute[cRoute.size() - 1];
+
+            NVUPOINT* wp = NULL;
+            sError = validate_custom_point(cwp, wp, qstr);
             if(wp)
             {
                 cRoute.push_back(wp);
@@ -225,7 +224,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
             }
             else
             {
-                sError = "Route: [" + record[i] + "] is not found.";
+                sError = "Route: " + sError;
                 goto rError;
             }
          }//if
@@ -236,6 +235,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
         for(int k=0; k<sWaypoint.size(); k++)
         {
             if(cRoute.size()>0) dCurrent = LMATH::calc_distance(sWaypoint[k]->latlon, cRoute[cRoute.size()-1]->latlon);
+            else if(wpRef) dCurrent = LMATH::calc_distance(sWaypoint[k]->latlon, wpRef->latlon);
             if(dCurrent<dMin)
             {
                 dMin = dCurrent;
@@ -810,9 +810,10 @@ void XFMS_DATA::validate_waypoint(const QStringList& record)
 
 
 //wpRef: reference waypoint (If more than 1 waypoints of the the same identifier is found, use wpRef to select the closest one)
+//rPoint: allocated waypoint returned, or NULL if not valid.
 //record: string of custom point
-//Returns allocated waypoint, returns NULL if not valid
-NVUPOINT* XFMS_DATA::validate_custom_point(const NVUPOINT* wpRef, const QString& record)
+//Returns description of error.
+QString XFMS_DATA::validate_custom_point(const NVUPOINT* wpRef, NVUPOINT*& rPoint, const QString& record)
 {
     //Validates a point of either a 7-11 string coordinate,
     //or a bearing and distance from an existing waypoint, and then creates a tempory waypoint.
@@ -821,6 +822,8 @@ NVUPOINT* XFMS_DATA::validate_custom_point(const NVUPOINT* wpRef, const QString&
     //Note: Waypoints which ends with numbers will not currently work with added bearing and distance,
     //as we do clip the last numbers of string.
 
+    rPoint = NULL;
+
     //Check if waypoint is detected as bearing and distance from waypoint
     QString sID = record;
     QString sBD = record;
@@ -828,19 +831,23 @@ NVUPOINT* XFMS_DATA::validate_custom_point(const NVUPOINT* wpRef, const QString&
     sID.truncate(lIndex+1);
     sBD.remove(0, lIndex+1);
 
+
     if(!sID.isEmpty() && !sBD.isEmpty())
     {
+        //We need a reference if waypoint is a bearing/distance waypoint.
+        if(wpRef == NULL) return "A waypoint of reference is needed for custom waypoint [" + record + "].";
+
         //Bearing and distance section needs to be 6 characters
-        if(sBD.size() != 6) return NULL;
+        if(sBD.size() != 6) return "Bearing and distance should be of 6 digits in custom waypoint [" + record + "].";
 
         //Bearing and distance needs to be a number
         bool isOk;
         sBD.toUInt(&isOk);
-        if(!isOk) return NULL;
+        if(!isOk) return "Bearing and distance should be a valid number in custom waypoint [" + record + "].";
 
         std::vector<NVUPOINT*> lWP = XFMS_DATA::search(sID);
         //Identifier needs to be found in database
-        if(lWP.size() == 0) return NULL;
+        if(lWP.size() == 0) return "Identifier not found in custom waypoint [" + record + "].";
 
         NVUPOINT* cWP;
         double dMin = std::numeric_limits<double>::max();
@@ -859,16 +866,15 @@ NVUPOINT* XFMS_DATA::validate_custom_point(const NVUPOINT* wpRef, const QString&
         int brng = sBD.left(3).toInt();
         int dist = sBD.right(3).toInt();
 
-        NVUPOINT* newPoint = new NVUPOINT();
-        LMATH::calc_destination_orthodromic(cWP->latlon, brng, double(dist)*1.852, newPoint->latlon);
+        rPoint = new NVUPOINT();
+        LMATH::calc_destination_orthodromic(cWP->latlon, brng, double(dist)*1.852, rPoint->latlon);
 
+        rPoint->name = record;
+        rPoint->type = WAYPOINT::TYPE_LATLON;
+        rPoint->MD = calc_magvar(rPoint->latlon.x, rPoint->latlon.y, dat);
+        rPoint->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
 
-        newPoint->name = record;
-        newPoint->type = WAYPOINT::TYPE_LATLON;
-        newPoint->MD = calc_magvar(newPoint->latlon.x, newPoint->latlon.y, dat);
-        newPoint->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
-
-        return newPoint;
+        return NULL;
     }
 
     //Check if is detected as latitude/longitude
@@ -879,17 +885,17 @@ NVUPOINT* XFMS_DATA::validate_custom_point(const NVUPOINT* wpRef, const QString&
     //Search for N/S tag, if not found return.
     lIndex = record.lastIndexOf(QRegExp("[NS]"));
     sID = record.left(lIndex+1);
-    if(sID.size()==0) return NULL;
+    if(sID.size()==0) return "Tag N or S is not found in custom waypoint [" + record + "].";
 
     //Check if tag is N or S
     if(sID[sID.size()-1] == 'N') isNE = true;
     else if(sID[sID.size()-1] == 'S') isNE = false;
-    else return NULL;
+    else return "Tag of N or S is not found in custom waypoint [" + record + "].";
     sID.remove(sID.size()-1, 1);
 
     //Check if coordinate before the tag is a number
     sID.toUInt(&isOK);
-    if(!isOK) return NULL;
+    if(!isOK) return "Coordinate should be number in custom waypoint [" + record + "].";
 
     format = sID.size();
     switch(format)
@@ -912,8 +918,8 @@ NVUPOINT* XFMS_DATA::validate_custom_point(const NVUPOINT* wpRef, const QString&
             lat = lat + sID.toInt()/3600.0;
         break;
         default:
-            //Not a correct format, should be 2, 4 or digits.
-            return NULL;
+            //Not a correct format, should be 2, 4 or 6 digits.
+            return "Coordinate should have 2, 4 or 6 digits in custom waypoint [" + record + "].";
     }
     if(!isNE) lat = -lat;
 
@@ -923,17 +929,17 @@ NVUPOINT* XFMS_DATA::validate_custom_point(const NVUPOINT* wpRef, const QString&
     sID = sID.remove(0, lIndex+1);
     lIndex = sID.lastIndexOf(QRegExp("[EW]"));
     sID = sID.left(lIndex+1);
-    if(sID.size()==0) return NULL;
+    if(sID.size()==0) return "Tag E or W is not found in custom waypoint [" + record + "].";
 
     //Check if tag is E or W
     if(sID[sID.size()-1] == 'E') isNE = true;
     else if(sID[sID.size()-1] == 'W') isNE = false;
-    else return NULL;
+    else return "Tag E or W is not found in custom waypoint [" + record + "].";
     sID.remove(sID.size()-1, 1);
 
     //Check if coordinate before the tag is a number
     sID.toUInt(&isOK);
-    if(!isOK) return NULL;
+    if(!isOK) return "Coordinate should be number in custom waypoint [" + record + "].";
 
     format = sID.size();
     switch(format)
@@ -956,20 +962,20 @@ NVUPOINT* XFMS_DATA::validate_custom_point(const NVUPOINT* wpRef, const QString&
             lon = lon + sID.toInt()/3600.0;
         break;
         default:
-            //Not a correct format, should be 2, 4 or digits.
-            return NULL;
+            //Not a correct format, should be 2, 4 or 6 digits.
+            return "Coordinate should have 2, 4 or 6 digits in custom waypoint [" + record + "].";
     }
     if(!isNE) lon = -lon;
 
-    NVUPOINT* newPoint = new NVUPOINT();
-    newPoint->latlon.x = lat;
-    newPoint->latlon.y = lon;
-    newPoint->name = record;
-    newPoint->type = WAYPOINT::TYPE_LATLON;
-    newPoint->MD = calc_magvar(newPoint->latlon.x, newPoint->latlon.y, dat);
-    newPoint->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
+    rPoint = new NVUPOINT();
+    rPoint->latlon.x = lat;
+    rPoint->latlon.y = lon;
+    rPoint->name = record;
+    rPoint->type = WAYPOINT::TYPE_LATLON;
+    rPoint->MD = calc_magvar(rPoint->latlon.x, rPoint->latlon.y, dat);
+    rPoint->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
 
-    return newPoint;
+    return NULL;
 }
 
 

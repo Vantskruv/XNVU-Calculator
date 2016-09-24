@@ -56,7 +56,7 @@ class QFlightplanTable : public QTableWidget
         void refreshFlightplan();                                       //Refresh all waypoints
         void clearFlightplan();                                         //Delete all waypoints and clear the flightplan
         const std::vector<NVUPOINT *> &getWaypoints();
-        NVUPOINT* getWaypoint(int row);                                 //Returns NULL if out of index
+        NVUPOINT* getWaypoint(int row, bool lastOutOfIndex = false);                                 //Returns NULL if out of index
 
         void updateShownColumns();
         void mousePressEvent(QMouseEvent* event);
