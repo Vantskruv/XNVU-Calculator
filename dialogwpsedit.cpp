@@ -65,7 +65,8 @@ void DialogWPSEdit::setWaypointDescription(const NVUPOINT* wp)
     }//if
     else if(wp->type == WAYPOINT::TYPE_VOR ||
             wp->type == WAYPOINT::TYPE_DME ||
-            wp->type == WAYPOINT::TYPE_VORDME)
+            wp->type == WAYPOINT::TYPE_VORDME ||
+            wp->type == WAYPOINT::TYPE_ILS)
     {
         qstr = qstr + "  " + QString::number(wp->freq, 'f', 3);
     }//if

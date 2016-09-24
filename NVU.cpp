@@ -82,7 +82,7 @@ void NVU::generate(std::vector<NVUPOINT*>& lWPs, double& NVU_FORK, long dat)
 
 
         //It may get nasty if waypoints are unbelievable close.
-        if(a.isSimilar(b, 0.0001))
+        if(a.isSimilar(b, DEFAULT_WAYPOINT_MARGIN))
         {
             lWPs[i]->MD = 0;
             lWPs[i]->IPU = 0;

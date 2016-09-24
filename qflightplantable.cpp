@@ -263,8 +263,14 @@ const std::vector<NVUPOINT*>& QFlightplanTable::getWaypoints()
     return lNVUPoints;
 }
 
-NVUPOINT* QFlightplanTable::getWaypoint(int row)
+NVUPOINT* QFlightplanTable::getWaypoint(int row, bool lastOutOfIndex)
 {
+    if(row<0 || row>=rowCount())
+    {
+        if(lastOutOfIndex && lNVUPoints.size()>0) return lNVUPoints[lNVUPoints.size()-1];
+        return NULL;
+    }
+
     return lNVUPoints[row];
 }
 

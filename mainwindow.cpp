@@ -290,7 +290,7 @@ void MainWindow::showXPlaneSettings()
     DialogSettings dSettings;
     if(QDialog::Rejected == dSettings.exec()) return;
 
-    DialogSettings::saveSettings();
+    //DialogSettings::saveSettings();
 
     XFMS_DATA::saveXNVUData();
     ui->lineEdit->clear();
@@ -472,7 +472,8 @@ void MainWindow::on_pushButtonInsertAfter_clicked()
 void MainWindow::on_pushButtonRouteInsertAfter_clicked()
 {
     std::vector<NVUPOINT*> route;
-    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route);
+    NVUPOINT* wpRef = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
+    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route, wpRef);
     if(!sError.isEmpty())
     {
         ui->statusBar->showMessage(sError, 10000);
@@ -490,7 +491,8 @@ void MainWindow::on_pushButtonRouteInsertAfter_clicked()
 void MainWindow::on_pushButtonRouteInsertBefore_clicked()
 {
     std::vector<NVUPOINT*> route;
-    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route);
+    NVUPOINT* wpRef = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
+    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route, wpRef);
     if(!sError.isEmpty())
     {
         ui->statusBar->showMessage(sError, 10000);
@@ -506,7 +508,8 @@ void MainWindow::on_pushButtonRouteInsertBefore_clicked()
 void MainWindow::on_pushButtonRouteReplace_clicked()
 {
     std::vector<NVUPOINT*> route;
-    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route);
+    NVUPOINT* wpRef = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
+    QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route, wpRef);
     if(!sError.isEmpty())
     {
         ui->statusBar->showMessage(sError, 10000);
@@ -560,7 +563,8 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
     }//if
     else if(wp->type == WAYPOINT::TYPE_VOR ||
             wp->type == WAYPOINT::TYPE_DME ||
-            wp->type == WAYPOINT::TYPE_VORDME)
+            wp->type == WAYPOINT::TYPE_VORDME ||
+            wp->type == WAYPOINT::TYPE_ILS)
     {
         qstr = qstr + "  " + QString::number(wp->freq, 'f', 3);
     }//if
@@ -603,7 +607,8 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
            wp->type == WAYPOINT::TYPE_DME ||
            wp->type == WAYPOINT::TYPE_NDB ||
            wp->type == WAYPOINT::TYPE_VOR ||
-           wp->type == WAYPOINT::TYPE_VORDME
+           wp->type == WAYPOINT::TYPE_VORDME ||
+           wp->type == WAYPOINT::TYPE_ILS
            ) qstr = qstr + "        Elev: " + (ui->actionShow_feet->isChecked() ? QString::number(wp->elev, 'f', 0) + " ft": QString::number(LMATH::feetToMeter(wp->elev), 'f', 0) + " m");
 
         ui->labelWPMagVar->setText(qstr);
@@ -985,7 +990,8 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     }
     else if(wp->type == WAYPOINT::TYPE_VOR ||
             wp->type == WAYPOINT::TYPE_DME ||
-            wp->type == WAYPOINT::TYPE_VORDME)
+            wp->type == WAYPOINT::TYPE_VORDME ||
+            wp->type == WAYPOINT::TYPE_ILS)
     {
         qstr = QString::number(wp->freq, 'f', 3);
         dx = fM.boundingRect(qstr).width();
@@ -1195,6 +1201,7 @@ void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
     DialogWaypointEdit dEdit(wp, true);
     int dr = dEdit.exec();
     if(dr == QDialog::Rejected || dr == DialogWaypointEdit::CANCEL) return;
+
 
     if(dr==DialogWaypointEdit::ADD_XNVU) //Create new
     {

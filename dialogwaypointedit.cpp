@@ -1,5 +1,6 @@
 #include "dialogwaypointedit.h"
 #include "ui_dialogwaypointedit.h"
+#include "coremag.h"
 
 //constexpr int DialogWaypointEdit::CANCEL = 0;
 //constexpr int DialogWaypointEdit::SAVE_CURRENT = 1;
@@ -46,6 +47,7 @@ DialogWaypointEdit::DialogWaypointEdit(const NVUPOINT* _nvuPoint, bool isSave, Q
        nvupoint.type == WAYPOINT::TYPE_NDB ||
        nvupoint.type == WAYPOINT::TYPE_VORDME ||
        nvupoint.type == WAYPOINT::TYPE_VOR ||
+       nvupoint.type == WAYPOINT::TYPE_ILS ||
        nvupoint.type == WAYPOINT::TYPE_DME ||
        nvupoint.type == WAYPOINT::TYPE_RSBN ||
        nvupoint.type == WAYPOINT::TYPE_FIX ||
@@ -73,6 +75,7 @@ void DialogWaypointEdit::on_comboBox_Type_currentIndexChanged(int index)
        index == WAYPOINT::TYPE_NDB ||
        index == WAYPOINT::TYPE_VOR ||
        index == WAYPOINT::TYPE_VORDME ||
+       index == WAYPOINT::TYPE_ILS ||
        index == WAYPOINT::TYPE_RSBN)
     {
         ui->spinBox_TransAlt->setDisabled(true);
