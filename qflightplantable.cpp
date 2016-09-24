@@ -265,6 +265,7 @@ const std::vector<NVUPOINT*>& QFlightplanTable::getWaypoints()
 
 NVUPOINT* QFlightplanTable::getWaypoint(int row)
 {
+    if(row>=rowCount() || row<0) return NULL;
     return lNVUPoints[row];
 }
 
