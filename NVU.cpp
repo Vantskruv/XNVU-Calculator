@@ -105,15 +105,21 @@ void NVU::generate(std::vector<NVUPOINT*>& lWPs, double& NVU_FORK, long dat)
         lWPs[i]->OZMPUv = LMATH::angleTo360(lWPs[i]->OZMPUv + e);               //Orthodromic course
 
         //Azimuth
+        e = LMATH::calc_bearing(wp1.latlon, b) - (LMATH::calc_bearing(b, wp1.latlon) - 180);
+        /*
+        Original
         e = LMATH::calc_bearing(b, a) - lWPs[0]->MD - 180;
         e = LMATH::angleTo360(e);
         e = lWPs[i]->OZMPUv - e;
+        qDebug() << "Eo[" << i << "] = " << e;
+        */
+
 
         lWPs[i]->OZMPUp = LMATH::angleTo360(lWPs[i]->OZMPUv + NVU_FORK);        //Orthodromic course with added fork of departure and arrival
 
         //Azimuth difference
-        //lWPs[i]->Pv = lWPs[i]->MPU - lWPs[i]->OZMPUv;
-        //lWPs[i]->Pp = lWPs[i]->MPU - lWPs[i]->OZMPUp;
+        //lWPs[i]->Pv = lWPs[i]->MPU - lWPs[i]->OZMPUv; //Deprecated
+        //lWPs[i]->Pp = lWPs[i]->MPU - lWPs[i]->OZMPUp; //Deprecated
         if(i == 0) lWPs[i]->Pv = 0.0;
         else lWPs[i]->Pv = LMATH::calc_fork(wp1.latlon.x, wp1.latlon.y, 0, a.x, a.y, 0, dat);
         lWPs[i]->Pp = LMATH::calc_fork(wp2.latlon.x, wp2.latlon.y, 0, a.x, a.y, 0, dat);
