@@ -306,13 +306,15 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
         return sError;
 }
 
-NVUPOINT* XFMS_DATA::getClosestSimilarWaypoint(NVUPOINT* wp, double &distance)
+NVUPOINT* XFMS_DATA::getClosestWaypointType(NVUPOINT* wp, double &distance)
 {
     double dMin = std::numeric_limits<double>::max();
     NVUPOINT* cWP = NULL;
     std::vector<NVUPOINT*> lS = search(wp->name);
     for(int i=0; i<lS.size(); i++)
     {
+        if(lS[i]->type!=wp->type) continue;
+
         double d = LMATH::calc_distance(wp->latlon, lS[i]->latlon);
         if(d<dMin)
         {
@@ -731,8 +733,8 @@ void XFMS_DATA::validate_earthnav(const QStringList &record)
     if(DialogSettings::distAlignEarthNav)
     {
         double d;
-        NVUPOINT *nwp = getClosestSimilarWaypoint(wp, d);
-        if(d<DialogSettings::distAlignMargin)
+        NVUPOINT *nwp = getClosestWaypointType(wp, d);
+        if(d<=DialogSettings::distAlignMargin && nwp)
         {
             delete wp;
             wp = nwp;
@@ -778,6 +780,18 @@ void XFMS_DATA::validate_waypoint(const QStringList& record)
 
     wp->wpOrigin = WAYPOINT::ORIGIN_AIRAC_WAYPOINTS;
     wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat);
+
+    double d;
+    NVUPOINT* wpSimilar = getClosestWaypointType(wp, d);
+    if(wpSimilar && d<=DEFAULT_WAYPOINT_MARGIN)
+    {
+        if(wpSimilar->wpOrigin!=WAYPOINT::ORIGIN_XNVU)
+        {
+            delete wp;
+            return;
+        }
+    }
+
     lWP.insert(std::make_pair(wp->name, wp));
     lWP2.insert(std::make_pair(wp->name2, wp));
     lFixes.push_back(wp);
@@ -977,7 +991,7 @@ void XFMS_DATA::validate_airways(QFile& infile)
                     {
                         if(ats)
                         {
-                            if(ats->lATS.size()>0)
+                            if(ats->lATS.size()>0)  //If ats has waypoints, this is the end of this ATS route.
                             {
                                 NVUPOINT* wpA = new NVUPOINT;
                                 wpA->type = WAYPOINT::TYPE_AIRWAY;
@@ -1046,12 +1060,22 @@ void XFMS_DATA::validate_airways(QFile& infile)
         if(DialogSettings::distAlignATS)
         {
             double d;
-            a = getClosestSimilarWaypoint(&wpA, d);
-            if(!(d<DialogSettings::distAlignMargin)) a = NULL;
 
-            b = getClosestSimilarWaypoint(&wpB, d);
-            if(!(d<DialogSettings::distAlignMargin)) b = NULL;
+            a = getClosestWaypointType(&wpA, d);
+            if(a) if(a->type!=wpA.type || a->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DialogSettings::distAlignMargin) a = NULL;
+
+            b = getClosestWaypointType(&wpB, d);
+            if(b) if(b->type!=wpB.type || b->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DialogSettings::distAlignMargin) b = NULL;
         }//if
+        else
+        {
+            double d;
+            a = getClosestWaypointType(&wpA, d);
+            if(a) if(a->type!=wpA.type || a->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DEFAULT_WAYPOINT_MARGIN) a = NULL;
+
+            b = getClosestWaypointType(&wpB, d);
+            if(b) if(b->type!=wpB.type || b->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DEFAULT_WAYPOINT_MARGIN) b = NULL;
+        }
 
         if(ats->lATS.size()==0)
         {
@@ -1361,9 +1385,9 @@ void XFMS_DATA::validate_xnvuflightplan(std::vector<NVUPOINT*>& lXNVUFlightplan,
     if(DialogSettings::distAlignWPS)
     {
         double d;
-        nwp = getClosestSimilarWaypoint(&wp, d);
+        nwp = getClosestWaypointType(&wp, d);
 
-        if(!(d<DialogSettings::distAlignMargin)) nwp = new NVUPOINT(wp);
+        if(d>DialogSettings::distAlignMargin || nwp==NULL) nwp = new NVUPOINT(wp);
     }//if
     else nwp = new NVUPOINT(wp);
 
@@ -1452,8 +1476,8 @@ void XFMS_DATA::validate_fms(std::vector<NVUPOINT*>& lFMS, const QStringList& RA
     if(DialogSettings::distAlignFMS)
     {
         double d;
-        nwp = XFMS_DATA::getClosestSimilarWaypoint(&wp, d);
-        if(!(d<DialogSettings::distAlignMargin)) nwp = new NVUPOINT(wp);
+        nwp = XFMS_DATA::getClosestWaypointType(&wp, d);
+        if(d>DialogSettings::distAlignMargin || nwp == NULL) nwp = new NVUPOINT(wp);
     }
     else nwp = new NVUPOINT(wp);
     //lWP.insert(std::make_pair(nwp->name, nwp));

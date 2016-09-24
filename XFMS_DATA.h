@@ -56,7 +56,7 @@ class XFMS_DATA
         static QString getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route);
         static std::vector<NVUPOINT*> search(const QString& _name);
         static std::vector< std::pair<NVUPOINT*, double> > getClosestRSBN(const NVUPOINT* wp, int n, double d, bool includeVOR);
-        static NVUPOINT* getClosestSimilarWaypoint(NVUPOINT* wp, double &distance);
+        static NVUPOINT* getClosestWaypointType(NVUPOINT* wp, double &distance); //Returns closest waypoint and its distance. If not found, returns NULL.
 
         static void addXNVUWaypoint(NVUPOINT* lP);
         static void addXNVUWaypointTempory(NVUPOINT* lP);
