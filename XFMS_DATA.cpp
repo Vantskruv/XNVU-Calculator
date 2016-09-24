@@ -26,6 +26,7 @@ std::vector<NVUPOINT*> XFMS_DATA::lNDB;
 std::vector<NVUPOINT*> XFMS_DATA::lVOR;
 std::vector<NVUPOINT*> XFMS_DATA::lDME;
 std::vector<NVUPOINT*> XFMS_DATA::lVORDME;         //Cannot be used as RSBN, as there is no angle deviation data.
+std::vector<NVUPOINT*> XFMS_DATA::lILS;
 std::vector<NVUPOINT*> XFMS_DATA::lFixes;
 std::vector<AIRWAY*> XFMS_DATA::lAirways;
 
@@ -58,6 +59,7 @@ void XFMS_DATA::clear()
     lVOR.clear();
     lDME.clear();
     lVORDME.clear();
+    lILS.clear();
     lFixes.clear();
     lAirways.clear();
 
@@ -306,6 +308,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route)
         return sError;
 }
 
+//Get closest waypoint of same type and name. Returns found waypoint or NULL, and distance.
 NVUPOINT* XFMS_DATA::getClosestWaypointType(NVUPOINT* wp, double &distance)
 {
     double dMin = std::numeric_limits<double>::max();
@@ -558,6 +561,7 @@ void XFMS_DATA::validate_navaid(const QStringList &record)
 	if(record.size()<9) return;
 
     NVUPOINT* wp = new NVUPOINT();
+    bool isILS;
 
 	for(int i=0; i<record.size(); i++)
 	{
@@ -569,19 +573,25 @@ void XFMS_DATA::validate_navaid(const QStringList &record)
 			break;
 			case 1: //Real name
                 wp->name2 = qstr;
+                if(wp->name2.contains(" ILS/")) isILS = true;
+                else isILS = false;
 			break;
 			case 2: //Frequency
                 wp->freq =qstr.toDouble();
 			break;
             case 3: //Is VOR?
-                wp->type = (qstr.toInt()) ? WAYPOINT::TYPE_VOR : 0;
+                if(isILS) wp->type = WAYPOINT::TYPE_ILS;
+                else wp->type = (qstr.toInt()) ? WAYPOINT::TYPE_VOR : 0;
 			break;
             case 4:	//Is DME?
-                if(qstr.toInt())
+                if(!isILS)
                 {
-                    wp->type = (wp->type) ? WAYPOINT::TYPE_VORDME : WAYPOINT::TYPE_DME;  //Is VORDME or DME
+                    if(qstr.toInt())
+                    {
+                        wp->type = (wp->type) ? WAYPOINT::TYPE_VORDME : WAYPOINT::TYPE_DME;  //Is VORDME or DME
+                    }
+                    else if(!wp->type) wp->type = WAYPOINT::TYPE_NDB;   //Is NDB
                 }
-                else if(!wp->type) wp->type = WAYPOINT::TYPE_NDB;   //Is NDB
 			break;
 			case 5: //Range
                 wp->range = qstr.toInt();
@@ -610,6 +620,7 @@ void XFMS_DATA::validate_navaid(const QStringList &record)
     else if(wp->type == WAYPOINT::TYPE_VOR)    lVOR.push_back(wp);
     else if(wp->type == WAYPOINT::TYPE_DME)    lDME.push_back(wp);
     else if(wp->type == WAYPOINT::TYPE_VORDME) lVORDME.push_back(wp);
+    else if(wp->type == WAYPOINT::TYPE_ILS) lILS.push_back(wp);
 }
 
 void XFMS_DATA::validate_earthnav(const QStringList &record)
@@ -1506,6 +1517,7 @@ int XFMS_DATA::XNVUToFMSType(int _type)
     if(_type == WAYPOINT::TYPE_RSBN) return 3;
     if(_type == WAYPOINT::TYPE_VORDME) return 3;
     if(_type == WAYPOINT::TYPE_VOR) return 3;
+    if(_type == WAYPOINT::TYPE_ILS) return 3;
     if(_type == WAYPOINT::TYPE_FIX) return 11;
     if(_type == WAYPOINT::TYPE_DME) return 28;
     if(_type == WAYPOINT::TYPE_LATLON) return 28;

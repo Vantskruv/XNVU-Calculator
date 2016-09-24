@@ -48,6 +48,7 @@ void QSearchList::addItem(QListWidgetItemData *wd, bool filter)
         case WAYPOINT::TYPE_AIRPORT: if(showTYPE_AIRPORT); else return; break;
         case WAYPOINT::TYPE_NDB: if(showTYPE_NDB); else return;
         case WAYPOINT::TYPE_VORDME: if(showTYPE_VORDME); else return; break;
+        case WAYPOINT::TYPE_ILS: if(showTYPE_VORDME); else return; break; //TODO currently we are combining ILS navaids with VOR/DME:s.
         case WAYPOINT::TYPE_VOR: if(showTYPE_VOR); else return; break;
         case WAYPOINT::TYPE_DME: if(showTYPE_DME); else return; break;
         case WAYPOINT::TYPE_RSBN: if(showTYPE_RSBN); else return; break;

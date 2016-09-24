@@ -6,6 +6,8 @@
 #include <cmath>
 #include <vector>
 
+#define DEFAULT_WAYPOINT_MARGIN 0.0001 //1 meter
+
 class WAYPOINT
 {
 	public:
@@ -19,6 +21,7 @@ class WAYPOINT
         static constexpr int ORIGIN_WPS = 8;
         static constexpr int ORIGIN_XNVU = 9;
         static constexpr int ORIGIN_FLIGHTPLAN = 10;
+        static constexpr int ORIGIN_AIRAC_PROC = 11;
 
         static constexpr int TYPE_AIRPORT = 1;
         static constexpr int TYPE_NDB = 2;
@@ -29,6 +32,11 @@ class WAYPOINT
         static constexpr int TYPE_FIX = 7;
         static constexpr int TYPE_LATLON = 8;
         static constexpr int TYPE_AIRWAY = 9;
+        static constexpr int TYPE_ILS = 10;
+        static constexpr int TYPE_STAR = 11;
+        static constexpr int TYPE_SID = 12;
+        static constexpr int TYPE_APPTR = 13;
+        static constexpr int TYPE_FINAL = 14;
 
 
         CPoint latlon;

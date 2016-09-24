@@ -35,6 +35,7 @@ class XFMS_DATA
         static std::vector<NVUPOINT*> lVOR;
         static std::vector<NVUPOINT*> lDME;
         static std::vector<NVUPOINT*> lVORDME;         //Cannot be used as RSBN, as there is no angle deviation data.
+        static std::vector<NVUPOINT*> lILS;
         static std::vector<NVUPOINT*> lFixes;
         static std::vector<AIRWAY*> lAirways;
 
@@ -56,7 +57,7 @@ class XFMS_DATA
         static QString getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route);
         static std::vector<NVUPOINT*> search(const QString& _name);
         static std::vector< std::pair<NVUPOINT*, double> > getClosestRSBN(const NVUPOINT* wp, int n, double d, bool includeVOR);
-        static NVUPOINT* getClosestWaypointType(NVUPOINT* wp, double &distance); //Returns closest waypoint and its distance. If not found, returns NULL.
+        static NVUPOINT* getClosestWaypointType(NVUPOINT* wp, double &distance); //Returns closest waypoint with same type and name and its distance. If not found, returns NULL.
 
         static void addXNVUWaypoint(NVUPOINT* lP);
         static void addXNVUWaypointTempory(NVUPOINT* lP);
