@@ -10,8 +10,6 @@ DialogWPSEdit::DialogWPSEdit(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    lXNVUTemp = XFMS_DATA::lXNVU;
-
     initializeList(NULL);
 }
 
@@ -27,9 +25,9 @@ void DialogWPSEdit::initializeList(NVUPOINT* select)
     int sIndex = -1;
 
     ui->listWPS->clear();
-    for(int i=0; i<lXNVUTemp.size(); i++)
+    for(int i=0; i<XFMS_DATA::lXNVU.size(); i++)
     {
-        p = lXNVUTemp[i];
+        p = XFMS_DATA::lXNVU[i];
         cItem = new QListWidgetItemData();
         cItem->nvupoint = p;
         cItem->setText(p->name + (!p->country.isEmpty() ? (" [" + p->country + "]") : " " + (!p->name2.isEmpty() ? "  " + p->name2 : "")));
@@ -172,13 +170,13 @@ void DialogWPSEdit::on_pushButton_Edit_clicked()
     switch(rv)
     {
         case DialogWaypointEdit::SAVE:
-            initializeList(new NVUPOINT(dEdit.nvupoint));
+            iD->nvupoint->clone(dEdit.nvupoint);
+            initializeList(iD->nvupoint);
         break;
 
         case DialogWaypointEdit::ADD_XNVU:
             NVUPOINT* nP = new NVUPOINT(dEdit.nvupoint);
             XFMS_DATA::addXNVUWaypoint(nP);
-            lXNVUTemp.push_back(nP);
             initializeList(nP);
         break;
     }
@@ -188,25 +186,13 @@ void DialogWPSEdit::on_pushButton_Edit_clicked()
 void DialogWPSEdit::on_pushButton_Delete_clicked()
 {
     int c = ui->listWPS->currentRow();
-
     QListWidgetItemData* iD = (QListWidgetItemData*) ui->listWPS->item(c);
-
     if(!iD) return;
-
-    lRemove.push_back(iD->nvupoint);
-    for(std::vector<NVUPOINT*>::iterator iL = lXNVUTemp.begin(); iL!=lXNVUTemp.end(); iL++)
-    {
-        if(*iL == iD->nvupoint)
-        {
-            lXNVUTemp.erase(iL);
-            break;
-        }
-    }
-
+    XFMS_DATA::removeXNVUWaypoint(iD->nvupoint);
     initializeList(NULL);
 }
 
-void DialogWPSEdit::on_pushButton_clicked()
+void DialogWPSEdit::on_pushButton_CreateNew_clicked()
 {
     DialogWaypointEdit dEdit(NULL, false);
     const int rv = dEdit.exec();
@@ -216,18 +202,13 @@ void DialogWPSEdit::on_pushButton_clicked()
         case DialogWaypointEdit::ADD_XNVU:
             NVUPOINT* nP = new NVUPOINT(dEdit.nvupoint);
             XFMS_DATA::addXNVUWaypoint(nP);
-            lXNVUTemp.push_back(nP);
             initializeList(nP);
         break;
     }
 }
 
-void DialogWPSEdit::on_buttonBox_accepted()
-{
-    done(QDialog::Accepted);
-}
 
-void DialogWPSEdit::on_buttonBox_rejected()
+void DialogWPSEdit::on_pushButton_clicked()
 {
-    done(QDialog::Rejected);
+    close();
 }

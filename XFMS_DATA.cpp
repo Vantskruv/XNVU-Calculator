@@ -478,6 +478,41 @@ void XFMS_DATA::addXNVUWaypoint(NVUPOINT* lP)
     lWP2.insert(std::make_pair(lP->name2, lP));
 }
 
+void XFMS_DATA::removeXNVUWaypoint(NVUPOINT* lP)
+{
+    std::vector<NVUPOINT*>::iterator iL;
+    std::multimap<QString, NVUPOINT*>::iterator iM;
+
+    for(iL = lXNVU.begin(); iL!=lXNVU.end(); iL++)
+    {
+        if(*iL == lP)
+        {
+            lXNVU.erase(iL);
+            break;
+        }
+    }
+
+    //Remove points from lWP and lWP2
+    for(iM = lWP.begin(); iM!=lWP.end(); iM++)
+    {
+        if((*iM).second == lP)
+        {
+            lWP.erase(iM);
+            break;
+        }//if
+    }
+
+    for(iM = lWP2.begin(); iM!=lWP2.end(); iM++)
+    {
+        if((*iM).second == lP)
+        {
+            lWP2.erase(iM);
+            break;
+        }//if
+    }
+}
+
+
 
 void XFMS_DATA::validate_airport(const QStringList& record)
 {

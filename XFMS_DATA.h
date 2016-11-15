@@ -88,8 +88,9 @@ class XFMS_DATA
         static NVUPOINT* getClosestWaypointType(NVUPOINT* wp, double &distance);
 
         static void addXNVUWaypoint(NVUPOINT* lP);
-        static void addXNVUWaypointTempory(NVUPOINT* lP);
+        //static void addXNVUWaypointTempory(NVUPOINT* lP);
         static void addXNVUData(std::vector<NVUPOINT*> lP);
+        static void removeXNVUWaypoint(NVUPOINT* lP);
         static QString load(int dat);
         static int _load(const QString& file, int _type);
         static int saveXNVUData();

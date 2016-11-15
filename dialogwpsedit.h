@@ -19,24 +19,18 @@ public:
 private slots:
     void on_listWPS_itemSelectionChanged();
     void on_pushButton_Edit_clicked();
-
     void on_pushButton_Delete_clicked();
+    void on_pushButton_CreateNew_clicked();
 
     void on_pushButton_clicked();
-
-    void on_buttonBox_accepted();
-
-    void on_buttonBox_rejected();
 
 private:
     Ui::DialogWPSEdit *ui;
 
     void setWaypointDescription(const NVUPOINT* wp);
     void initializeList(NVUPOINT *select);
-    std::vector<NVUPOINT*> lXNVUTemp;
 
 public:
-    std::vector<NVUPOINT*> lRemove;
 
 };
 
