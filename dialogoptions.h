@@ -20,6 +20,8 @@ private slots:
 
     void on_doubleSpinBoxDistance_valueChanged(double arg1);
 
+    void on_checkBoxCustomDate_clicked();
+
 private:
     Ui::DialogOptions *ui;
 

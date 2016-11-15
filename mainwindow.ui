@@ -50,7 +50,7 @@
 	border-color: rgb(73, 163, 0);
 }
 
-#labelIWPName2, #labelWPLatlon, #labelWPMagVar, #labelWPNote, #labelWPType, #labelWPType2, #labelFlightLevel
+#labelIWPName2, #labelWPLatlon, #labelWPMagVar, #labelWPNote, #labelWPType, #labelWPType2, #labelFlightLevel, #labelDate
 {
 	color: rgb(107, 239, 0);
 }
@@ -75,13 +75,13 @@
 	selection-color: rgb(0, 0, 0);
 }
 
-#pushButtonInsertAfter, #pushButtonInsertBefore, #pushButtonReplace, #pushButtonRouteInsertAfter, #pushButtonRouteReplace, #pushButtonRouteInsertBefore, #pushButton_ClearFlightplan, #pushButton_showAIRAC_Airports, #pushButton_showAIRAC_Airways, #pushButton_showAIRAC_Navaids, #pushButton_showAIRAC_Fixes, #pushButton_showAirports, #pushButton_showDME, #pushButton_showEarthNav, #pushButton_showFix, #pushButton_showNDB, #pushButton_showRSBN, #pushButton_showVOR, #pushButton_showVORDME, #pushButton_showXNVU, #pushButtonSetFL, #pushButtonDeleteWaypoint
+#pushButtonInsertAfter, #pushButtonInsertBefore, #pushButtonReplace, #pushButtonRouteInsertAfter, #pushButtonRouteReplace, #pushButtonRouteInsertBefore, #pushButton_ClearFlightplan, #pushButton_showAIRAC_Airports, #pushButton_showAIRAC_Airways, #pushButton_showAIRAC_Navaids, #pushButton_showAIRAC_Fixes, #pushButton_showAirports, #pushButton_showDME, #pushButton_showEarthNav, #pushButton_showFix, #pushButton_showNDB, #pushButton_showRSBN, #pushButton_showVOR, #pushButton_showVORDME, #pushButton_showXNVU, #pushButtonSetFL, #pushButtonSetDate, #pushButtonDeleteWaypoint
 {
 	background-color: rgb(73, 163, 0);
 	color: rgb(0, 0, 0);
 }
 
-#lineEdit, #lineEditRoute, #lineEdit_FlightLevel, #spinBoxFL
+#lineEdit, #lineEditRoute, #lineEdit_FlightLevel, #spinBoxFL, #dateEdit
 {
 	background-color: rgb(0, 30, 0);
 	color: rgb(107, 239, 0);
@@ -696,6 +696,61 @@
         </property>
         <property name="text">
          <string>Fork   0.0</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelDate">
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>29</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Gentium Basic</family>
+          <pointsize>13</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Date:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDateEdit" name="dateEdit">
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>29</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Gentium Basic</family>
+          <pointsize>13</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="calendarPopup">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButtonSetDate">
+        <property name="maximumSize">
+         <size>
+          <width>75</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>SET</string>
         </property>
        </widget>
       </item>

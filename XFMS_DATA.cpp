@@ -16,10 +16,11 @@
 #include "dialogsettings.h"
 #include <QDebug>
 
+int XFMS_DATA::dat; //Current date
+
 std::multimap<QString, NVUPOINT*> XFMS_DATA::lWP;
 std::multimap<QString, NVUPOINT*> XFMS_DATA::lWP2;
-std::vector<NVUPOINT*> XFMS_DATA::lXNVURemove;
-int XFMS_DATA::dat;
+
 //Loaded from i.e. navigraph
 std::vector<NVUPOINT*> XFMS_DATA::lAirports;
 std::vector<NVUPOINT*> XFMS_DATA::lNDB;
@@ -81,6 +82,29 @@ void XFMS_DATA::clear()
     lWP.clear();
 }
 
+void XFMS_DATA::setDate(int _dat)
+{
+    dat = _dat;
+
+    std::multimap<QString, NVUPOINT*>::iterator it = lWP.begin();
+
+    for(; it!=lWP.end(); it++)
+    {
+        NVUPOINT* cP = (*it).second;
+        double elev = 0;
+        /*
+        if(cP->wpOrigin == WAYPOINT::ORIGIN_AIRAC_AIRPORTS ||
+           cP->wpOrigin == WAYPOINT::ORIGIN_AIRAC_NAVAIDS ||
+           cP->wpOrigin == WAYPOINT::ORIGIN_EARTHNAV ||
+           cP->wpOrigin == WAYPOINT::ORIGIN_XNVU)
+        {
+        */
+            elev = (double(LMATH::feetToMeter(cP->elev))/1000.0);
+        //}
+        cP->MD = calc_magvar(cP->latlon.x, cP->latlon.y, dat, elev);
+    }
+}
+
 std::vector<NVUPOINT*> XFMS_DATA::search(const QString& _name)
 {
     std::vector<NVUPOINT*> rWP;
@@ -101,9 +125,7 @@ std::vector<NVUPOINT*> XFMS_DATA::search(const QString& _name)
         rWP.push_back(wp);
     }
 
-    //std::printf("rWP.size: %d\n", rWP.size());
-
-	return rWP;
+    return rWP;
 }
 
 QString XFMS_DATA::getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVUPOINT* wpB, std::vector<NVUPOINT*>& lA, bool allowOpposite)
@@ -129,17 +151,7 @@ QString XFMS_DATA::getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVU
             if(ap->name.compare(wpA->name)==0) kA = k;
             if(ap->name.compare(wpB->name)==0) kB = k;
         }
- /*
-        {
-            if(lA.size()==0 && !kAIsFound) sError = "Route: Waypoint [" + wpA->name + "] is not found in airway [" + airway + "].";
-            continue;
-        }
-        else if(kB<0)
-        {
-            if(lA.size()==0) sError = "Route: Waypoint [" + wpB->name + "] is not found in airway [" + airway + "].";
-            continue;
-        }
-*/
+
         if(kA>=0) kAIsFound = true;
         if(kB>=0) kBIsFound = true;
 
@@ -464,46 +476,6 @@ void XFMS_DATA::addXNVUWaypoint(NVUPOINT* lP)
     lXNVU.push_back(lP);
     lWP.insert(std::make_pair(lP->name, lP));
     lWP2.insert(std::make_pair(lP->name2, lP));
-}
-
-void XFMS_DATA::removeWPSPoints(const std::vector<NVUPOINT*>& pR)
-{
-    std::vector<NVUPOINT*>::iterator iL;
-    std::multimap<QString, NVUPOINT*>::iterator iM;
-
-    lXNVURemove = pR;
-
-    for(int i=0; i<pR.size(); i++)
-    {
-        //Remove points from lXNVU
-        for(iL = lXNVU.begin(); iL!=lXNVU.end(); iL++)
-        {
-            if(*iL == pR[i])
-            {
-                lXNVU.erase(iL);
-                break;
-            }
-        }
-
-        //Remove points from lWP and lWP2
-        for(iM = lWP.begin(); iM!=lWP.end(); iM++)
-        {
-            if((*iM).second == pR[i])
-            {
-                lWP.erase(iM);
-                break;
-            }//if
-        }
-
-        for(iM = lWP2.begin(); iM!=lWP2.end(); iM++)
-        {
-            if((*iM).second == pR[i])
-            {
-                lWP2.erase(iM);
-                break;
-            }//if
-        }
-    }//for
 }
 
 

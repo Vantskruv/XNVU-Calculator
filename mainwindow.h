@@ -80,7 +80,7 @@ private slots:
 
     void on_frameDescription_clicked();
 
-    void on_actionXNVU_library_triggered();
+    //void on_actionXNVU_library_triggered();
 
     void on_pushButton_showAIRAC_Airports_clicked();
 
@@ -115,6 +115,8 @@ private slots:
     void on_pushButtonDeleteWaypoint_clicked();
 
     void on_actionColumns_2_triggered();
+
+    void on_pushButtonSetDate_clicked();
 
 private:
     Ui::MainWindow *ui;

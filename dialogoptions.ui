@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>585</width>
-    <height>373</height>
+    <height>480</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,8 +16,8 @@
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>330</y>
+     <x>30</x>
+     <y>430</y>
      <width>341</width>
      <height>32</height>
     </rect>
@@ -32,8 +32,8 @@
   <widget class="QDoubleSpinBox" name="doubleSpinBoxDistance">
    <property name="geometry">
     <rect>
-     <x>210</x>
-     <y>190</y>
+     <x>220</x>
+     <y>290</y>
      <width>101</width>
      <height>31</height>
     </rect>
@@ -59,8 +59,8 @@
   <widget class="QCheckBox" name="checkBox_FMS">
    <property name="geometry">
     <rect>
-     <x>50</x>
-     <y>140</y>
+     <x>60</x>
+     <y>240</y>
      <width>111</width>
      <height>31</height>
     </rect>
@@ -75,8 +75,8 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>0</y>
+     <x>20</x>
+     <y>100</y>
      <width>181</width>
      <height>31</height>
     </rect>
@@ -94,8 +94,8 @@
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>20</y>
+     <x>20</x>
+     <y>120</y>
      <width>501</width>
      <height>121</height>
     </rect>
@@ -117,8 +117,8 @@ Note waypoints from AIRAC airways file ATS.txt may also  be aligned.</string>
   <widget class="QCheckBox" name="checkBox_WPS">
    <property name="geometry">
     <rect>
-     <x>50</x>
-     <y>170</y>
+     <x>60</x>
+     <y>270</y>
      <width>111</width>
      <height>31</height>
     </rect>
@@ -133,8 +133,8 @@ Note waypoints from AIRAC airways file ATS.txt may also  be aligned.</string>
   <widget class="QCheckBox" name="checkBox_ATS">
    <property name="geometry">
     <rect>
-     <x>50</x>
-     <y>200</y>
+     <x>60</x>
+     <y>300</y>
      <width>111</width>
      <height>31</height>
     </rect>
@@ -149,8 +149,8 @@ Note waypoints from AIRAC airways file ATS.txt may also  be aligned.</string>
   <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
-     <x>210</x>
-     <y>170</y>
+     <x>220</x>
+     <y>270</y>
      <width>171</width>
      <height>18</height>
     </rect>
@@ -162,8 +162,8 @@ Note waypoints from AIRAC airways file ATS.txt may also  be aligned.</string>
   <widget class="QLabel" name="label_Meter">
    <property name="geometry">
     <rect>
-     <x>340</x>
-     <y>190</y>
+     <x>350</x>
+     <y>290</y>
      <width>171</width>
      <height>31</height>
     </rect>
@@ -175,8 +175,8 @@ Note waypoints from AIRAC airways file ATS.txt may also  be aligned.</string>
   <widget class="QCheckBox" name="checkBox_EarthNav">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>230</y>
+     <x>30</x>
+     <y>330</y>
      <width>141</width>
      <height>31</height>
     </rect>
@@ -191,8 +191,8 @@ Note waypoints from AIRAC airways file ATS.txt may also  be aligned.</string>
   <widget class="QLabel" name="label_4">
    <property name="geometry">
     <rect>
-     <x>70</x>
-     <y>280</y>
+     <x>80</x>
+     <y>380</y>
      <width>431</width>
      <height>31</height>
     </rect>
@@ -208,6 +208,55 @@ Note waypoints from AIRAC airways file ATS.txt may also  be aligned.</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_5">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>10</y>
+     <width>361</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Date settings</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxCustomDate">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>40</y>
+     <width>261</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Enable custom date at startup</string>
+   </property>
+  </widget>
+  <widget class="QDateEdit" name="dateEdit">
+   <property name="geometry">
+    <rect>
+     <x>290</x>
+     <y>36</y>
+     <width>141</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="date">
+    <date>
+     <year>2020</year>
+     <month>1</month>
+     <day>1</day>
+    </date>
    </property>
   </widget>
  </widget>

@@ -72,10 +72,10 @@ QString WAYPOINT::getTypeStr(const WAYPOINT* wp, int _type)
     if(t == TYPE_LATLON) return "LAT/LON";
     if(t == TYPE_AIRWAY) return "AIRWAY";
     if(t == TYPE_ILS) return "ILS";
-    if(t == TYPE_STAR) return "STAR";
-    if(t == TYPE_SID) return "SID";
-    if(t == TYPE_APPTR) return "TRANSITION";
-    if(t == TYPE_FINAL) return "FINAL";
+    //if(t == TYPE_STAR) return "STAR";
+    //if(t == TYPE_SID) return "SID";
+    //if(t == TYPE_APPTR) return "TRANSITION";
+    //if(t == TYPE_FINAL) return "FINAL";
 
     return "NAN";
 }
@@ -94,10 +94,10 @@ std::vector<QString> WAYPOINT::getTypeStrList()
     rTStr.push_back(getTypeStr(NULL, TYPE_LATLON));
     rTStr.push_back(getTypeStr(NULL, TYPE_AIRWAY));
     rTStr.push_back(getTypeStr(NULL, TYPE_ILS));
-    rTStr.push_back(getTypeStr(NULL, TYPE_STAR));
-    rTStr.push_back(getTypeStr(NULL, TYPE_SID));
-    rTStr.push_back(getTypeStr(NULL, TYPE_APPTR));
-    rTStr.push_back(getTypeStr(NULL, TYPE_FINAL));
+    //rTStr.push_back(getTypeStr(NULL, TYPE_STAR));
+    //rTStr.push_back(getTypeStr(NULL, TYPE_SID));
+    //rTStr.push_back(getTypeStr(NULL, TYPE_APPTR));
+    //rTStr.push_back(getTypeStr(NULL, TYPE_FINAL));
     return rTStr;
 };
 

@@ -28,6 +28,8 @@ bool DialogSettings::distAlignATS = false;
 bool DialogSettings::distAlignEarthNav = false;
 double DialogSettings::distAlignMargin = 0.0001;
 bool DialogSettings::showFeet = false;
+bool DialogSettings::customDateIsTrue = false;
+QString DialogSettings::customDate = "2020.01.01";
 
 /*
 bool DialogSettings::showN = true;
@@ -195,6 +197,8 @@ void DialogSettings::loadSettings()
     windowSize = s.value("WindowSize", windowSize).toSize();
     windowPos = s.value("WindowPos", windowPos).toPoint();
     tableState = s.value("TableState", tableState).toByteArray();
+    customDateIsTrue = s.value("CustomDateIsTrue", customDateIsTrue).toBool();
+    customDate = s.value("CustomDate", customDate).toString();
 }
 
 void DialogSettings::saveSettings()
@@ -220,6 +224,8 @@ void DialogSettings::saveSettings()
     s.setValue("WindowSize", windowSize);
     s.setValue("WindowPos", windowPos);
     s.setValue("TableState", tableState);
+    s.setValue("CustomDateIsTrue", customDateIsTrue);
+    s.setValue("CustomDate", customDate);
 }
 
 /*

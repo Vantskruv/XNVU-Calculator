@@ -54,6 +54,8 @@ public:
     static bool distAlignEarthNav;
     static double distAlignMargin;
     static bool showFeet;
+    static bool customDateIsTrue;
+    static QString customDate;
 /*
     static bool showN;
     static bool showID;

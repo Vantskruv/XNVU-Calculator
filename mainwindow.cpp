@@ -74,11 +74,11 @@ MainWindow::MainWindow(QWidget *parent) :
                                 "color: rgb(255, 255, 0);");
     ui->statusBar->addPermanentWidget(labelWarning);
 
+
+
     //Load settings and data
-    time_t t = time(0);   // get time now
-    struct tm * now = localtime( & t );
-    dat = yymmdd_to_julian_days(now->tm_year, now->tm_mon+1, now->tm_mday);
-    ui->tableWidget->dat = dat;
+
+
     DialogSettings::loadSettings();
     //this->resize(QSize(DialogSettings::windowWidth, DialogSettings::windowHeight));
     ui->actionShow_feet->setChecked(DialogSettings::showFeet);
@@ -88,6 +88,22 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->spinBoxFL->setSuffix(" ft");
     }//if
     else ui->spinBoxFL->setSuffix(" m");
+
+    /*
+    time_t t = time(0);   // get time now
+    struct tm * now = localtime( & t );
+    dat = yymmdd_to_julian_days(now->tm_year, now->tm_mon+1, now->tm_mday);
+    */
+
+    if(DialogSettings::customDateIsTrue)
+    {
+        QDate date = QDate::fromString(DialogSettings::customDate, "yyyy.MM.dd");
+        ui->dateEdit->setDate(date);
+    }
+    else ui->dateEdit->setDate(QDate::currentDate());
+    dat = ui->dateEdit->date().toJulianDay();
+    ui->tableWidget->dat = dat;
+
 
     QString sError = XFMS_DATA::load(dat);
     if(!sError.isEmpty())
@@ -1305,6 +1321,7 @@ void MainWindow::on_frameDescription_clicked()
     }//if
 }
 
+/*
 void MainWindow::on_actionXNVU_library_triggered()
 {
     DialogWPSEdit dEdit;
@@ -1318,6 +1335,7 @@ void MainWindow::on_actionXNVU_library_triggered()
         }
     }
 }
+*/
 
 void MainWindow::on_pushButton_showAIRAC_Airports_clicked()
 {
@@ -1410,6 +1428,15 @@ void MainWindow::on_pushButtonSetFL_clicked()
     ui->tableWidget->refreshFlightplan();
 }
 
+void MainWindow::on_pushButtonSetDate_clicked()
+{
+    dat = ui->dateEdit->date().toJulianDay();
+    ui->tableWidget->dat = dat;
+    XFMS_DATA::setDate(dat);
+
+    ui->tableWidget->refreshFlightplan();
+}
+
 void MainWindow::on_actionShow_feet_triggered()
 {
     ui->tableWidget->showFeet = ui->actionShow_feet->isChecked();
@@ -1441,3 +1468,5 @@ void MainWindow::on_actionColumns_2_triggered()
 
     //ui->tableWidget->updateShownColumns();
 }
+
+
