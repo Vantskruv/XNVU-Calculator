@@ -77,10 +77,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     //Load settings and data
-
-
     DialogSettings::loadSettings();
-    //this->resize(QSize(DialogSettings::windowWidth, DialogSettings::windowHeight));
     ui->actionShow_feet->setChecked(DialogSettings::showFeet);
     ui->tableWidget->showFeet = DialogSettings::showFeet;
     if(DialogSettings::showFeet)
@@ -95,13 +92,14 @@ MainWindow::MainWindow(QWidget *parent) :
     dat = yymmdd_to_julian_days(now->tm_year, now->tm_mon+1, now->tm_mday);
     */
 
+    dat = QDate::currentDate().toJulianDay();
     if(DialogSettings::customDateIsTrue)
     {
         QDate date = QDate::fromString(DialogSettings::customDate, "yyyy.MM.dd");
+        dat = date.toJulianDay();
         ui->dateEdit->setDate(date);
     }
     else ui->dateEdit->setDate(QDate::currentDate());
-    dat = ui->dateEdit->date().toJulianDay();
     ui->tableWidget->dat = dat;
 
 
@@ -1321,21 +1319,14 @@ void MainWindow::on_frameDescription_clicked()
     }//if
 }
 
-/*
+
 void MainWindow::on_actionXNVU_library_triggered()
 {
+    ui->lineEdit->clear();
     DialogWPSEdit dEdit;
     int rv = dEdit.exec();
-
-    if(rv == QDialog::Accepted)
-    {
-        if(dEdit.lRemove.size())
-        {
-           XFMS_DATA::removeWPSPoints(dEdit.lRemove);
-        }
-    }
 }
-*/
+
 
 void MainWindow::on_pushButton_showAIRAC_Airports_clicked()
 {
@@ -1435,6 +1426,13 @@ void MainWindow::on_pushButtonSetDate_clicked()
     XFMS_DATA::setDate(dat);
 
     ui->tableWidget->refreshFlightplan();
+    //ui->pushButtonSetDate->setDisabled(true);
+    ui->pushButtonSetDate->setEnabled(false);
+    QString styleSheet = "background-color: rgb(0, 30, 0);"
+                          "color: rgb(107, 239, 0);";
+    ui->pushButtonSetDate->setText("IS SET");
+    ui->pushButtonSetDate->setStyleSheet(styleSheet);
+
 }
 
 void MainWindow::on_actionShow_feet_triggered()
@@ -1470,3 +1468,22 @@ void MainWindow::on_actionColumns_2_triggered()
 }
 
 
+void MainWindow::on_dateEdit_userDateChanged(const QDate &date)
+{
+    if(date.toJulianDay() == dat)
+    {
+        ui->pushButtonSetDate->setEnabled(false);
+        QString styleSheet = "background-color: rgb(0, 30, 0);"
+                              "color: rgb(107, 239, 0);";
+        ui->pushButtonSetDate->setText("IS SET");
+        ui->pushButtonSetDate->setStyleSheet(styleSheet);
+        return;
+    }
+
+    ui->pushButtonSetDate->setEnabled(true);
+    QString styleSheet = "background-color: rgb(255, 0, 0);"
+                         "color: rgb(255, 255, 255);";
+
+    ui->pushButtonSetDate->setText("SET");
+    ui->pushButtonSetDate->setStyleSheet(styleSheet);
+}

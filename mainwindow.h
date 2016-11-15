@@ -118,6 +118,10 @@ private slots:
 
     void on_pushButtonSetDate_clicked();
 
+    void on_actionXNVU_library_triggered();
+
+    void on_dateEdit_userDateChanged(const QDate &date);
+
 private:
     Ui::MainWindow *ui;
 };
