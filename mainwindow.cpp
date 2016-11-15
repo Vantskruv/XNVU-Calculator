@@ -16,7 +16,7 @@
 #include "dialogcolumns.h"
 #include <ctime>
 
-#define XNVU_VERSION    "XNVU version 0.31 beta"
+#define XNVU_VERSION    "XNVU version 0.32"
 
 //XFMS_DATA xdata;
 int dat;
