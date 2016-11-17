@@ -29,6 +29,7 @@ private:
 
 public:
     QSearchList(QWidget*&w);
+    void mousePressEvent(QMouseEvent* event);
     void search(const QString& name, bool filter);
     void refreshSearch();
     void addItem(QListWidgetItemData* wd, bool filter);

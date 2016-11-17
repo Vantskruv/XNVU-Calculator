@@ -4,6 +4,7 @@
 #include <waypoint.h>
 #include <XFMS_DATA.h>
 #include <QDebug>
+#include <QMouseEvent>
 
 QSearchList::QSearchList(QWidget *&w)
 {
@@ -14,6 +15,18 @@ QSearchList::QSearchList(QWidget *&w)
 
     horizontalScrollBar()->setStyleSheet(styleSheet);
     verticalScrollBar()->setStyleSheet(styleSheet);
+}
+
+void QSearchList::mousePressEvent(QMouseEvent* event)
+{
+    QModelIndex item = indexAt(event->pos());
+    if (!item.isValid())
+    {
+        QModelIndex qI = currentIndex();
+        qI = qI.child(-1, -1);
+        setCurrentIndex(qI);
+    }
+    else QListWidget::mousePressEvent(event);
 }
 
 void QSearchList::search(const QString &name, bool filter)
