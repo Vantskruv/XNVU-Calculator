@@ -59,11 +59,20 @@ void QFlightplanTable::mousePressEvent(QMouseEvent* event)
     QModelIndex item = indexAt(event->pos());
     if (!item.isValid())
     {
-        QModelIndex qI = currentIndex();
-        qI = qI.child(-1, -1);
-        setCurrentIndex(qI);
+        selectNone();
+    }
+    else if(currentIndex() == item)
+    {
+        selectNone();
     }
     else QTableWidget::mousePressEvent(event);
+}
+
+void QFlightplanTable::selectNone()
+{
+    QModelIndex qI = currentIndex();
+    qI = qI.child(-1, -1);
+    setCurrentIndex(qI);
 }
 
 void QFlightplanTable::updateShownColumns()
