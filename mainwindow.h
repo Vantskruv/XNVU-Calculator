@@ -5,6 +5,7 @@
 #include <QListWidgetItem>
 #include <QtPrintSupport/QtPrintSupport>
 #include <NVU.h>
+#include "qlineeditwp.h"
 
 namespace Ui {
 class MainWindow;
@@ -30,6 +31,7 @@ private slots:
     void saveNVUFlightPlan();
     void tableGoUp();
     void tableGoDown();
+    void goDirectToFieldClicked(QLineEditWP *wp);
 
     //void clearFlightplan();
     //void refreshFlightplan();
@@ -121,6 +123,10 @@ private slots:
     void on_actionXNVU_library_triggered();
 
     void on_dateEdit_userDateChanged(const QDate &date);
+
+    void on_listWidget_clicked(const QModelIndex &index);
+
+    void on_pushButtonDTInsert_clicked();
 
 private:
     Ui::MainWindow *ui;

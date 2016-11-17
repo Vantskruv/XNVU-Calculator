@@ -32,14 +32,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
     setWindowTitle(XNVU_VERSION);
     ui->tableWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    QAction* actionDirectTo = new QAction("Go direct...", this);
+    ui->menuBar->addAction(actionDirectTo);
 
     //Setup shortcuts
     QShortcut* shortcutDeleteKey = new QShortcut(QKeySequence(Qt::Key_Delete), ui->tableWidget);
     QShortcut* shortcutUpKey = new QShortcut(QKeySequence(Qt::Key_Up), ui->tableWidget);
     QShortcut* shortcutDownKey = new QShortcut(QKeySequence(Qt::Key_Down), ui->tableWidget);
+
+    //Setup signals
     connect(shortcutDeleteKey, SIGNAL(activated()), this, SLOT(deleteCurrentWaypoint()));
     connect(shortcutUpKey, SIGNAL(activated()), this, SLOT(tableGoUp()));
     connect(shortcutDownKey, SIGNAL(activated()), this, SLOT(tableGoDown()));
+    //connect(actionDirectTo, SIGNAL(triggered()), this, SLOT(goDirectTo()));
     connect(ui->actionExport_X_Plane_FMS, SIGNAL(triggered()), this, SLOT(exportFMS()));
     connect(ui->actionImport_X_Plane_FMS, SIGNAL(triggered()), this, SLOT(importFMS()));
     connect(ui->actionSave_XNVU_flightplan, SIGNAL(triggered()), this, SLOT(saveNVUFlightPlan()));
@@ -50,6 +55,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->tableWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showFlightplanContextMenu(const QPoint&)));
     connect(ui->frameDescription, SIGNAL(clicked(QPoint)), this, SLOT(on_frameDescription_clicked()));
     connect(&clearFlightplan_timer, SIGNAL(timeout()), this, SLOT(clearFlightplanTimeout()));
+    connect(ui->lineEdit_DTCourseFrom, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
+    connect(ui->lineEdit_DTCourseTo, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
+    connect(ui->lineEdit_DTTo, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
+
 
     //Give tablewidget a reference to labelFork and set its size
     ui->tableWidget->setColumnCount(QFlightplanTable::COL::_SIZE);
@@ -486,7 +495,7 @@ void MainWindow::on_pushButtonInsertAfter_clicked()
 void MainWindow::on_pushButtonRouteInsertAfter_clicked()
 {
     std::vector<NVUPOINT*> route;
-    NVUPOINT* wpRef = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
+    NVUPOINT* wpRef = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow(), true);
     QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route, wpRef);
     if(!sError.isEmpty())
     {
@@ -505,7 +514,7 @@ void MainWindow::on_pushButtonRouteInsertAfter_clicked()
 void MainWindow::on_pushButtonRouteInsertBefore_clicked()
 {
     std::vector<NVUPOINT*> route;
-    NVUPOINT* wpRef = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
+    NVUPOINT* wpRef = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow(), true);
     QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route, wpRef);
     if(!sError.isEmpty())
     {
@@ -522,7 +531,7 @@ void MainWindow::on_pushButtonRouteInsertBefore_clicked()
 void MainWindow::on_pushButtonRouteReplace_clicked()
 {
     std::vector<NVUPOINT*> route;
-    NVUPOINT* wpRef = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
+    NVUPOINT* wpRef = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow(), true);
     QString sError = XFMS_DATA::getRoute(ui->lineEditRoute->text().toUpper(), route, wpRef);
     if(!sError.isEmpty())
     {
@@ -539,12 +548,11 @@ void MainWindow::on_pushButtonRouteReplace_clicked()
 
 void MainWindow::on_tableWidget_clicked(const QModelIndex &index)
 {
-    ui->tableWidget->setFocus();
     if(ui->tableWidget->currentRow()<0) return;
-
     NVUPOINT* wp = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
     ui->lineEdit->setText(wp->name);
     setWaypointDescription(wp);
+    ui->tableWidget->setFocus();
 }
 
 void MainWindow::on_listWidget_currentRowChanged(int currentRow)
@@ -562,6 +570,9 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
     ui->labelWPMagVar->setText("");
     ui->labelWPLatlon->setText("");
     ui->labelWPNote->setText("");
+    ui->labelWPType2->setText("");
+
+    if(wp == NULL) return;
 
     QString qstr;
     qstr = WAYPOINT::getTypeStr(wp);
@@ -1486,4 +1497,68 @@ void MainWindow::on_dateEdit_userDateChanged(const QDate &date)
 
     ui->pushButtonSetDate->setText("SET");
     ui->pushButtonSetDate->setStyleSheet(styleSheet);
+}
+
+void MainWindow::goDirectToFieldClicked(QLineEditWP *wp)
+{
+    NVUPOINT* fr;
+    NVUPOINT* to;
+    if(wp == ui->lineEdit_DTTo)
+    {
+        to = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
+        if(!to && ui->listWidget->currentItem()) to = ((QListWidgetItemData*) ui->listWidget->currentItem())->nvupoint;
+        if(to) wp->setWaypoint(to);
+    }
+    else if(wp == ui->lineEdit_DTCourseFrom)
+    {
+        fr = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
+        to = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow()+1);
+        if(fr && to)
+        {
+            wp->setWaypoint(fr);
+            ui->lineEdit_DTCourseTo->setWaypoint(to);
+        }
+    }//else
+    else if(wp == ui->lineEdit_DTCourseTo)
+    {
+        fr = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow()-1);
+        to = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
+        if(fr && to)
+        {
+            wp->setWaypoint(to);
+            ui->lineEdit_DTCourseFrom->setWaypoint(fr);
+        }
+    }//else
+
+    setWaypointDescription(wp->getWaypoint());
+}
+
+void MainWindow::on_listWidget_clicked(const QModelIndex &index)
+{
+    //ui->tableWidget->selectNone();
+    //QString tst = "QTableWidget::item{selection-background-color: rgb(82, 140, 35)}";
+    //ui->tableWidget->setStyleSheet(tst);
+}
+
+void MainWindow::on_pushButtonDTInsert_clicked()
+{
+    NVUPOINT* a = ui->lineEdit_DTCourseFrom->getWaypoint();
+    NVUPOINT* b = ui->lineEdit_DTCourseTo->getWaypoint();
+    NVUPOINT* c = ui->lineEdit_DTTo->getWaypoint();
+
+    if(a == NULL || b == NULL || c == NULL) return;
+
+    double brng = LMATH::calc_bearing(a->latlon, b->latlon);
+    CPoint cp;
+    LMATH::calc_destination_orthodromic(a->latlon, brng, a->S + ui->doubleSpinBox_DTCourseDistRem->value(), cp);
+
+    NVUPOINT* n = new NVUPOINT();
+    n->name = a->name + "_DTO";
+    n->latlon = cp;
+    n->type = WAYPOINT::TYPE_LATLON;
+    n->MD = calc_magvar(n->latlon.x, n->latlon.y, dat, LMATH::feetToMeter(a->alt));
+    n->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
+
+    ui->tableWidget->insertWaypoint(n, ui->tableWidget->currentRow()+1);
+    ui->tableWidget->insertWaypoint(new NVUPOINT(*c), ui->tableWidget->currentRow()+2);
 }
