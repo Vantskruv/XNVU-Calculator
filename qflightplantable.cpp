@@ -153,12 +153,12 @@ void QFlightplanTable::insertRoute(std::vector<NVUPOINT*> route, int row)
 void QFlightplanTable::moveWaypoint(int row, bool up)
 {
     if(row<0 || row>=lNVUPoints.size()) return;            //Row should be in the span of list
-    if(!up && row<=0) return;                              //Moving down first item does not do anything
-    if(up && row >= (lNVUPoints.size()-1)) return;         //Moving up the last item does not do anything
+    if(up && row<=0) return;                              //Moving down first item does not do anything
+    if(!up && row >= (lNVUPoints.size()-1)) return;         //Moving up the last item does not do anything
 
     NVUPOINT* wp = lNVUPoints[row];
 
-    if(up)
+    if(!up)
     {
         lNVUPoints.erase(lNVUPoints.begin() + row);
         lNVUPoints.insert(lNVUPoints.begin() + row + 1, wp);
