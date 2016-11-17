@@ -26,6 +26,12 @@ void QSearchList::mousePressEvent(QMouseEvent* event)
         qI = qI.child(-1, -1);
         setCurrentIndex(qI);
     }
+    else if(currentIndex() == item)
+    {
+        QModelIndex qI = currentIndex();
+        qI = qI.child(-1, -1);
+        setCurrentIndex(qI);
+    }
     else QListWidget::mousePressEvent(event);
 }
 
