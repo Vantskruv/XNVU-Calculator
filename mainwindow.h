@@ -24,6 +24,7 @@ public:
 private slots:
     void quit();
     void showFlightplanContextMenu(const QPoint& pos);
+    void showSearchListContextMenu(const QPoint& pos);
     void showXPlaneSettings();
     void importFMS();
     void exportFMS();

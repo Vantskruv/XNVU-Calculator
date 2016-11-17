@@ -16,7 +16,7 @@
 #include "dialogcolumns.h"
 #include <ctime>
 
-#define XNVU_VERSION    "XNVU version 0.32"
+#define XNVU_VERSION    "XNVU version 0.33"
 
 //XFMS_DATA xdata;
 int dat;
@@ -32,8 +32,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     setWindowTitle(XNVU_VERSION);
     ui->tableWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    /*
     QAction* actionDirectTo = new QAction("Go direct...", this);
     ui->menuBar->addAction(actionDirectTo);
+    */
 
     //Setup shortcuts
     QShortcut* shortcutDeleteKey = new QShortcut(QKeySequence(Qt::Key_Delete), ui->tableWidget);
@@ -53,6 +57,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionPrint, SIGNAL(triggered()), this, SLOT(on_pushButtonPrint_clicked()));
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(quit()));
     connect(ui->tableWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showFlightplanContextMenu(const QPoint&)));
+    connect(ui->listWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showSearchListContextMenu(const QPoint&)));
     connect(ui->frameDescription, SIGNAL(clicked(QPoint)), this, SLOT(on_frameDescription_clicked()));
     connect(&clearFlightplan_timer, SIGNAL(timeout()), this, SLOT(clearFlightplanTimeout()));
     connect(ui->lineEdit_DTCourseFrom, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
@@ -225,6 +230,7 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
     {
         fpMenu.addAction("Move up");
         fpMenu.addAction("Move down");
+        fpMenu.addAction("Set direct to");
         fpMenu.addAction("Edit waypoint...");
         fpMenu.addAction("Set correction beacon...");
         fpMenu.addSeparator();
@@ -250,6 +256,10 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
             }
             else if(selectedItem == fpMenu.actions()[2])
             {
+                ui->lineEdit_DTTo->setWaypoint(wp);
+            }
+            else if(selectedItem == fpMenu.actions()[3])
+            {
                 DialogWaypointEdit dEdit(wp, true);
                 int dr = dEdit.exec();
                 if(dr == QDialog::Rejected || dr == DialogWaypointEdit::CANCEL) return;
@@ -267,7 +277,7 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
                     ui->tableWidget->refreshFlightplan();
                 }
             }
-            else if(selectedItem == fpMenu.actions()[3])
+            else if(selectedItem == fpMenu.actions()[4])
             {
                 DialogRSBN dRSBN(wp);
                 int dr = dRSBN.exec();
@@ -276,7 +286,7 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
                 wp->rsbn = dRSBN.rsbn;
                 ui->tableWidget->refreshFlightplan();
             }
-            else if(selectedItem == fpMenu.actions()[5])
+            else if(selectedItem == fpMenu.actions()[6])
             {
                 ui->tableWidget->deleteWaypoint(row);
             }
@@ -305,6 +315,39 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
 
         return;
     }
+}
+
+void MainWindow::showSearchListContextMenu(const QPoint& pos) // this is a slot
+{
+    // for most widgets
+    QPoint globalPos = ui->listWidget->mapToGlobal(pos);
+    // for QAbstractScrollArea and derived classes you would use:
+    // QPoint globalPos = myWidget->viewport()->mapToGlobal(pos);
+
+
+
+    QMenu fpMenu;
+    QAction* selectedItem;
+    QString styleSheet = "background-color: rgb(0, 30, 0);"
+                         "color: rgb(107, 239, 0);"
+                         "selected-background-color: rgb(107, 239, 0);"
+                         "selected-color: rgb(0, 0, 0);";
+    fpMenu.setStyleSheet(styleSheet);
+
+    QListWidgetItemData* iItem = (QListWidgetItemData*) ui->listWidget->itemAt(pos);
+    if(iItem)
+    {
+        fpMenu.addAction("Set direct to");
+
+        selectedItem = fpMenu.exec(globalPos);
+        if(selectedItem)
+        {
+            if(selectedItem == fpMenu.actions()[0])
+            {
+                ui->lineEdit_DTTo->setWaypoint(iItem->nvupoint);
+            }//if
+        }//if
+    }//if
 }
 
 
