@@ -7,7 +7,10 @@
 #include <QDebug>
 #include <QSettings>
 
+bool DialogSettings::XP11 = false;
+bool DialogSettings::XP11_includeCustomAirports = true;
 QString DialogSettings::xDir;
+QString DialogSettings::customAirportsDir; //TODO: Currently a dummy, either implement it or define it.
 QString DialogSettings::fileAirports;
 QString DialogSettings::fileNavaids;
 QString DialogSettings::fileWaypoints;
@@ -166,6 +169,8 @@ DialogSettings::DialogSettings(QWidget *parent) :
 
     ui->checkBoxManual->setChecked(manualSetDir);
     on_checkBoxManual_clicked(manualSetDir);
+    ui->checkBoxXP11->setChecked(XP11);
+    ui->checkBoxAPTOverride->setChecked(XP11_includeCustomAirports);
 }
 
 DialogSettings::~DialogSettings()
@@ -178,6 +183,8 @@ void DialogSettings::loadSettings()
 {
     QSettings s("xnvu.conf", QSettings::IniFormat);
 
+    XP11 = s.value("XP11", XP11).toBool();
+    XP11_includeCustomAirports = s.value("XP11_includeCustomAirports", XP11_includeCustomAirports).toBool();
     xDir = s.value("XPlaneDirectory").toString();
     fileAirports = s.value("AirportFile").toString();
     fileNavaids = s.value("NavaidFile").toString();
@@ -205,6 +212,8 @@ void DialogSettings::saveSettings()
 {
     QSettings s("xnvu.conf", QSettings::IniFormat);
 
+    s.setValue("XP11", XP11);
+    s.setValue("XP11_includeCustomAirports", XP11_includeCustomAirports);
     s.setValue("XPlaneDirectory", xDir);
     s.setValue("AirportFile", fileAirports);
     s.setValue("NavaidFile", fileNavaids);
@@ -884,6 +893,8 @@ void DialogSettings::on_buttonBox_accepted()
     fileAirways = ui->lineEditAirwaysFile->text();
     fileNavdata = ui->lineEditEarthnavFile->text();
     manualSetDir = ui->checkBoxManual->isChecked();
+    XP11 = ui->checkBoxXP11->isChecked();
+    XP11_includeCustomAirports = ui->checkBoxAPTOverride->isChecked();
 }
 
 void DialogSettings::on_checkBoxManual_clicked(bool checked)

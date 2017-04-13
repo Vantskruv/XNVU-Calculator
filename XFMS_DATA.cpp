@@ -9,6 +9,8 @@
 #include <list>
 #include <QString>
 #include <QFile>
+#include <QDir>
+#include <QFileInfoList>
 #include <QTextStream>
 #include "LMATH.h"
 #include "coremag.h"
@@ -22,19 +24,19 @@ std::multimap<QString, NVUPOINT*> XFMS_DATA::lWP;
 std::multimap<QString, NVUPOINT*> XFMS_DATA::lWP2;
 
 //Loaded from i.e. navigraph
-std::vector<NVUPOINT*> XFMS_DATA::lAirports;
-std::vector<NVUPOINT*> XFMS_DATA::lNDB;
-std::vector<NVUPOINT*> XFMS_DATA::lVOR;
-std::vector<NVUPOINT*> XFMS_DATA::lDME;
-std::vector<NVUPOINT*> XFMS_DATA::lVORDME;         //Cannot be used as RSBN, as there is no angle deviation data.
-std::vector<NVUPOINT*> XFMS_DATA::lILS;
-std::vector<NVUPOINT*> XFMS_DATA::lFixes;
-std::vector<AIRWAY*> XFMS_DATA::lAirways;
+//std::vector<NVUPOINT*> XFMS_DATA::lAirports;
+//std::vector<NVUPOINT*> XFMS_DATA::lNDB;
+//std::vector<NVUPOINT*> XFMS_DATA::lVOR;
+//std::vector<NVUPOINT*> XFMS_DATA::lDME;
+//std::vector<NVUPOINT*> XFMS_DATA::lVORDME;         //Cannot be used as RSBN, as there is no angle deviation data.
+//std::vector<NVUPOINT*> XFMS_DATA::lILS;
+//std::vector<NVUPOINT*> XFMS_DATA::lFixes;
+//std::vector<AIRWAY*> XFMS_DATA::lAirways;
 
 //Loaded from earthnav.dat
-std::vector<NVUPOINT*> XFMS_DATA::lXNDB;
-std::vector<NVUPOINT*> XFMS_DATA::lXVOR;
-std::vector<NVUPOINT*> XFMS_DATA::lXDME;
+//std::vector<NVUPOINT*> XFMS_DATA::lXNDB;
+//std::vector<NVUPOINT*> XFMS_DATA::lXVOR;
+//std::vector<NVUPOINT*> XFMS_DATA::lXDME;
 std::vector<NVUPOINT*> XFMS_DATA::lXVORDME;        //VOR/DME loaded from X-Plane earth earth_nav.dat, as it includes VOR angle deviation data.
 
 //Loaded from rsbn.dat
@@ -55,18 +57,18 @@ XFMS_DATA::~XFMS_DATA()
 
 void XFMS_DATA::clear()
 {
-    lAirports.clear();
-    lNDB.clear();
-    lVOR.clear();
-    lDME.clear();
-    lVORDME.clear();
-    lILS.clear();
-    lFixes.clear();
-    lAirways.clear();
+    //lAirports.clear();
+    //lNDB.clear();
+    //lVOR.clear();
+    //lDME.clear();
+    //lVORDME.clear();
+    //lILS.clear();
+    //lFixes.clear();
+    //lAirways.clear();
 
-    lXNDB.clear();
-    lXVOR.clear();
-    lXDME.clear();
+    //lXNDB.clear();
+    //lXVOR.clear();
+    //lXDME.clear();
     lXVORDME.clear();
 
     lRSBN.clear();
@@ -105,23 +107,36 @@ void XFMS_DATA::setDate(int _dat)
     }
 }
 
-std::vector<NVUPOINT*> XFMS_DATA::search(const QString& _name)
+//ICAO_name2 defines if user want to search in both ICAO name and full name of waypoint, or either:
+//0: Search both
+//1: Only ICAO
+//2: Only full name
+std::vector<NVUPOINT*> XFMS_DATA::search(const QString& _name, int _type, int _ICAO_name2, const QString& _country)
 {
     std::vector<NVUPOINT*> rWP;
+    std::pair<std::multimap<QString, NVUPOINT*>::iterator, std::multimap<QString, NVUPOINT*>::iterator> ret;
 
     if(_name.isEmpty()) return rWP;
+    if(_ICAO_name2>0 && _ICAO_name2 != 1) goto _name2;  //I hate GOTO:s, but they are effective.
 
-    std::pair<std::multimap<QString, NVUPOINT*>::iterator, std::multimap<QString, NVUPOINT*>::iterator> ret = lWP.equal_range(_name);
+    ret = lWP.equal_range(_name);
     for(std::multimap<QString, NVUPOINT*>::iterator it=ret.first; it!=ret.second; it++)
 	{
         NVUPOINT* wp = it->second;
+        if(_type>0 && wp->type != _type) continue;
+        if(_country!=NULL && !_country.isEmpty()) if(_country.compare(wp->country) !=0) continue;
         rWP.push_back(wp);
 	}
+
+    _name2:
+    if(_ICAO_name2>0 && _ICAO_name2 != 2) return rWP;
 
     ret = lWP2.equal_range(_name);
     for(std::multimap<QString, NVUPOINT*>::iterator it=ret.first; it!=ret.second; it++)
     {
         NVUPOINT* wp = it->second;
+        if(_type>0 && wp->type != _type) continue;
+        if(_country!=NULL && !_country.isEmpty()) if(_country.compare(wp->country) !=0) continue;
         rWP.push_back(wp);
     }
 
@@ -220,7 +235,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route,
         qstr = record[i];
 
         //Search for identifier in database, if not found, add if this is a custom waypoint.
-        sWaypoint = XFMS_DATA::search(qstr);
+        sWaypoint = XFMS_DATA::search(qstr, 0, 1);
         if(sWaypoint.size() == 0)
         {
             //TODO If there are more records, and this is the first one, set wpRef to next waypoint, and calculate later.
@@ -294,11 +309,13 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route,
             for(int k=0; k<lA.size(); k++)
             {
                 NVUPOINT* cP = new NVUPOINT(*lA[k]);
-                cP->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
+                //cP->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
                 route.push_back(cP);
             }//for
             continue; //Do not push the airway itself to the list
         }//if
+
+        /*
         else if(wp->type==WAYPOINT::ORIGIN_FLIGHTPLAN)
         {
             route.push_back(wp);
@@ -306,6 +323,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route,
         }
 
         wp->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
+        */
 
         route.push_back(wp);
     }//for
@@ -321,16 +339,18 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route,
 }
 
 //Get closest waypoint of same type and name. Returns found waypoint or NULL, and distance.
-NVUPOINT* XFMS_DATA::getClosestWaypointType(NVUPOINT* wp, double &distance)
+
+//NVUPOINT* XFMS_DATA::getClosestWaypointType(NVUPOINT* wp, double &distance)
+NVUPOINT* XFMS_DATA::getClosestWaypointType(const CPoint& _latlon, const QString& _name, int _type, double &distance)
 {
     double dMin = std::numeric_limits<double>::max();
     NVUPOINT* cWP = NULL;
-    std::vector<NVUPOINT*> lS = search(wp->name);
+    std::vector<NVUPOINT*> lS = search(_name, _type);//search(wp->name);
     for(int i=0; i<lS.size(); i++)
     {
-        if(lS[i]->type!=wp->type) continue;
+        if(_type>0) if(lS[i]->type!=_type) continue;
 
-        double d = LMATH::calc_distance(wp->latlon, lS[i]->latlon);
+        double d = LMATH::calc_distance(_latlon, lS[i]->latlon);
         if(d<dMin)
         {
             dMin = d;
@@ -380,7 +400,7 @@ std::vector< std::pair<NVUPOINT*, double> > XFMS_DATA::getClosestRSBN(const NVUP
 }
 
 
-int XFMS_DATA::_load(const QString& file, int type)
+int XFMS_DATA::_loadXP10(const QString& file, int type)
 {
 
     QFile infile(file);
@@ -388,7 +408,7 @@ int XFMS_DATA::_load(const QString& file, int type)
 
     if(type == 6)
     {
-        validate_airways(infile);
+        validate_airways_XP10(infile);
         infile.close();
         return 1;
     }
@@ -397,25 +417,198 @@ int XFMS_DATA::_load(const QString& file, int type)
 	{
         QString line = infile.readLine();
         QStringList list;
-        if(type == 3 || type == 5) list = line.split('|');//, QString::SkipEmptyParts);           //RSBN data (rsbn.dat)
-        else if(type == 4) list = line.split(' ', QString::SkipEmptyParts);      //X-Plane navdata (earth_nav.dat)
-        else list = line.split(',',  QString::SkipEmptyParts);
+        if(type == 3 || type == 5) list = line.split('|');//, QString::SkipEmptyParts);                 //RSBN data (rsbn.dat) and xnvu_wps.txt
+        else if(type == 4) list = line.split(' ', QString::SkipEmptyParts);     //X-Plane navdata (earth_nav.dat) and all XP11 files
+        else list = line.split(',',  QString::SkipEmptyParts);                                          //XP10 other files
 
-        switch(type)
-		{
-            case 0: validate_airport(list); break;
-            case 1: validate_navaid(list); break;
-            case 2: validate_waypoint(list); break;
+        switch(type) //else
+        {
+            case 0: validate_airport_XP10(list); break;
+            case 1: validate_navaid_XP10(list); break;
+            case 2: validate_waypoint_XP10(list); break;
             case 3: validate_RSBN(list); break;
-            case 4: validate_earthnav(list); break;
+            case 4: validate_earthnav_XP10(list); break;
             case 5: validate_xnvu(list); break;
-		}//switch
+        }//switch, else
 	}//while
 
 	infile.close();
 
     return 1;
 }//void load
+
+int XFMS_DATA::_loadAirportsXP11(QString& sError)
+{
+    //1. Default apt.dat: "Resources\default scenery\default apt dat\Earth nav data\apt.dat"
+    //2. Gateway apt.dat (overrides default apt.dat): "Custom Scenery\Global Airports\Earth nav data\apt.dat"
+    //3. Custom apt.dat (overrides both above): "Custom Scenery/XXXXX/Earth nav data\apt.dat"
+    //We should load in above steps reversed, i.e. 3, 2 then 1 and ignoring previously added airports, using ICAO as identifier.
+    sError = "";
+
+    //1. Load custom airports first
+
+    //TODO: Define DialogSettings::customAirportsDir
+    //QDir dir(DialogSettings::customAirportsDir);
+    QDir dir(DialogSettings::xDir + "//Custom Scenery");
+
+    if(DialogSettings::XP11_includeCustomAirports)
+    {
+        QFileInfoList files = dir.entryInfoList();
+        foreach(const QFileInfo &fi, files)
+        {
+            QString path = fi.absoluteFilePath();
+            if(fi.baseName().compare("Global Airports") == 0) continue;
+            if(fi.isDir())
+            {
+                path = path + "/Earth nav data/apt.dat";
+                QFile inFile(path);
+                if(!inFile.open(QIODevice::ReadOnly | QIODevice::Text)) continue;   //apt.dat is not readable or found in custom airport folder
+                validate_airports_XP11(inFile, WAYPOINT::ORIGIN_X11_CUSTOM_AIRPORTS);
+                inFile.close();
+            }//if
+        }//foreach
+    }//if
+
+
+    //2. Load gateway apt.dat
+    QString path = DialogSettings::xDir + "/Custom Scenery/Global Airports/Earth nav data/apt.dat";
+    QFile inFile(path);
+    if(inFile.open(QIODevice::ReadOnly | QIODevice::Text))   //If apt.dat is readable and found
+    {
+        validate_airports_XP11(inFile, WAYPOINT::ORIGIN_X11_GATEWAY_AIRPORTS);
+    }
+    else sError = "[GATEWAY apt.dat]";
+    inFile.close();
+
+
+
+    //3. Load default apt.dat
+    path = DialogSettings::xDir + "/Resources/default scenery/default apt dat/Earth nav data/apt.dat";
+    inFile.setFileName(path);
+    if(inFile.open(QIODevice::ReadOnly | QIODevice::Text))   //If apt.dat is readable and found
+    {
+        validate_airports_XP11(inFile, WAYPOINT::ORIGIN_X11_DEFAULT_AIRPORTS);
+    }
+    else
+    {
+        if(sError.length()>0) sError = "[DEFAULT & GATEWAY apt.dat]";
+        else sError = "[DEFAULT apt.dat]";
+    }
+    inFile.close();
+
+}
+
+int XFMS_DATA::_loadWaypointsXP11(QString& sError)
+{
+    sError = "";
+    QString path = DialogSettings::xDir + "/Custom Data/earth_fix.dat";
+    QFile inFile(path);
+
+    if(inFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        while(!inFile.atEnd())
+        {
+            QString line = inFile.readLine();
+            QStringList list;
+            list = line.split(' ', QString::SkipEmptyParts);
+            validate_waypoint_XP11(list);
+        }//while
+
+        inFile.close();
+        return 1;
+    }
+    inFile.close();
+
+    path = DialogSettings::xDir + "/Custom Data/earth_fix.dat";
+    inFile.setFileName(path);
+    if(inFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        while(!inFile.atEnd())
+        {
+            QString line = inFile.readLine();
+            QStringList list;
+            list = line.split(' ', QString::SkipEmptyParts);
+            validate_waypoint_XP11(list);
+        }//while
+
+        inFile.close();
+        return 1;
+    }
+
+    inFile.close();
+    sError = "[earth_fix.dat]";
+    return 0;
+}
+
+int XFMS_DATA::_loadNavDataXP11(QString& sError)
+{
+    sError = "";
+    QString path = DialogSettings::xDir + "/Custom Data/earth_nav.dat";
+    QFile inFile(path);
+
+    if(inFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        while(!inFile.atEnd())
+        {
+            QString line = inFile.readLine();
+            QStringList list;
+            list = line.split(' ', QString::SkipEmptyParts);
+            validate_earthnav_XP11(list);
+        }//while
+
+        inFile.close();
+        return 1;
+    }
+    inFile.close();
+
+    path = DialogSettings::xDir + "/Resources/default data/earth_nav.dat";
+    inFile.setFileName(path);
+    if(inFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        while(!inFile.atEnd())
+        {
+            QString line = inFile.readLine();
+            QStringList list;
+            list = line.split(' ', QString::SkipEmptyParts);
+            validate_earthnav_XP11(list);
+        }//while
+
+        inFile.close();
+        return 1;
+    }
+
+    inFile.close();
+    sError = "[earth_nav.dat]";
+    return 0;
+}
+
+int XFMS_DATA::_loadAirwaysXP11(QString& sError)
+{
+    sError = "";
+    QString path = DialogSettings::xDir + "/Custom Data/earth_awy.dat";
+    QFile inFile(path);
+
+    if(inFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        validate_airways_XP11(inFile);
+        inFile.close();
+        return 1;
+    }
+    inFile.close();
+
+    path = DialogSettings::xDir + "/Resources/default data/earth_awy.dat";
+    inFile.setFileName(path);
+    if(inFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        validate_airways_XP11(inFile);
+        inFile.close();
+        return 1;
+    }
+
+    inFile.close();
+    sError = "[earth_awy.dat]";
+    return 0;
+}
 
 QString XFMS_DATA::load(int _dat)
 {
@@ -430,31 +623,70 @@ QString XFMS_DATA::load(int _dat)
 */
 
     QString sError;
-    if(!_load(DialogSettings::fileAirports, 0))
+    QString rError;
+
+    if(DialogSettings::XP11)
     {
-        sError = " [Airports.txt]";
+        if(!_loadAirportsXP11(sError))
+        {
+            //1. Default apt.dat: "Resources\default scenery\default apt dat\Earth nav data\apt.dat"
+            //2. Gateway apt.dat (overrides default apt.dat): "Custom Scenery\Global Airports\Earth nav data\apt.dat"
+            //3. Custom apt.dat (overrides both above): "Custom Scenery/XXXXX/Earth nav data\apt.dat"
+            //We should load in above steps reversed, i.e. 3, 2 then 1 and ignoring previously added airports, using ICAO as identifier.
+        }
+        if(!_loadWaypointsXP11(rError))
+        {
+            //1. "Resources/default data/earth_fix.dat"
+            //2. "Custom Data/earth_fix.dat"
+            //If number 2 exist, we ignore number 1.
+            sError = sError + " " + rError;
+        }
+        if(!_loadNavDataXP11(rError))
+        {
+            //1. "Resources/default data/earth_nav.dat"
+            //2. "Custom Data/earth_nav.dat"
+            //3. "Custom Scenery/Global Airports/Earth nav data/earth_nav.dat"
+            //We do load the ILS beacons from 3 first. If number 2 exist, we ignore number 1. Then we load 1 or 2 and ignore ILS beacons which we already have added from 3.
+            //EDIT: Change, we skip loading ILS beacons (step 3) for now.
+            sError = sError + " " + rError;
+        }
+        if(!_loadAirwaysXP11(rError))
+        {
+            //1. "Resources/default data/earth_awy.dat"
+            //2. "Custom Data/earth_awy.dat"
+            //If number 2 exist, we ignore number 1.
+            sError = sError + " " + rError;
+        }
     }
-    if(!_load(DialogSettings::fileNavaids, 1))
+    else
     {
-        sError = sError + " [Navaids.txt]";
-    }
-    if(!_load(DialogSettings::fileWaypoints, 2))
-    {
-        sError = sError + " [Waypoints.txt]";
-    }
-    if(!_load(DialogSettings::fileRSBN, 3))
+        if(!_loadXP10(DialogSettings::fileAirports, 0))
+        {
+            sError = " [Airports.txt]";
+        }
+        if(!_loadXP10(DialogSettings::fileNavaids, 1))
+        {
+            sError = sError + " [Navaids.txt]";
+        }
+        if(!_loadXP10(DialogSettings::fileWaypoints, 2))
+        {
+            sError = sError + " [Waypoints.txt]";
+        }
+        if(!_loadXP10(DialogSettings::fileNavdata, 4))
+        {
+            sError = sError + " [earth_nav.txt]";
+        }
+        if(!_loadXP10(DialogSettings::fileAirways, 6))
+        {
+            sError = sError + " [ats.txt]";
+        }
+    }//else
+
+    if(!_loadXP10(DialogSettings::fileRSBN, 3))
     {
         sError = sError + " [rsbn.dat]";
     }
-    if(!_load(DialogSettings::fileNavdata, 4))
-    {
-        sError = sError + " [earth_nav.txt]";
-    }
-    if(!_load(DialogSettings::fileAirways, 6))
-    {
-        sError = sError + " [ats.txt]";
-    }
-    if(!_load(XNVU_WPS_FILENAME, 5))
+    if(!_loadXP10(XNVU_WPS_FILENAME, 5))
     {
         sError = sError + " [xnvu_wps.txt]";
 
@@ -512,15 +744,1044 @@ void XFMS_DATA::removeXNVUWaypoint(NVUPOINT* lP)
     }
 }
 
-
-
-void XFMS_DATA::validate_airport(const QStringList& record)
+void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
 {
+    /* The new apt.dat format gives elevation and region data with these tags:
+     * 1302 datum_lat
+     * 1302 datum_lon
+     * 1302 icao_code
+     * 1302 faa_code
+     * 1302 region_code
+     * If the datum do not exist, take middle on the first runway (100/101), or the first helipad of no runway exist (102).
+     */
+    QString line;
+    QStringList record;
+
+    /* currentState values:
+     * 0: Searching for airport header
+     * 1: Airport header
+     * 2: Searching for 1302 datum_xx or 100-102
+     * 1302: 1302 datum_xx header
+     * 100: 1st 100 header
+     * 102: 1st 101 header
+     * 103: 1st 102 header
+     */
+    int currentState = 0;
+    QString qstr;
+    int cmpData;
+    bool lat_set = false;
+    bool lon_set = false;
+    bool latAB_set = false;
+    CPoint latA, latB;
+    double longestRunway = -1.0;
+    double longestRunwayCompare = 0.0;
+    CPoint latlonX;
+
+    NVUPOINT wp;
+    wp.type = WAYPOINT::TYPE_AIRPORT;
+
+    while(!infile.atEnd())
+    {
+        line = infile.readLine();
+        record = line.split(' ', QString::SkipEmptyParts);
+        for(int i=0; i<record.size(); i++)
+        {
+            qstr = record.at(i).simplified();
+
+            switch(i)
+            {
+                case 0: //Row type
+                    cmpData = qstr.toInt();
+                    if(cmpData == 1 || cmpData == 16 || cmpData == 17)
+                    {
+                        //If first item in row is 1, 16 or 17, it tells us this is the start of an airport data.
+                        //We set the currentState to 1 to show we begin with a new initialization of an airport.
+
+                        //TODO: Maybe we should optimize the search function, note also that this search is also searching for the names of the airports, maybe that is not so good
+                        //if an airport has the same name as an other airports ICAO name, but the chance is very small though...
+                        //Note that similar code is also placed in the end of this function, to grab the last found airport.
+                        wp.wpOrigin = wpOrigin;
+                        wp.type = WAYPOINT::TYPE_AIRPORT;
+                        std::vector<NVUPOINT*> lFound;
+                        lFound = search(wp.name, WAYPOINT::TYPE_AIRPORT, 1);
+                        if(lFound.size()>0); //We have already this airport in list
+                        else if(lat_set && lon_set)
+                        {
+                            wp.longest_runway = longestRunway*1000.0;
+                            NVUPOINT* nwp = new NVUPOINT(wp);
+                            nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
+                            lWP.insert(std::make_pair(nwp->name, nwp));
+                            lWP2.insert(std::make_pair(nwp->name2, nwp));
+                            //lAirports.push_back(nwp);
+                        }//if
+                        else if(longestRunway>=0.0)
+                        {
+                            //wp.latlon = latA + (latB - latA)*0.5;
+                            wp.latlon = latlonX;
+                            wp.longest_runway = longestRunway*1000.0;
+                            NVUPOINT* nwp = new NVUPOINT(wp);
+                            nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
+                            lWP.insert(std::make_pair(nwp->name, nwp));
+                            lWP2.insert(std::make_pair(nwp->name2, nwp));
+                            //lAirports.push_back(nwp);
+                        }
+
+                        //Reset the flags and continue with this new airport
+                        wp = NVUPOINT();
+                        lat_set = 0;
+                        lon_set = 0;
+                        longestRunway = -1.0;
+                        latAB_set = false;
+                        currentState = 1;
+                        continue;
+                    }
+                    else if(cmpData == 1302 || (cmpData>99 && cmpData<103)) currentState = cmpData;
+                    else i = record.size(); //Nothing to see here, begone!
+                break;
+
+                case 1: //(1) Elevation, (1302) datum_xxx
+                    if(currentState == 1) //Elevation
+                    {
+                        wp.elev = qstr.toInt();
+                    }
+                    else if(currentState == 1302)
+                    {
+                        if(i<(record.size()-1))
+                        {
+                            i++;
+                            if(qstr.compare("datum_lat") == 0)
+                            {
+                                qstr = record.at(i).simplified();
+                                wp.latlon.x = qstr.toDouble();
+                                lat_set = true;
+                            }
+                            else if(qstr.compare("datum_lon") == 0)
+                            {
+                                qstr = record.at(i).simplified();
+                                wp.latlon.y = qstr.toDouble();
+                                lon_set = true;
+                            }//if
+                            else if(qstr.compare("region_code") == 0)
+                            {
+                                qstr = record.at(i).simplified();
+                                wp.country = qstr;
+                                break;
+                            }
+                            else if(qstr.compare("transition_alt") == 0)
+                            {
+                                qstr = record.at(i).simplified();
+                                wp.trans_alt = qstr.toInt();
+                                break;
+                            }
+                            else if(qstr.compare("transition_alt") == 0)
+                            {
+                                qstr = record.at(i).simplified();
+                                wp.trans_level = qstr.toInt();
+                                break;
+                            }
+                        }
+
+                        i = record.size(); //We have managed to add all data for this row.
+                    }
+                break;
+
+                case 2: // (1) Deprecated, (102) Helipad longitude
+                    //if(currentState == 102 &&!latAB_set) wp.latlon.x = qstr.toDouble();
+                    if(currentState == 102) latA.x = qstr.toDouble();
+                break;
+
+                case 3: // (1) Deprecated (102) Helipad latitude
+                    if(currentState == 102)
+                    {
+                        if(longestRunway>0) break;
+                        longestRunway = 0;
+                        latlonX.x = latA.x;
+                        latlonX.y = qstr.toDouble();
+
+                        //wp.latlon.y = qstr.toDouble();
+                        //latAB_set = true;
+                    }//if
+                break;
+
+                case 4: // (1) ICAO code, (101) Water runway start longitude
+                    if(currentState == 1)
+                    {
+                        wp.name = qstr;
+                    }//if
+                    else if(currentState == 101) latA.x = qstr.toDouble();
+                break;
+                case 5: // (1) Airport name, (101) Water runway start latitude
+                    if(currentState == 1)
+                    {
+                        while(i<record.size())
+                        {
+                            if(wp.name2.isEmpty()) wp.name2 = qstr;
+                            else wp.name2 = wp.name2 + " " + qstr;
+                            i++;
+                            if(i<record.size()) qstr = record.at(i).simplified();
+                        }
+                    }//if
+                    else if(currentState == 101) latA.y = qstr.toDouble();
+                break;
+
+                case 7: //(101) Water runway end longitude
+                    if(currentState == 101) latB.x = qstr.toDouble();
+                break;
+                case 8: //(101) Water runway end latitude
+                   if(currentState == 101)
+                   {
+                       latB.y = qstr.toDouble();
+                       longestRunwayCompare = LMATH::calc_distance(latA.x, latA.y, latB.x, latB.y);
+                       if(longestRunway>longestRunwayCompare) break;
+                       longestRunway = longestRunwayCompare;
+                       latlonX = latA + (latB - latA)*0.5;
+
+                       //latAB_set = true;
+                   }
+                break;
+                case 9: //(100) Runway start longitude
+                    if(currentState == 100) latA.x = qstr.toDouble();
+                break;
+                case 10: //(100) Runway start latitude
+                    if(currentState == 100) latA.y = qstr.toDouble();
+                break;
+                case 18: //(100) Runway end longitude
+                    if(currentState == 100) latB.x = qstr.toDouble();
+                break;
+                case 19: //(100) Runway end latitude
+                    if(currentState == 100)
+                    {
+                        latB.y = qstr.toDouble();
+
+                        longestRunwayCompare = LMATH::calc_distance(latA.x, latA.y, latB.x, latB.y);
+                        if(longestRunway>longestRunwayCompare) break;
+                        longestRunway = longestRunwayCompare;
+                        latlonX = latA + (latB - latA)*0.5;
+
+                        //latAB_set = true;
+                    }//if
+                break;
+            }
+        }
+    }//while
+
+    //Add the last airport, if valid
+    wp.wpOrigin = wpOrigin;
+    wp.type = WAYPOINT::TYPE_AIRPORT;
+    std::vector<NVUPOINT*> lFound;
+
+
+    lFound = search(wp.name, WAYPOINT::TYPE_AIRPORT, 1);
+    if(lFound.size()>0); //We have already this airport in list
+    else if(lon_set && lat_set)
+    {
+        wp.longest_runway = longestRunway*1000.0;
+        NVUPOINT* nwp = new NVUPOINT(wp);
+        nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
+        lWP.insert(std::make_pair(nwp->name, nwp));
+        lWP2.insert(std::make_pair(nwp->name2, nwp));
+        //lAirports.push_back(nwp);
+    }
+    else if(longestRunway>=0.0)
+    {
+        wp.longest_runway = longestRunway*1000.0;
+        wp.latlon = latlonX;
+        //wp.latlon = latA + (latB - latA)*0.5;
+        NVUPOINT* nwp = new NVUPOINT(wp);
+        nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
+        lWP.insert(std::make_pair(nwp->name, nwp));
+        lWP2.insert(std::make_pair(nwp->name2, nwp));
+        //lAirports.push_back(new NVUPOINT(nwp));
+    }
+}
+
+void XFMS_DATA::validate_waypoint_XP11(const QStringList& record)
+{
+
+    QString test;
     if(record.size()<5) return;
 
     NVUPOINT* wp = new NVUPOINT();
-    wp->type = WAYPOINT::TYPE_AIRPORT;
+    wp->type = WAYPOINT::TYPE_FIX;
 
+    for(int i=0; i<record.size(); i++)
+    {
+        QString qstr = record.at(i).simplified();
+        switch(i)
+        {
+            case 0: //Latitude
+                wp->latlon.x = qstr.toDouble();
+            break;
+            case 1: //Longitude
+                wp->latlon.y = qstr.toDouble();
+            break;
+            case 2: //ICAO code
+                wp->name = qstr;
+            break;
+            case 3: //Airport terminal or ENRT (enroute)
+                //wp->name2 = qstr;
+            break;
+            case 4: //ICAO region code or terminal area airport
+                wp->country = qstr;
+            break;
+        }
+    }
+
+    wp->wpOrigin = WAYPOINT::ORIGIN_AIRAC_WAYPOINTS;
+    wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat);
+
+    double d;
+    NVUPOINT* wpSimilar = getClosestWaypointType(wp->latlon, wp->name, WAYPOINT::TYPE_FIX, d);
+    if(wpSimilar && d<=DEFAULT_WAYPOINT_MARGIN)
+    {
+        if(wpSimilar->wpOrigin!=WAYPOINT::ORIGIN_XNVU)
+        {
+            delete wp;
+            return;
+        }
+    }
+
+    lWP.insert(std::make_pair(wp->name, wp));
+    lWP2.insert(std::make_pair(wp->name2, wp));
+    //lFixes.push_back(wp);
+}
+
+void XFMS_DATA::validate_airways_XP11(QFile& infile)
+{
+    //Line: Fix | Region | Type | Fix | Region | Type | Directional | Airway (Low or High) | Base | Top | Airway-Airway-Airway....
+
+    std::vector<AIRWAY_SEGMENT_X11*> lASegs;
+
+    while(!infile.atEnd())
+    {
+        bool bError = false;
+        NVUPOINT wp;
+        NVUPOINT wp2;
+        AIRWAY_SEGMENT_X11 aSeg;
+        int type;
+        QStringList sharedAirways;
+        QStringList record;
+        QString qstr;
+        QString line;
+
+        line = infile.readLine();
+        record = line.split(' ',  QString::SkipEmptyParts);
+        try
+        {
+            for(int i=0; i<record.size(); i++)
+            {
+                qstr = record[i].simplified();
+                switch(i)
+                {
+                case 0: //Fix ICAO
+                    wp.name = qstr;
+                    break;
+                case 1: //Region i.e. ES
+                    wp.country = qstr;
+                    break;
+                case 2: //Type of fix 11=fix, 2=enroute NDB, 3 = VOR, TACAN or DME
+                    type = qstr.toInt();
+                    if(type == 11) wp.type = WAYPOINT::TYPE_FIX;
+                    else if(type == 2) wp.type = WAYPOINT::TYPE_NDB;
+                    else if(type == 3) wp.type = WAYPOINT::TYPE_VHFNAV;
+                    else bError = true;
+                    break;
+                case 3: //Fix ICAO
+                    wp2.name = qstr;
+                    break;
+                case 4: //Region i.e. ES
+                    wp2.country = qstr;
+                    break;
+                case 5: //Type of fix 11=fix, 2=enroute NDB, 3 = VOR, TACAN or DME
+                    type = qstr.toInt();
+                    if(type == 11) wp2.type = WAYPOINT::TYPE_FIX;
+                    else if(type == 2) wp2.type = WAYPOINT::TYPE_NDB;
+                    else if(type == 3) wp2.type = WAYPOINT::TYPE_VHFNAV;
+                    else bError = true;
+                    break;
+                case 6: //Directional (N, F, B)
+                    if(qstr.compare("N", Qt::CaseInsensitive) == 0) aSeg.direction = 0;
+                    else if(qstr.compare("F", Qt::CaseInsensitive) == 0) aSeg.direction = 1;
+                    else if(qstr.compare("B", Qt::CaseInsensitive) == 0) aSeg.direction = 2;
+                    else bError = true;
+                    break;
+                case 7: //Airway low (1) or high (2)
+                    aSeg.hilo = qstr.toInt();
+                    break;
+                case 8: //Base of airway FL
+                    aSeg.base = qstr.toInt();
+                    break;
+                case 9: //Top of airway FL
+                    aSeg.top = qstr.toInt();
+                    break;
+                case 10:
+                    //aSeg.sharedAirways = qstr.split('-', QString::SkipEmptyParts);
+                    sharedAirways = qstr.split('-', QString::SkipEmptyParts);
+                    break;
+                }//switch
+            }//for
+        }//try
+        catch(...)
+        {
+            continue;
+        }//catch
+
+        if(bError) continue;
+
+
+        //We set aSeg.start and aSeg.end, if the waypoint is not found in the global waypoint list (lWP), we also allocate it and add it to the global waypoint list.--------------------------------------------------------------
+        std::vector<NVUPOINT*> sPoints;
+        aSeg.start = NULL;
+        sPoints = search(wp.name, 0, 1, wp.country);
+        for(int i=0; i<sPoints.size(); i++) if(sPoints[i]->wpOrigin!=WAYPOINT::ORIGIN_XNVU) { aSeg.start = sPoints[i]; break;};
+        if(aSeg.start == NULL) continue;
+
+        aSeg.end = NULL;
+        sPoints = search(wp2.name, 0, 1, wp2.country);
+        for(int i=0; i<sPoints.size(); i++) if(sPoints[i]->wpOrigin!=WAYPOINT::ORIGIN_XNVU) { aSeg.end = sPoints[i]; break;};
+        if(aSeg.end == NULL) continue;
+
+        //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+        //We add the segments to the lASegs list
+        //* Note1: Some segments share the same airways, so we duplicate the segment for each airway.
+
+        if(aSeg.direction == 2)
+        {
+            NVUPOINT* tmp = aSeg.start;
+            aSeg.start = aSeg.end;
+            aSeg.end = tmp;
+        }//if
+        else if(aSeg.direction == 0)
+        {
+            NVUPOINT* tmp = aSeg.start;
+            aSeg.start = aSeg.end;
+            aSeg.end = tmp;
+            for(int i=0; i<sharedAirways.size(); i++)
+            {
+                AIRWAY_SEGMENT_X11* nASeg = new AIRWAY_SEGMENT_X11();
+                nASeg->start = aSeg.start;
+                nASeg->end = aSeg.end;
+                //nASeg->direction = aSeg.direction;
+                nASeg->hilo = aSeg.hilo;
+                nASeg->base = aSeg.base;
+                nASeg->top = aSeg.top;
+                nASeg->airway = sharedAirways.at(i);
+
+                lASegs.push_back(nASeg);
+            }
+            tmp = aSeg.start;
+            aSeg.start = aSeg.end;
+            aSeg.end = tmp;
+        }//else if
+
+        for(int i=0; i<sharedAirways.size(); i++)
+        {
+            AIRWAY_SEGMENT_X11* nASeg = new AIRWAY_SEGMENT_X11();
+            nASeg->start = aSeg.start;
+            nASeg->end = aSeg.end;
+            //nASeg->direction = aSeg.direction;
+            nASeg->hilo = aSeg.hilo;
+            nASeg->base = aSeg.base;
+            nASeg->top = aSeg.top;
+            nASeg->airway = sharedAirways.at(i);
+
+            lASegs.push_back(nASeg);
+        }
+
+    }//while
+
+    //Everthing us loaded into memory, now let us sort everthing out.
+    //The list will be sorted after the airway ICAO identifier.
+    std::sort(lASegs.begin(), lASegs.end(), AIRWAY_SEGMENT_X11::sort);
+
+    std::vector<AIRWAY_SEGMENT_X11*>::iterator it;
+    for(it = lASegs.begin(); it!=lASegs.end(); it++)
+    {
+        std::pair<std::vector<AIRWAY_SEGMENT_X11*>::iterator, std::vector<AIRWAY_SEGMENT_X11*>::iterator> ret = std::equal_range(lASegs.begin(), lASegs.end(), *it, AIRWAY_SEGMENT_X11::sort);
+        std::list<AIRWAY_SEGMENT_X11*> lAW;
+        std::list<AIRWAY_SEGMENT_X11*>::iterator ulit;
+        std::list<AIRWAY_SEGMENT_X11*>::iterator ulit2;
+
+        for(it=ret.first; it!=ret.second; it++) lAW.push_back(*it);
+
+        for(ulit = lAW.begin(); ulit!=lAW.end(); ulit++)
+        {
+            for(ulit2 = std::next(ulit, 1); ulit2!=lAW.end(); ulit2++)
+            {
+                if(AIRWAY_SEGMENT_X11::isSameIgnoreHILO((*ulit), (*ulit2)))
+                {
+                    ulit++;
+                    lAW.erase(std::prev(ulit, 1));
+                    ulit--;
+                    break;
+                }//if
+            }//for
+        }//for
+
+
+        while(lAW.size()>0)
+        {
+            std::list<AIRWAY_SEGMENT_X11*> lCSeg;	//Sub airway
+            std::list<AIRWAY_SEGMENT_X11*>::iterator cit;
+            std::list<AIRWAY_SEGMENT_X11*>::iterator lit;
+
+            lCSeg.push_back((*lAW.begin()));
+            lAW.erase(lAW.begin());
+
+            lit = lAW.begin();
+            while(lit!=lAW.end())
+            {
+                for(cit = lCSeg.begin(); cit!=lCSeg.end(); cit++)
+                {
+                    if((*lit)->end == (*cit)->start && (*lit)->start!=(*cit)->end)
+                    {
+                        lCSeg.insert(cit, *lit);
+                        lAW.erase(lit);
+                        lit = lAW.begin();
+
+                        if(lit == lAW.end())
+                        {
+                            lit--;
+                            break;
+                        }//if
+                        cit = lCSeg.begin();
+                        cit--;
+                        continue;
+                    }//if
+                    else if((*lit)->start == (*cit)->end && (*lit)->end!=(*cit)->start)
+                    {
+                        lCSeg.insert(std::next(cit,1), *lit);
+                        lAW.erase(lit);
+                        lit = lAW.begin();
+
+                        if(lit == lAW.end())
+                        {
+                            lit--;
+                            break;
+                        }//if
+                        cit = lCSeg.begin();
+                        cit--;
+                        continue;
+                    }//else
+                }//for
+
+                lit++;
+            }//while
+
+            AIRWAY* ats = new AIRWAY();
+            ats->name = (*lCSeg.begin())->airway;
+            ats->distance = 0;
+
+            for(cit = lCSeg.begin(); cit!=lCSeg.end(); cit++)
+            {
+                if(cit == lCSeg.begin())
+                {
+                    ats->lATS.push_back((*cit)->start);
+                }//if
+                ats->lATS.push_back((*cit)->end);
+                ats->distance+=LMATH::calc_distance((*cit)->start->latlon, (*cit)->end->latlon);
+            }//for
+
+            NVUPOINT* wpA = new NVUPOINT();
+            wpA->type = WAYPOINT::TYPE_AIRWAY;
+            wpA->wpOrigin = WAYPOINT::ORIGIN_AIRAC_ATS;
+            wpA->name = ats->name;
+            wpA->latlon = ats->lATS[0]->latlon;
+            wpA->MD = ats->lATS[0]->MD;
+            wpA->data = ats;
+
+            //lAirways.push_back(ats);
+            lWP.insert(std::make_pair(wpA->name, wpA));
+        }//while
+
+        if(it == lASegs.end()) break;
+    }//for
+
+    for(int i=0; i<lASegs.size(); i++) delete lASegs.at(i);
+    lASegs.clear();
+}
+
+void XFMS_DATA::validate_earthnav_XP11(const QStringList &record)
+{
+    if(record.size()<9) return;
+
+    NVUPOINT* wp = new NVUPOINT();
+
+    for(int i=0; i<record.size(); i++)
+    {
+        QString qstr = record.at(i).simplified();
+        int _type;
+        switch(i)
+        {
+            case 0:	//Type
+                _type = qstr.toInt();
+                if(_type==2 || _type==3 || _type == 13) //NDB, VHFNAV, STANDALONE DME
+                {
+                    wp = new NVUPOINT();
+                    wp->type = -_type;
+                }//if
+                else return;
+            break;
+            case 1:	//Latitude
+                wp->latlon.x = qstr.toDouble();
+            break;
+            case 2:	//Longitude
+                wp->latlon.y = qstr.toDouble();
+            break;
+            case 3: //Elevation
+                wp->elev = qstr.toInt();
+            break;
+            case 4: //Frequency
+                if(wp->type == -2)
+                {
+                    wp->freq = qstr.toDouble();
+                }
+                else
+                {
+                    wp->freq = (qstr.length() == 6 ? qstr.toDouble()/1000.0 : qstr.toDouble()/100.0);
+                }
+            break;
+            case 5: //Range
+                wp->range = (int) qstr.toDouble()*1.852;
+            break;
+            case 6: //Angle Deviation
+                wp->ADEV = qstr.toDouble();
+            break;
+            case 7: //Identifier
+                wp->name = qstr;
+            break;
+            case 8: //TODO: Airport or enroute (ENRT), store it also
+            break;
+            case 9: //Country
+                wp->country = qstr;
+            break;
+
+            default: //Real name and VOR/DME type
+                //Concat real name, and if VOR/DME is found, we have completed that waypoint
+                QString name2;
+                if(wp->type == -2)
+                {
+                    while(i<record.size())
+                    {
+                        if(qstr.compare("NDB")==0)
+                        {
+                            wp->type = WAYPOINT::TYPE_NDB;
+                            i = record.size();
+                            break;
+                        }
+                        if(name2.isEmpty()) name2 = qstr;
+                        else name2 = name2 + " " + qstr;
+
+                        i++;
+                        if(!(i<record.size())) break;
+                        qstr = record.at(i).simplified();
+                    }//while
+                }//if
+                else if(wp->type == -3)
+                {
+                    while(i<record.size())
+                    {
+                        if(qstr.compare("VOR/DME")==0)
+
+                        {
+                            wp->type = WAYPOINT::TYPE_VORDME;
+                            i = record.size();
+                            break;
+                        }
+                        else if(qstr.compare("VORTAC")==0)
+                        {
+                            wp->type = WAYPOINT::TYPE_VORTAC;
+                            i = record.size();
+                            break;
+                        }
+                        else if(qstr.compare("VOR") == 0)
+                        {
+                            wp->type = WAYPOINT::TYPE_VOR;
+                            i = record.size();
+                            break;
+                        }
+                        else if(qstr.compare("TACAN") == 0)
+                        {
+                            wp->type = WAYPOINT::TYPE_TACAN;
+                            i = record.size();
+                            break;
+                        }
+
+                        if(name2.isEmpty()) name2 = qstr;
+                        else name2 = name2 + " " + qstr;
+
+                        i++;
+                        if(!(i<record.size())) break;
+                        qstr = record.at(i).simplified();
+                    }//while
+                }//else if
+                else if(wp->type == -13)
+                {
+                    while(i<record.size())
+                    {
+                        if(qstr.compare("DME")==0)
+                        {
+                            wp->type = WAYPOINT::TYPE_DME;
+                            i = record.size();
+                            break;
+                        }
+                        else if(qstr.compare("DME-ILS")==0)
+                        {
+                            wp->type = WAYPOINT::TYPE_DME;
+                            i = record.size();
+                            break;
+                        }
+                        if(name2.isEmpty()) name2 = qstr;
+                        else name2 = name2 + " " + qstr;
+
+                        i++;
+                        if(!(i<record.size())) break;
+                        qstr = record.at(i).simplified();
+                    }//while
+                }//else if
+                wp->name2 = name2;
+
+                //If a valid type is not found, do not add this navaid
+                if(wp->type<0)
+                {
+                    delete wp;
+                    return;
+                }
+        }//switch
+    }//for
+    wp->wpOrigin = WAYPOINT::ORIGIN_EARTHNAV;
+    wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat, (double(LMATH::feetToMeter(wp->elev))/1000.0));
+
+
+    if(DialogSettings::distAlignEarthNav)
+    {
+        double d;
+        NVUPOINT *nwp = getClosestWaypointType(wp->latlon, wp->name, 0, d);
+        if(d<=DialogSettings::distAlignMargin && nwp)
+        {
+            delete wp;
+            return;
+            //wp = nwp;
+        }
+    }
+    else
+    {
+        lWP.insert(std::make_pair(wp->name, wp));
+        lWP2.insert(std::make_pair(wp->name2, wp));
+
+        if(wp->type == WAYPOINT::TYPE_VORDME || wp->type == WAYPOINT::TYPE_VORTAC) lXVORDME.push_back(wp);
+        /*
+        if(wp->type == WAYPOINT::TYPE_NDB) lXNDB.push_back(wp);
+        else if(wp->type == WAYPOINT::TYPE_VOR) lXVOR.push_back(wp);
+        else if(wp->type == WAYPOINT::TYPE_VORDME || wp->type == WAYPOINT::TYPE_VORTAC) lXVORDME.push_back(wp);
+        else if(wp->type == WAYPOINT::TYPE_DME || wp->type == WAYPOINT::TYPE_TACAN) lXDME.push_back(wp);
+        */
+    }//else
+}
+
+//KLN90B
+/*
+void XFMS_DATA::validate_airport_KLN90B(const QStringList& record)
+{
+    if(record.size()<5) return;
+
+    NVUPOINT* wp;
+    for(int i=0; i<record.size(); i++)
+    {
+        QString qstr = record.at(i).simplified();
+        switch(i)
+        {
+            case 0:	//Runway or airport
+                if(qstr.compare("A")!=0) return;
+                wp = new NVUPOINT();
+                wp->type = WAYPOINT::TYPE_AIRPORT;
+            break;
+            case 1:	//ICAO
+                wp->name = qstr;
+            break;
+            case 2: //Real name
+                wp->name2 = qstr;
+            break;
+            case 3:	//Latitude
+                wp->latlon.x = qstr.toInt()*0.000001;
+            break;
+            case 4:	//Longitude
+                wp->latlon.y = qstr.toInt()*0.000001;
+            break;
+            case 5: //Elevation
+                wp->elev = qstr.toInt();
+            break;
+        }//switch
+    }//for
+
+    wp->wpOrigin = WAYPOINT::ORIGIN_AIRAC_AIRPORTS;
+    wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat, (double(LMATH::feetToMeter(wp->elev))/1000.0));
+    lWP.insert(std::make_pair(wp->name, wp));
+    lWP2.insert(std::make_pair(wp->name2, wp));
+    lAirports.push_back(wp);
+}
+
+void XFMS_DATA::validate_navaid_KLN90B(const QStringList &record)
+{
+    if(record.size()<9) return;
+
+    NVUPOINT* wp = new NVUPOINT();
+    bool isILS;
+
+    for(int i=0; i<record.size(); i++)
+    {
+        QString qstr = record.at(i).simplified();
+        switch(i)
+        {
+            case 0:	//Identifier
+                wp->name = qstr;
+            break;
+            case 1: //Real name
+                wp->name2 = qstr;
+                if(wp->name2.contains(" ILS/")) isILS = true;
+                else isILS = false;
+            break;
+            case 2: //Frequency
+                wp->freq =qstr.toDouble();
+            break;
+            case 3: //Is VOR?
+                if(isILS) wp->type = WAYPOINT::TYPE_ILS;
+                else wp->type = (qstr.toInt()) ? WAYPOINT::TYPE_VOR : 0;
+            break;
+            case 4:	//Is DME?
+                if(!isILS)
+                {
+                    if(qstr.toInt())
+                    {
+                        wp->type = (wp->type) ? WAYPOINT::TYPE_VORDME : WAYPOINT::TYPE_DME;  //Is VORDME or DME
+                    }
+                    else if(!wp->type) wp->type = WAYPOINT::TYPE_NDB;   //Is NDB
+                }
+            break;
+            case 5: //Range
+                wp->range = qstr.toInt();
+            break;
+            case 6:	//Latitude
+                wp->latlon.x = qstr.toInt()*0.000001;
+            break;
+            case 7:	//Longitude
+                wp->latlon.y = qstr.toInt()*0.000001;
+            break;
+            case 8: //Elevation
+                wp->elev = qstr.toInt();
+            break;
+            case 9: //Country code
+                wp->country = qstr;
+            break;
+        }//switch
+    }//for
+
+    wp->wpOrigin = WAYPOINT::ORIGIN_AIRAC_NAVAIDS;
+    wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat, (double(LMATH::feetToMeter(wp->elev))/1000.0));
+    lWP.insert(std::make_pair(wp->name, wp));
+    lWP2.insert(std::make_pair(wp->name2, wp));
+
+    if(wp->type == WAYPOINT::TYPE_NDB)    lNDB.push_back(wp);
+    else if(wp->type == WAYPOINT::TYPE_VOR)    lVOR.push_back(wp);
+    else if(wp->type == WAYPOINT::TYPE_DME)    lDME.push_back(wp);
+    else if(wp->type == WAYPOINT::TYPE_VORDME) lVORDME.push_back(wp);
+    else if(wp->type == WAYPOINT::TYPE_ILS) lILS.push_back(wp);
+}
+
+void XFMS_DATA::validate_waypoint_KLN90B(const QStringList& record)
+{
+    if(record.size()<3) return;
+
+    NVUPOINT* wp = new NVUPOINT();
+    wp->type = WAYPOINT::TYPE_FIX;
+
+    for(int i=0; i<record.size(); i++)
+    {
+        QString qstr = record.at(i).simplified();
+        switch(i)
+        {
+            case 0:	//Identifier
+                wp->name = qstr;
+            break;
+            case 1:	//Latitude
+                wp->latlon.x = qstr.toInt()*0.000001;
+            break;
+            case 2:	//Longitude
+                wp->latlon.y = qstr.toInt()*0.000001;
+            break;
+            case 3: //Country code
+                wp->country = qstr;
+            break;
+        }//switch
+    }//for
+
+    wp->wpOrigin = WAYPOINT::ORIGIN_AIRAC_WAYPOINTS;
+    wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat);
+
+    double d;
+    NVUPOINT* wpSimilar = getClosestWaypointType(wp, d);
+    if(wpSimilar && d<=DEFAULT_WAYPOINT_MARGIN)
+    {
+        if(wpSimilar->wpOrigin!=WAYPOINT::ORIGIN_XNVU)
+        {
+            delete wp;
+            return;
+        }
+    }
+
+    lWP.insert(std::make_pair(wp->name, wp));
+    lWP2.insert(std::make_pair(wp->name2, wp));
+    lFixes.push_back(wp);
+}
+
+void XFMS_DATA::validate_airways_KLN90B(QFile& infile)
+{
+    QString qstr;
+    NVUPOINT wpA, wpB;
+    AIRWAY* ats = NULL;
+    int inboundCourse = 0;
+    int outboundCourse = 0;
+    double distance = 0;
+
+    while_loop:
+    while(!infile.atEnd())
+    {
+        QString line = infile.readLine();
+        QStringList record;
+        record = line.split('|',  QString::SkipEmptyParts);
+
+        for(int i=0; i<record.size(); i++)
+        {
+            qstr = record.at(i).simplified();
+            switch(i)
+            {
+                case 0:	//Identifier
+                    if(qstr.compare("A") == 0)  //If beginning of a ATS route, get the ATS name and continue on next line.
+                    {
+                        if(ats)
+                        {
+                            if(ats->lATS.size()>0)  //If ats has waypoints, this is the end of this ATS route.
+                            {
+                                NVUPOINT* wpA = new NVUPOINT;
+                                wpA->type = WAYPOINT::TYPE_AIRWAY;
+                                wpA->wpOrigin = WAYPOINT::WAYPOINT::ORIGIN_AIRAC_ATS;
+                                wpA->name = ats->name;
+                                wpA->latlon = ats->lATS[0]->latlon;
+                                wpA->MD = ats->lATS[0]->MD;
+                                wpA->data = ats;
+                                ats->distance = 0;
+                                for(int k=0; k<ats->lATS.size()-1; k++)
+                                {
+                                    ats->distance+=LMATH::calc_distance(ats->lATS[k]->latlon, ats->lATS[k+1]->latlon);
+                                }
+                                lAirways.push_back(ats);
+                                lWP.insert(std::make_pair(wpA->name, wpA));
+                            }//if
+                            else delete ats;
+                        }//if
+                        ats = new AIRWAY();
+                        ats->name = record.at(1).simplified();
+                        goto while_loop;
+                    }
+                    else if(qstr.compare("S")!=0) goto while_loop; //If not A, it should be S, otherwise the line is corrupt
+                break;
+                case 1:	//Waypoint A identifier
+                    wpA.name = qstr;
+                break;
+                case 2:	//A Latitude
+                    wpA.latlon.x = qstr.toInt()*0.000001;
+                break;
+                case 3:	//A Longitude
+                    wpA.latlon.y = qstr.toInt()*0.000001;
+                break;
+                case 4:	//Waypoint B identifier
+                    wpB.name = qstr;
+                break;
+                case 5:	//B Latitude
+                    wpB.latlon.x = qstr.toInt()*0.000001;
+                break;
+                case 6:	//B Longitude
+                    wpB.latlon.y = qstr.toInt()*0.000001;
+                break;
+                case 7: //Inbound course
+                    inboundCourse = qstr.toInt();
+                break;
+                case 8: //Outbound course
+                    outboundCourse = qstr.toInt();
+                break;
+                case 9: //Distance
+                    distance = qstr.toInt()*0.01;
+                break;
+            }//switch
+        }//for
+
+        wpA.wpOrigin = WAYPOINT::ORIGIN_AIRAC_ATS;
+        wpA.MD =  calc_magvar(wpA.latlon.x, wpA.latlon.y, dat);
+        wpA.type = WAYPOINT::TYPE_FIX;
+        wpB.wpOrigin = WAYPOINT::ORIGIN_AIRAC_ATS;
+        wpB.MD =  calc_magvar(wpB.latlon.x, wpB.latlon.y, dat);
+        wpB.type = WAYPOINT::TYPE_FIX;
+
+        NVUPOINT* a = NULL;
+        NVUPOINT* b = NULL;
+
+
+        if(DialogSettings::distAlignATS)
+        {
+            double d;
+
+            a = getClosestWaypointType(&wpA, d);
+            if(a) if(a->type!=wpA.type || a->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DialogSettings::distAlignMargin) a = NULL;
+
+            b = getClosestWaypointType(&wpB, d);
+            if(b) if(b->type!=wpB.type || b->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DialogSettings::distAlignMargin) b = NULL;
+        }//if
+        else
+        {
+            double d;
+            a = getClosestWaypointType(&wpA, d);
+            if(a) if(a->type!=wpA.type || a->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DEFAULT_WAYPOINT_MARGIN) a = NULL;
+
+            b = getClosestWaypointType(&wpB, d);
+            if(b) if(b->type!=wpB.type || b->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DEFAULT_WAYPOINT_MARGIN) b = NULL;
+        }
+
+        if(ats->lATS.size()==0)
+        {
+            if(!a)
+            {
+                a = new NVUPOINT(wpA);
+                lWP.insert(std::make_pair(a->name, a));
+            }//if
+
+            if(!b)
+            {
+                b = new NVUPOINT(wpB);
+                lWP.insert(std::make_pair(b->name, b));
+            }//if
+            ats->lATS.push_back(a);
+            ats->lATS.push_back(b);
+        }
+        else
+        {
+            if(!b)
+            {
+                b = new NVUPOINT(wpB);
+                lWP.insert(std::make_pair(b->name, b));
+            }//if
+            ats->lATS.push_back(b);
+        }//else
+    }//while
+}
+*/
+
+void XFMS_DATA::validate_airport_XP10(const QStringList& record)
+{
+    if(record.size()<5) return;
+
+    NVUPOINT* wp;
 	for(int i=0; i<record.size(); i++)
 	{
         QString qstr = record.at(i).simplified();
@@ -528,6 +1789,8 @@ void XFMS_DATA::validate_airport(const QStringList& record)
 		{
 			case 0:	//Runway or airport
                 if(qstr.compare("A")!=0) return;
+                wp = new NVUPOINT();
+                wp->type = WAYPOINT::TYPE_AIRPORT;
 			break;
 			case 1:	//ICAO
                 wp->name = qstr;
@@ -560,10 +1823,10 @@ void XFMS_DATA::validate_airport(const QStringList& record)
     wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat, (double(LMATH::feetToMeter(wp->elev))/1000.0));
     lWP.insert(std::make_pair(wp->name, wp));
     lWP2.insert(std::make_pair(wp->name2, wp));
-    lAirports.push_back(wp);
+    //lAirports.push_back(wp);
 }
 
-void XFMS_DATA::validate_navaid(const QStringList &record)
+void XFMS_DATA::validate_navaid_XP10(const QStringList &record)
 {
 	if(record.size()<9) return;
 
@@ -623,14 +1886,17 @@ void XFMS_DATA::validate_navaid(const QStringList &record)
     lWP.insert(std::make_pair(wp->name, wp));
     lWP2.insert(std::make_pair(wp->name2, wp));
 
+
+    /*
     if(wp->type == WAYPOINT::TYPE_NDB)    lNDB.push_back(wp);
     else if(wp->type == WAYPOINT::TYPE_VOR)    lVOR.push_back(wp);
     else if(wp->type == WAYPOINT::TYPE_DME)    lDME.push_back(wp);
     else if(wp->type == WAYPOINT::TYPE_VORDME) lVORDME.push_back(wp);
     else if(wp->type == WAYPOINT::TYPE_ILS) lILS.push_back(wp);
+    */
 }
 
-void XFMS_DATA::validate_earthnav(const QStringList &record)
+void XFMS_DATA::validate_earthnav_XP10(const QStringList &record)
 {
     if(record.size()<9) return;
 
@@ -671,7 +1937,7 @@ void XFMS_DATA::validate_earthnav(const QStringList &record)
             case 5: //Range
                 wp->range = (int) qstr.toDouble()*1.852;
             break;
-            case 6: //Range
+            case 6: //Angle Deviation
                 wp->ADEV = qstr.toDouble();
             break;
             case 7: //Identifier
@@ -751,7 +2017,7 @@ void XFMS_DATA::validate_earthnav(const QStringList &record)
     if(DialogSettings::distAlignEarthNav)
     {
         double d;
-        NVUPOINT *nwp = getClosestWaypointType(wp, d);
+        NVUPOINT *nwp = getClosestWaypointType(wp->latlon, wp->name, 0, d);
         if(d<=DialogSettings::distAlignMargin && nwp)
         {
             delete wp;
@@ -764,12 +2030,17 @@ void XFMS_DATA::validate_earthnav(const QStringList &record)
         lWP2.insert(std::make_pair(wp->name2, wp));
     }//else
 
+
+    if(wp->type == WAYPOINT::TYPE_VORDME) lXVORDME.push_back(wp);
+
+    /*
     if(wp->type == WAYPOINT::TYPE_NDB) lXNDB.push_back(wp);
     else if(wp->type == WAYPOINT::TYPE_VORDME) lXVORDME.push_back(wp);
     else if(wp->type == WAYPOINT::TYPE_DME) lXDME.push_back(wp);
+    */
 }
 
-void XFMS_DATA::validate_waypoint(const QStringList& record)
+void XFMS_DATA::validate_waypoint_XP10(const QStringList& record)
 {
     if(record.size()<3) return;
 
@@ -800,7 +2071,7 @@ void XFMS_DATA::validate_waypoint(const QStringList& record)
     wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat);
 
     double d;
-    NVUPOINT* wpSimilar = getClosestWaypointType(wp, d);
+    NVUPOINT* wpSimilar = getClosestWaypointType(wp->latlon, wp->name, 0, d);
     if(wpSimilar && d<=DEFAULT_WAYPOINT_MARGIN)
     {
         if(wpSimilar->wpOrigin!=WAYPOINT::ORIGIN_XNVU)
@@ -812,10 +2083,148 @@ void XFMS_DATA::validate_waypoint(const QStringList& record)
 
     lWP.insert(std::make_pair(wp->name, wp));
     lWP2.insert(std::make_pair(wp->name2, wp));
-    lFixes.push_back(wp);
+    //lFixes.push_back(wp);
 }
 
+void XFMS_DATA::validate_airways_XP10(QFile& infile)
+{
+    QString qstr;
+    NVUPOINT wpA, wpB;
+    AIRWAY* ats = NULL;
+    int inboundCourse = 0;
+    int outboundCourse = 0;
+    double distance = 0;
 
+    while_loop:
+    while(!infile.atEnd())
+    {
+        QString line = infile.readLine();
+        QStringList record;
+        record = line.split(',',  QString::SkipEmptyParts);
+
+        for(int i=0; i<record.size(); i++)
+        {
+            qstr = record.at(i).simplified();
+            switch(i)
+            {
+                case 0:	//Identifier
+                    if(qstr.compare("A") == 0)  //If beginning of a ATS route, get the ATS name and continue on next line.
+                    {
+                        if(ats)
+                        {
+                            if(ats->lATS.size()>0)  //If ats has waypoints, this is the end of this ATS route.
+                            {
+                                NVUPOINT* wpA = new NVUPOINT;
+                                wpA->type = WAYPOINT::TYPE_AIRWAY;
+                                wpA->wpOrigin = WAYPOINT::WAYPOINT::ORIGIN_AIRAC_ATS;
+                                wpA->name = ats->name;
+                                wpA->latlon = ats->lATS[0]->latlon;
+                                wpA->MD = ats->lATS[0]->MD;
+                                wpA->data = ats;
+                                ats->distance = 0;
+                                for(int k=0; k<ats->lATS.size()-1; k++)
+                                {
+                                    ats->distance+=LMATH::calc_distance(ats->lATS[k]->latlon, ats->lATS[k+1]->latlon);
+                                }
+                                //lAirways.push_back(ats);
+                                lWP.insert(std::make_pair(wpA->name, wpA));
+                            }//if
+                            else delete ats;
+                        }//if
+                        ats = new AIRWAY();
+                        ats->name = record.at(1).simplified();
+                        goto while_loop;
+                    }
+                    else if(qstr.compare("S")!=0) goto while_loop; //If not A, it should be S, otherwise the line is corrupt
+                break;
+                case 1:	//Waypoint A identifier
+                    wpA.name = qstr;
+                break;
+                case 2:	//A Latitude
+                    wpA.latlon.x = qstr.toDouble();
+                break;
+                case 3:	//A Longitude
+                    wpA.latlon.y = qstr.toDouble();
+                break;
+                case 4:	//Waypoint B identifier
+                    wpB.name = qstr;
+                break;
+                case 5:	//B Latitude
+                    wpB.latlon.x = qstr.toDouble();
+                break;
+                case 6:	//B Longitude
+                    wpB.latlon.y = qstr.toDouble();
+                break;
+                case 7: //Inbound course
+                    inboundCourse = qstr.toInt();
+                break;
+                case 8: //Outbound course
+                    outboundCourse = qstr.toInt();
+                break;
+                case 9: //Distance
+                    distance = qstr.toDouble();
+                break;
+            }//switch
+        }//for
+
+        wpA.wpOrigin = WAYPOINT::ORIGIN_AIRAC_ATS;
+        wpA.MD =  calc_magvar(wpA.latlon.x, wpA.latlon.y, dat);
+        wpA.type = WAYPOINT::TYPE_FIX;
+        wpB.wpOrigin = WAYPOINT::ORIGIN_AIRAC_ATS;
+        wpB.MD =  calc_magvar(wpB.latlon.x, wpB.latlon.y, dat);
+        wpB.type = WAYPOINT::TYPE_FIX;
+
+        NVUPOINT* a = NULL;
+        NVUPOINT* b = NULL;
+
+
+        if(DialogSettings::distAlignATS)
+        {
+            double d;
+
+            a = getClosestWaypointType(wpA.latlon, wpA.name, 0, d);
+            if(a) if(a->type!=wpA.type || a->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DialogSettings::distAlignMargin) a = NULL;
+
+            b = getClosestWaypointType(wpB.latlon, wpB.name, 0, d);
+            if(b) if(b->type!=wpB.type || b->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DialogSettings::distAlignMargin) b = NULL;
+        }//if
+        else
+        {
+            double d;
+            a = getClosestWaypointType(wpA.latlon, wpA.name, 0, d);
+            if(a) if(a->type!=wpA.type || a->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DEFAULT_WAYPOINT_MARGIN) a = NULL;
+
+            b = getClosestWaypointType(wpB.latlon, wpB.name, 0, d);
+            if(b) if(b->type!=wpB.type || b->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DEFAULT_WAYPOINT_MARGIN) b = NULL;
+        }
+
+        if(ats->lATS.size()==0)
+        {
+            if(!a)
+            {
+                a = new NVUPOINT(wpA);
+                lWP.insert(std::make_pair(a->name, a));
+            }//if
+
+            if(!b)
+            {
+                b = new NVUPOINT(wpB);
+                lWP.insert(std::make_pair(b->name, b));
+            }//if
+            ats->lATS.push_back(a);
+            ats->lATS.push_back(b);
+        }
+        else
+        {
+            if(!b)
+            {
+                b = new NVUPOINT(wpB);
+                lWP.insert(std::make_pair(b->name, b));
+            }//if
+            ats->lATS.push_back(b);
+        }//else
+    }//while
+}
 //wpRef: reference waypoint (If more than 1 waypoints of the the same identifier is found, use wpRef to select the closest one)
 //rPoint: allocated waypoint returned, or NULL if not valid.
 //record: string of custom point
@@ -983,150 +2392,6 @@ QString XFMS_DATA::validate_custom_point(const NVUPOINT* wpRef, NVUPOINT*& rPoin
     rPoint->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
 
     return NULL;
-}
-
-
-
-
-
-void XFMS_DATA::validate_airways(QFile& infile)
-{
-    QString qstr;
-    NVUPOINT wpA, wpB;
-    AIRWAY* ats = NULL;
-    int inboundCourse = 0;
-    int outboundCourse = 0;
-    double distance = 0;
-
-    while_loop:
-    while(!infile.atEnd())
-    {
-        QString line = infile.readLine();
-        QStringList record;
-        record = line.split(',',  QString::SkipEmptyParts);
-
-        for(int i=0; i<record.size(); i++)
-        {
-            qstr = record.at(i).simplified();
-            switch(i)
-            {
-                case 0:	//Identifier
-                    if(qstr.compare("A") == 0)  //If beginning of a ATS route, get the ATS name and continue on next line.
-                    {
-                        if(ats)
-                        {
-                            if(ats->lATS.size()>0)  //If ats has waypoints, this is the end of this ATS route.
-                            {
-                                NVUPOINT* wpA = new NVUPOINT;
-                                wpA->type = WAYPOINT::TYPE_AIRWAY;
-                                wpA->wpOrigin = WAYPOINT::WAYPOINT::ORIGIN_AIRAC_ATS;
-                                wpA->name = ats->name;
-                                wpA->latlon = ats->lATS[0]->latlon;
-                                wpA->MD = ats->lATS[0]->MD;
-                                wpA->data = ats;
-                                ats->distance = 0;
-                                for(int k=0; k<ats->lATS.size()-1; k++)
-                                {
-                                    ats->distance+=LMATH::calc_distance(ats->lATS[k]->latlon, ats->lATS[k+1]->latlon);
-                                }
-                                lAirways.push_back(ats);
-                                lWP.insert(std::make_pair(wpA->name, wpA));
-                            }//if
-                            else delete ats;
-                        }//if
-                        ats = new AIRWAY();
-                        ats->name = record.at(1).simplified();
-                        goto while_loop;
-                    }
-                    else if(qstr.compare("S")!=0) goto while_loop; //If not A, it should be S, otherwise the line is corrupt
-                break;
-                case 1:	//Waypoint A identifier
-                    wpA.name = qstr;
-                break;
-                case 2:	//A Latitude
-                    wpA.latlon.x = qstr.toDouble();
-                break;
-                case 3:	//A Longitude
-                    wpA.latlon.y = qstr.toDouble();
-                break;
-                case 4:	//Waypoint B identifier
-                    wpB.name = qstr;
-                break;
-                case 5:	//B Latitude
-                    wpB.latlon.x = qstr.toDouble();
-                break;
-                case 6:	//B Longitude
-                    wpB.latlon.y = qstr.toDouble();
-                break;
-                case 7: //Inbound course
-                    inboundCourse = qstr.toInt();
-                break;
-                case 8: //Outbound course
-                    outboundCourse = qstr.toInt();
-                break;
-                case 9: //Distance
-                    distance = qstr.toDouble();
-                break;
-            }//switch
-        }//for
-
-        wpA.wpOrigin = WAYPOINT::ORIGIN_AIRAC_ATS;
-        wpA.MD =  calc_magvar(wpA.latlon.x, wpA.latlon.y, dat);
-        wpA.type = WAYPOINT::TYPE_FIX;
-        wpB.wpOrigin = WAYPOINT::ORIGIN_AIRAC_ATS;
-        wpB.MD =  calc_magvar(wpB.latlon.x, wpB.latlon.y, dat);
-        wpB.type = WAYPOINT::TYPE_FIX;
-
-        NVUPOINT* a = NULL;
-        NVUPOINT* b = NULL;
-
-
-        if(DialogSettings::distAlignATS)
-        {
-            double d;
-
-            a = getClosestWaypointType(&wpA, d);
-            if(a) if(a->type!=wpA.type || a->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DialogSettings::distAlignMargin) a = NULL;
-
-            b = getClosestWaypointType(&wpB, d);
-            if(b) if(b->type!=wpB.type || b->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DialogSettings::distAlignMargin) b = NULL;
-        }//if
-        else
-        {
-            double d;
-            a = getClosestWaypointType(&wpA, d);
-            if(a) if(a->type!=wpA.type || a->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DEFAULT_WAYPOINT_MARGIN) a = NULL;
-
-            b = getClosestWaypointType(&wpB, d);
-            if(b) if(b->type!=wpB.type || b->wpOrigin==WAYPOINT::ORIGIN_XNVU || d>DEFAULT_WAYPOINT_MARGIN) b = NULL;
-        }
-
-        if(ats->lATS.size()==0)
-        {
-            if(!a)
-            {
-                a = new NVUPOINT(wpA);
-                lWP.insert(std::make_pair(a->name, a));
-            }//if
-
-            if(!b)
-            {
-                b = new NVUPOINT(wpB);
-                lWP.insert(std::make_pair(b->name, b));
-            }//if
-            ats->lATS.push_back(a);
-            ats->lATS.push_back(b);
-        }
-        else
-        {
-            if(!b)
-            {
-                b = new NVUPOINT(wpB);
-                lWP.insert(std::make_pair(b->name, b));
-            }//if
-            ats->lATS.push_back(b);
-        }//else
-    }//while
 }
 
 void XFMS_DATA::validate_RSBN(const QStringList &record)
@@ -1409,7 +2674,7 @@ void XFMS_DATA::validate_xnvuflightplan(std::vector<NVUPOINT*>& lXNVUFlightplan,
     if(DialogSettings::distAlignWPS)
     {
         double d;
-        nwp = getClosestWaypointType(&wp, d);
+        nwp = getClosestWaypointType(wp.latlon, wp.name, 0, d);
 
         if(d>DialogSettings::distAlignMargin || nwp==NULL) nwp = new NVUPOINT(wp);
     }//if
@@ -1500,7 +2765,7 @@ void XFMS_DATA::validate_fms(std::vector<NVUPOINT*>& lFMS, const QStringList& RA
     if(DialogSettings::distAlignFMS)
     {
         double d;
-        nwp = XFMS_DATA::getClosestWaypointType(&wp, d);
+        nwp = XFMS_DATA::getClosestWaypointType(wp.latlon, wp.name, 0, d);
         if(d>DialogSettings::distAlignMargin || nwp == NULL) nwp = new NVUPOINT(wp);
     }
     else nwp = new NVUPOINT(wp);
@@ -1534,6 +2799,9 @@ int XFMS_DATA::XNVUToFMSType(int _type)
     if(_type == WAYPOINT::TYPE_FIX) return 11;
     if(_type == WAYPOINT::TYPE_DME) return 28;
     if(_type == WAYPOINT::TYPE_LATLON) return 28;
+    if(_type == WAYPOINT::TYPE_TACAN) return 28;
+    if(_type == WAYPOINT::TYPE_VORTAC) return 3;
+    if(_type == WAYPOINT::TYPE_VHFNAV) return 28;
 
     return 0;
 }

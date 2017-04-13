@@ -16,7 +16,7 @@
 #include "dialogcolumns.h"
 #include <ctime>
 
-#define XNVU_VERSION    "XNVU version 0.33"
+#define XNVU_VERSION    "XNVU version 0.34"
 
 //XFMS_DATA xdata;
 int dat;
@@ -58,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(quit()));
     connect(ui->tableWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showFlightplanContextMenu(const QPoint&)));
     connect(ui->listWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showSearchListContextMenu(const QPoint&)));
-    connect(ui->frameDescription, SIGNAL(clicked(QPoint)), this, SLOT(on_frameDescription_clicked()));
+    connect(ui->frameDescription, SIGNAL(clicked(QPoint)), this, SLOT(on_frameDescription_clicked()), Qt::UniqueConnection);
     connect(&clearFlightplan_timer, SIGNAL(timeout()), this, SLOT(clearFlightplanTimeout()));
     connect(ui->lineEdit_DTCourseFrom, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
     connect(ui->lineEdit_DTCourseTo, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
@@ -459,7 +459,15 @@ void MainWindow::on_lineEdit_textChanged(const QString &arg1)
 void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *_item)
 {
     QListWidgetItemData* itemData = (QListWidgetItemData*) _item;
-    ui->tableWidget->insertWaypoint(new NVUPOINT(*itemData->nvupoint), ui->tableWidget->rowCount());
+    if(itemData->nvupoint->type == WAYPOINT::TYPE_AIRWAY)
+    {
+        AIRWAY* awy = (AIRWAY*) itemData->nvupoint->data;
+        for(int i=0; i<awy->lATS.size(); i++)
+        {
+            ui->tableWidget->insertWaypoint(new NVUPOINT(*awy->lATS[i]), ui->tableWidget->rowCount());
+        }//for
+    }
+    else ui->tableWidget->insertWaypoint(new NVUPOINT(*itemData->nvupoint), ui->tableWidget->rowCount());
 }
 
 
@@ -512,15 +520,36 @@ void MainWindow::on_pushButtonInsertBefore_clicked()
 
     int row = ui->tableWidget->currentRow();
     if(row<0) row = 0;
-    ui->tableWidget->insertWaypoint(new NVUPOINT(*itemData->nvupoint), row);
+    if(itemData->nvupoint->type == WAYPOINT::TYPE_AIRWAY)
+    {
+        AIRWAY* awy = (AIRWAY*) itemData->nvupoint->data;
+        for(int i=0; i<awy->lATS.size(); i++)
+        {
+            ui->tableWidget->insertWaypoint(new NVUPOINT(*awy->lATS[i]), row);
+            row++;
+        }//for
+    }
+    else ui->tableWidget->insertWaypoint(new NVUPOINT(*itemData->nvupoint), row);
 }
 
 void MainWindow::on_pushButtonReplace_clicked()
 {
 
-    if(ui->listWidget->currentRow()<0) return;
+    if(ui->listWidget->currentRow()<0 || ui->tableWidget->currentRow()<0) return;
     QListWidgetItemData* itemData = (QListWidgetItemData*)ui->listWidget->currentItem();
-    ui->tableWidget->replaceWaypoint(new NVUPOINT(*itemData->nvupoint), ui->tableWidget->currentRow());
+    if(itemData->nvupoint->type == WAYPOINT::TYPE_AIRWAY)
+    {
+        AIRWAY* awy = (AIRWAY*) itemData->nvupoint->data;
+        ui->tableWidget->replaceWaypoint(new NVUPOINT(*awy->lATS[0]), ui->tableWidget->currentRow());
+        int row = ui->tableWidget->currentRow();
+        row++;
+        for(int i=1; i<awy->lATS.size(); i++)
+        {
+            ui->tableWidget->insertWaypoint(new NVUPOINT(*awy->lATS[i]), row);
+            row++;
+        }//for
+    }
+    else ui->tableWidget->replaceWaypoint(new NVUPOINT(*itemData->nvupoint), ui->tableWidget->currentRow());
 }
 
 
@@ -532,7 +561,17 @@ void MainWindow::on_pushButtonInsertAfter_clicked()
     int row = ui->tableWidget->currentRow();
     if(row<0) row = ui->tableWidget->rowCount();
     else row++;
-    ui->tableWidget->insertWaypoint(new NVUPOINT(*itemData->nvupoint), row);
+
+    if(itemData->nvupoint->type == WAYPOINT::TYPE_AIRWAY)
+    {
+        AIRWAY* awy = (AIRWAY*) itemData->nvupoint->data;
+        for(int i=0; i<awy->lATS.size(); i++)
+        {
+            ui->tableWidget->insertWaypoint(new NVUPOINT(*awy->lATS[i]), row);
+            row++;
+        }//for
+    }
+    else ui->tableWidget->insertWaypoint(new NVUPOINT(*itemData->nvupoint), row);
 }
 
 void MainWindow::on_pushButtonRouteInsertAfter_clicked()
@@ -632,7 +671,9 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
     else if(wp->type == WAYPOINT::TYPE_VOR ||
             wp->type == WAYPOINT::TYPE_DME ||
             wp->type == WAYPOINT::TYPE_VORDME ||
-            wp->type == WAYPOINT::TYPE_ILS)
+            wp->type == WAYPOINT::TYPE_ILS ||
+            wp->type == WAYPOINT::TYPE_TACAN ||
+            wp->type == WAYPOINT::TYPE_VORTAC)
     {
         qstr = qstr + "  " + QString::number(wp->freq, 'f', 3);
     }//if
@@ -676,13 +717,27 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
            wp->type == WAYPOINT::TYPE_NDB ||
            wp->type == WAYPOINT::TYPE_VOR ||
            wp->type == WAYPOINT::TYPE_VORDME ||
-           wp->type == WAYPOINT::TYPE_ILS
+           wp->type == WAYPOINT::TYPE_ILS ||
+           wp->type == WAYPOINT::TYPE_TACAN ||
+           wp->type == WAYPOINT::TYPE_VORTAC
            ) qstr = qstr + "        Elev: " + (ui->actionShow_feet->isChecked() ? QString::number(wp->elev, 'f', 0) + " ft": QString::number(LMATH::feetToMeter(wp->elev), 'f', 0) + " m");
 
         ui->labelWPMagVar->setText(qstr);
     }
 
-    if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_AIRPORTS)
+    if(wp->wpOrigin == WAYPOINT::ORIGIN_X11_CUSTOM_AIRPORTS)
+    {
+        ui->labelWPNote->setText("Source: Custom airports");
+    }
+    else if(wp->wpOrigin == WAYPOINT::ORIGIN_X11_DEFAULT_AIRPORTS)
+    {
+        ui->labelWPNote->setText("Source: Default airports");
+    }
+    else if(wp->wpOrigin == WAYPOINT::ORIGIN_X11_GATEWAY_AIRPORTS)
+    {
+        ui->labelWPNote->setText("Source: Gateway airports");
+    }
+    else if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_AIRPORTS)
     {
         ui->labelWPNote->setText("Source: airports.txt (GNS430 AIRAC)");
     }
@@ -1059,7 +1114,9 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     else if(wp->type == WAYPOINT::TYPE_VOR ||
             wp->type == WAYPOINT::TYPE_DME ||
             wp->type == WAYPOINT::TYPE_VORDME ||
-            wp->type == WAYPOINT::TYPE_ILS)
+            wp->type == WAYPOINT::TYPE_ILS ||
+            wp->type == WAYPOINT::TYPE_TACAN ||
+            wp->type == WAYPOINT::TYPE_VORTAC)
     {
         qstr = QString::number(wp->freq, 'f', 3);
         dx = fM.boundingRect(qstr).width();
@@ -1356,21 +1413,45 @@ void MainWindow::on_frameDescription_clicked()
     {
         if(iD->nvupoint->type == WAYPOINT::TYPE_AIRWAY)
         {
-            AIRWAY* ats = (AIRWAY*) iD->nvupoint->data;
-            ui->listWidget->clear();
-            for(int i=0; i<ats->lATS.size(); i++)
+            //ui->labelWPMagVar->setText("CLICK TO SHOW WAYPOINTS");
+            //if(ui->labelWPMagVar->text().compare("CLICK TO SHOW WAYPOINTS") == 0)
+            //{
+                ui->labelWPMagVar->setText("<---- GO BACK");
+                AIRWAY* ats = (AIRWAY*) iD->nvupoint->data;
+                ui->listWidget->clear();
+                for(int i=0; i<ats->lATS.size(); i++)
+                {
+                    NVUPOINT* wp = (NVUPOINT*) ats->lATS[i];
+                    QListWidgetItemData *newItem = new QListWidgetItemData;
+                    QString qstr = wp->name;
+                    if(!wp->name2.isEmpty() && wp->type!=WAYPOINT::TYPE_FIX) qstr = qstr + " - " + wp->name2;
+                    if(!wp->country.isEmpty()) qstr = qstr + " [" + wp->country + "]";
+                    newItem->setText(qstr);
+                    newItem->nvupoint = wp;
+                    ui->listWidget->addItem(newItem, false);
+                }//for
+            /*
+            }//if
+            else
             {
-                NVUPOINT* wp = (NVUPOINT*) ats->lATS[i];
-                QListWidgetItemData *newItem = new QListWidgetItemData;
-                QString qstr = wp->name;
-                if(!wp->name2.isEmpty()) qstr = qstr + " - " + wp->name2;
-                if(!wp->country.isEmpty()) qstr = qstr + " [" + wp->country + "]";
-                newItem->setText(qstr);
-                newItem->nvupoint = wp;
-                ui->listWidget->addItem(newItem, false);
-            }//for
+                ui->labelWPMagVar->setText("SELECT AIRWAY IN LIST");
+                ui->listWidget->search(ui->labelWPType->text(), 0);
+            }
+            */
+
+            return;
         }//if
     }//if
+
+    if(ui->labelWPType2->text().compare("AIRWAY") == 0)
+    {
+        if(ui->labelWPMagVar->text().compare("<---- GO BACK") == 0)
+        {
+            ui->labelWPMagVar->setText("SELECT AIRWAY IN LIST");
+            ui->listWidget->search(ui->labelWPType->text(), 0);
+        }
+    }
+
 }
 
 
@@ -1382,39 +1463,48 @@ void MainWindow::on_actionXNVU_library_triggered()
 }
 
 
+/*
 void MainWindow::on_pushButton_showAIRAC_Airports_clicked()
 {
+    //TODO: XP11 Custom, default and gateway airports
     ui->listWidget->showOrigin(WAYPOINT::ORIGIN_AIRAC_AIRPORTS, ui->pushButton_showAIRAC_Airports->isChecked());
     ui->listWidget->refreshSearch();
 }
 
 void MainWindow::on_pushButton_showAIRAC_Navaids_clicked()
 {
+    //TODO: XP11 AIRAC NAVAIDS?
     ui->listWidget->showOrigin(WAYPOINT::ORIGIN_AIRAC_NAVAIDS, ui->pushButton_showAIRAC_Navaids->isChecked());
     ui->listWidget->refreshSearch();
 }
 
 void MainWindow::on_pushButton_showAIRAC_Fixes_clicked()
 {
+    //TODO: XP11 AIRAC FIXES?
     ui->listWidget->showOrigin(WAYPOINT::ORIGIN_AIRAC_WAYPOINTS, ui->pushButton_showAIRAC_Fixes->isChecked());
     ui->listWidget->refreshSearch();
 }
+*/
 
 void MainWindow::on_pushButton_showAIRAC_Airways_clicked()
 {
-    ui->listWidget->showOrigin(WAYPOINT::ORIGIN_AIRAC_ATS, ui->pushButton_showAIRAC_Airways->isChecked());
+    //TODO: XP11 AIRAC AIRWAYS?
+    ui->listWidget->showType(WAYPOINT::TYPE_AIRWAY, ui->pushButton_showAIRAC_Airways->isChecked());
     ui->listWidget->refreshSearch();
 }
 
+/*
 void MainWindow::on_pushButton_showEarthNav_clicked()
 {
+    //TODO: XP11 EARTHNAV?
     ui->listWidget->showOrigin(WAYPOINT::ORIGIN_EARTHNAV, ui->pushButton_showEarthNav->isChecked());
     ui->listWidget->refreshSearch();
 }
+*/
 
 void MainWindow::on_pushButton_showRSBN_clicked()
 {
-    ui->listWidget->showOrigin(WAYPOINT::ORIGIN_RSBN, ui->pushButton_showRSBN->isChecked());
+    ui->listWidget->showType(WAYPOINT::TYPE_RSBN, ui->pushButton_showRSBN->isChecked());
     ui->listWidget->refreshSearch();
 }
 

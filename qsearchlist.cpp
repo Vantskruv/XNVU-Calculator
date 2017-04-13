@@ -41,14 +41,23 @@ void QSearchList::search(const QString &name, bool filter)
     currentFilter = filter;
     std::vector<NVUPOINT*> lWP = XFMS_DATA::search(currentSearch);
 
+
     clear();
     if(currentSearch.isEmpty()) return;
     for(int i=0; i<lWP.size(); i++)
     {
         QListWidgetItemData *newItem = new QListWidgetItemData;
         QString qstr = lWP[i]->name;
-        if(!lWP[i]->name2.isEmpty()) qstr = qstr + " - " + lWP[i]->name2;
-        if(!lWP[i]->country.isEmpty()) qstr = qstr + " [" + lWP[i]->country + "]";
+        if(lWP[i]->type == WAYPOINT::TYPE_AIRWAY)
+        {
+            AIRWAY* awy = (AIRWAY*) lWP[i]->data;
+            qstr = qstr + "  [" + awy->lATS[0]->name + "] - [" + awy->lATS.back()->name + "]";
+        }
+        else
+        {
+            if((!lWP[i]->name2.isEmpty()) && lWP[i]->type!=WAYPOINT::TYPE_FIX) qstr = qstr + " - " + lWP[i]->name2;
+            if(!lWP[i]->country.isEmpty()) qstr = qstr + " [" + lWP[i]->country + "]";
+        }//else
         newItem->setText(qstr);
         newItem->nvupoint = lWP[i];
         addItem(newItem, filter);
@@ -60,6 +69,7 @@ void QSearchList::refreshSearch()
     search(currentSearch, currentFilter);
 }
 
+//TODO: We have added some more items with XP11 transition, how should we reprogram this?
 void QSearchList::addItem(QListWidgetItemData *wd, bool filter)
 {
     if(filter) switch(wd->nvupoint->type)
@@ -67,31 +77,26 @@ void QSearchList::addItem(QListWidgetItemData *wd, bool filter)
         case WAYPOINT::TYPE_AIRPORT: if(showTYPE_AIRPORT); else return; break;
         case WAYPOINT::TYPE_NDB: if(showTYPE_NDB); else return;
         case WAYPOINT::TYPE_VORDME: if(showTYPE_VORDME); else return; break;
+        case WAYPOINT::TYPE_VORTAC: if(showTYPE_VORDME); else return; break;
         case WAYPOINT::TYPE_ILS: if(showTYPE_VORDME); else return; break; //TODO currently we are combining ILS navaids with VOR/DME:s.
         case WAYPOINT::TYPE_VOR: if(showTYPE_VOR); else return; break;
         case WAYPOINT::TYPE_DME: if(showTYPE_DME); else return; break;
+        case WAYPOINT::TYPE_TACAN: if(showTYPE_DME); else return; break;
         case WAYPOINT::TYPE_RSBN: if(showTYPE_RSBN); else return; break;
         case WAYPOINT::TYPE_FIX: if(showTYPE_FIX); else return; break;
-        case WAYPOINT::TYPE_LATLON: if(showTYPE_LATLON); else return; break;
         case WAYPOINT::TYPE_AIRWAY: if(showTYPE_AIRWAY); else return; break;
 
-        default:
-            return;
+        default: //TODO: Currently showing everything else
+            ;//return;
     }
 
 
     if(filter) switch(wd->nvupoint->wpOrigin)
     {
-        case WAYPOINT::ORIGIN_AIRAC_AIRPORTS: if(showORIGIN_AIRAC_AIRPORTS); else return; break;
-        case WAYPOINT::ORIGIN_AIRAC_NAVAIDS: if(showORIGIN_AIRAC_NAVAIDS); else return; break;
-        case WAYPOINT::ORIGIN_AIRAC_WAYPOINTS: if(showORIGIN_AIRAC_WAYPOINTS); else return; break;
-        case WAYPOINT::ORIGIN_AIRAC_ATS: if(showORIGIN_AIRAC_ATS); else return; break;
-        case WAYPOINT::ORIGIN_EARTHNAV: if(showORIGIN_EARTHNAV); else return; break;
-        case WAYPOINT::ORIGIN_RSBN: if(showORIGIN_RSBN); else return; break;
         case WAYPOINT::ORIGIN_XNVU: if(showORIGIN_XNVU); else return; break;
 
-        default:
-            return;
+        default: //TODO: Currently showing everthung else
+            ;//return;
     }
 
     QListWidget::addItem(wd);
@@ -108,21 +113,16 @@ void QSearchList::showType(int type, bool show)
         case WAYPOINT::TYPE_DME: showTYPE_DME = show; break;
         case WAYPOINT::TYPE_RSBN: showTYPE_RSBN = show; break;
         case WAYPOINT::TYPE_FIX: showTYPE_FIX = show; break;
-        case WAYPOINT::TYPE_LATLON: showTYPE_LATLON = show; break;
         case WAYPOINT::TYPE_AIRWAY: showTYPE_AIRWAY = show; break;
     }
 }
+
 
 void QSearchList::showOrigin(int origin, bool show)
 {
     switch(origin)
     {
-        case WAYPOINT::ORIGIN_AIRAC_AIRPORTS: showORIGIN_AIRAC_AIRPORTS = show; break;
-        case WAYPOINT::ORIGIN_AIRAC_NAVAIDS: showORIGIN_AIRAC_NAVAIDS = show; break;
-        case WAYPOINT::ORIGIN_AIRAC_WAYPOINTS: showORIGIN_AIRAC_WAYPOINTS = show; break;
-        case WAYPOINT::ORIGIN_AIRAC_ATS: showORIGIN_AIRAC_ATS = show; break;
-        case WAYPOINT::ORIGIN_EARTHNAV: showORIGIN_EARTHNAV = show; break;
-        case WAYPOINT::ORIGIN_RSBN: showORIGIN_RSBN = show; break;
         case WAYPOINT::ORIGIN_XNVU: showORIGIN_XNVU = show; break;
     }
 }
+

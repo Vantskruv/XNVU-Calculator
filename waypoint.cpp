@@ -72,6 +72,9 @@ QString WAYPOINT::getTypeStr(const WAYPOINT* wp, int _type)
     if(t == TYPE_LATLON) return "LAT/LON";
     if(t == TYPE_AIRWAY) return "AIRWAY";
     if(t == TYPE_ILS) return "ILS";
+    if(t == TYPE_VORTAC) return "VORTAC";
+    if(t == TYPE_TACAN) return "TACAN";
+    if(t == TYPE_VHFNAV) return "VHF NAV";
     //if(t == TYPE_STAR) return "STAR";
     //if(t == TYPE_SID) return "SID";
     //if(t == TYPE_APPTR) return "TRANSITION";
@@ -94,6 +97,10 @@ std::vector<QString> WAYPOINT::getTypeStrList()
     rTStr.push_back(getTypeStr(NULL, TYPE_LATLON));
     rTStr.push_back(getTypeStr(NULL, TYPE_AIRWAY));
     rTStr.push_back(getTypeStr(NULL, TYPE_ILS));
+    rTStr.push_back(getTypeStr(NULL, TYPE_TACAN));
+    rTStr.push_back(getTypeStr(NULL, TYPE_VORTAC));
+    rTStr.push_back(getTypeStr(NULL, TYPE_VHFNAV));
+
     //rTStr.push_back(getTypeStr(NULL, TYPE_STAR));
     //rTStr.push_back(getTypeStr(NULL, TYPE_SID));
     //rTStr.push_back(getTypeStr(NULL, TYPE_APPTR));
@@ -110,6 +117,10 @@ bool WAYPOINT::isNavaid(int _type)
     if(_type == TYPE_ILS) return true;
     if(_type == TYPE_DME) return true;
     if(_type == TYPE_RSBN) return true;
+    if(_type == TYPE_ILS) return true;
+    if(_type == TYPE_VORTAC) return true;
+    if(_type == TYPE_TACAN) return true;
+    if(_type == TYPE_VHFNAV) return true;
 
     return false;
 }

@@ -83,7 +83,9 @@ void DialogRSBN::setWaypointDescription(const NVUPOINT* wp)
     }//if
     else if(wp->type == WAYPOINT::TYPE_VOR ||
             wp->type == WAYPOINT::TYPE_DME ||
-            wp->type == WAYPOINT::TYPE_VORDME)
+            wp->type == WAYPOINT::TYPE_VORDME ||
+            wp->type == WAYPOINT::TYPE_VORTAC ||
+            wp->type == WAYPOINT::TYPE_TACAN)
     {
         qstr = qstr + "  " + QString::number(wp->freq, 'f', 3);
     }//if
@@ -122,7 +124,19 @@ void DialogRSBN::setWaypointDescription(const NVUPOINT* wp)
     else ui->labelWPMagVar->setText("Magnetic Declination: " + QString::number(wp->MD, 'f', 1));
 
 
-    if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_AIRPORTS)
+    if(wp->wpOrigin == WAYPOINT::ORIGIN_X11_CUSTOM_AIRPORTS)
+    {
+        ui->labelWPNote->setText("Source: Custom airports");
+    }
+    else if(wp->wpOrigin == WAYPOINT::ORIGIN_X11_DEFAULT_AIRPORTS)
+    {
+        ui->labelWPNote->setText("Source: Default airports");
+    }
+    else if(wp->wpOrigin == WAYPOINT::ORIGIN_X11_GATEWAY_AIRPORTS)
+    {
+        ui->labelWPNote->setText("Source: Gateway airports");
+    }
+    else if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_AIRPORTS)
     {
         ui->labelWPNote->setText("Source: airports.txt (GNS430 AIRAC)");
     }

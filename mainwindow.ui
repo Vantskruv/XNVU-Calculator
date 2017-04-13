@@ -109,7 +109,7 @@
    <property name="styleSheet">
     <string notr="true"/>
    </property>
-   <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" columnstretch="0,0,0,0">
+   <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0,0,0,0" columnstretch="0,0,0">
     <item row="1" column="0" rowspan="7" colspan="2">
      <layout class="QVBoxLayout" name="verticalLayout">
       <property name="sizeConstraint">
@@ -815,33 +815,7 @@
         <property name="sizeConstraint">
          <enum>QLayout::SetMinimumSize</enum>
         </property>
-        <item row="3" column="1">
-         <widget class="QPushButton" name="pushButton_showRSBN">
-          <property name="text">
-           <string>RSBN</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QPushButton" name="pushButton_showVOR">
-          <property name="text">
-           <string>VOR</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
+        <item row="1" column="0">
          <widget class="QPushButton" name="pushButton_showAirports">
           <property name="text">
            <string>Airports</string>
@@ -854,10 +828,10 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="3">
+        <item row="1" column="1">
          <widget class="QPushButton" name="pushButton_showFix">
           <property name="text">
-           <string>Fix</string>
+           <string>Fixes</string>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -868,9 +842,9 @@
          </widget>
         </item>
         <item row="2" column="0">
-         <widget class="QPushButton" name="pushButton_showEarthNav">
+         <widget class="QPushButton" name="pushButton_showVORDME">
           <property name="text">
-           <string>EarthNav</string>
+           <string>VOR/DME</string>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -880,10 +854,10 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="4">
-         <widget class="QPushButton" name="pushButton_showXNVU">
+        <item row="2" column="2">
+         <widget class="QPushButton" name="pushButton_showVOR">
           <property name="text">
-           <string>XNVU</string>
+           <string>VOR</string>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -894,9 +868,9 @@
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="QPushButton" name="pushButton_showAIRAC_Navaids">
+         <widget class="QPushButton" name="pushButton_showRSBN">
           <property name="text">
-           <string>AIRAC Navaids</string>
+           <string>RSBN</string>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -906,10 +880,10 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="4">
-         <widget class="QPushButton" name="pushButton_showAIRAC_Fixes">
+        <item row="1" column="2">
+         <widget class="QPushButton" name="pushButton_showAIRAC_Airways">
           <property name="text">
-           <string>AIRAC FIxes</string>
+           <string>Airways</string>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -919,20 +893,7 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="3">
-         <widget class="QPushButton" name="pushButton_showDME">
-          <property name="text">
-           <string>DME</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
+        <item row="3" column="0">
          <widget class="QPushButton" name="pushButton_showNDB">
           <property name="text">
            <string>NDB</string>
@@ -945,10 +906,10 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="4">
-         <widget class="QPushButton" name="pushButton_showAIRAC_Airways">
+        <item row="3" column="1">
+         <widget class="QPushButton" name="pushButton_showDME">
           <property name="text">
-           <string>AIRAC Airways</string>
+           <string>DME</string>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -958,23 +919,10 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QPushButton" name="pushButton_showAIRAC_Airports">
+        <item row="3" column="2">
+         <widget class="QPushButton" name="pushButton_showXNVU">
           <property name="text">
-           <string>AIRAC Airports</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <widget class="QPushButton" name="pushButton_showVORDME">
-          <property name="text">
-           <string>VOR/DME</string>
+           <string>XNVU</string>
           </property>
           <property name="checkable">
            <bool>true</bool>

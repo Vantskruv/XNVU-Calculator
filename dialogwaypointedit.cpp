@@ -42,6 +42,7 @@ DialogWaypointEdit::DialogWaypointEdit(const NVUPOINT* _nvuPoint, bool isSave, Q
     ui->spinBox_Elev->setValue(nvupoint.elev);
     ui->spinBox_Alt->setValue(nvupoint.alt);
 
+    //TODO: Bad coding, very bad coding. Need to reprogram.
     ui->comboBox_Type->setCurrentIndex(nvupoint.type-1);
     if(nvupoint.type == WAYPOINT::TYPE_AIRPORT ||
        nvupoint.type == WAYPOINT::TYPE_NDB ||
@@ -52,7 +53,9 @@ DialogWaypointEdit::DialogWaypointEdit(const NVUPOINT* _nvuPoint, bool isSave, Q
        nvupoint.type == WAYPOINT::TYPE_RSBN ||
        nvupoint.type == WAYPOINT::TYPE_FIX ||
        nvupoint.type == WAYPOINT::TYPE_LATLON ||
-       nvupoint.type == WAYPOINT::TYPE_AIRWAY) ui->comboBox_Type->setCurrentIndex(nvupoint.type-1);
+       nvupoint.type == WAYPOINT::TYPE_AIRWAY ||
+       nvupoint.type == WAYPOINT::TYPE_TACAN ||
+       nvupoint.type == WAYPOINT::TYPE_VORTAC) ui->comboBox_Type->setCurrentIndex(nvupoint.type-1);
     else ui->comboBox_Type->setCurrentIndex(WAYPOINT::TYPE_FIX-1);
 
     ui->doubleSpinBox_Freq->setValue(nvupoint.freq);
@@ -76,7 +79,9 @@ void DialogWaypointEdit::on_comboBox_Type_currentIndexChanged(int index)
        index == WAYPOINT::TYPE_VOR ||
        index == WAYPOINT::TYPE_VORDME ||
        index == WAYPOINT::TYPE_ILS ||
-       index == WAYPOINT::TYPE_RSBN)
+       index == WAYPOINT::TYPE_RSBN ||
+       index == WAYPOINT::TYPE_VORTAC ||
+       index == WAYPOINT::TYPE_TACAN)
     {
         ui->spinBox_TransAlt->setDisabled(true);
         ui->spinBox_TransLevel->setDisabled(true);

@@ -33,7 +33,10 @@ public:
     //static bool isChanged();
 
 
+    static bool XP11;
+    static bool XP11_includeCustomAirports;
     static QString xDir;
+    static QString customAirportsDir; //TODO: Currently a dummy, either implement it or define it.
     static QString fileAirports;
     static QString fileNavaids;
     static QString fileWaypoints;

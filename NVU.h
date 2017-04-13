@@ -72,6 +72,8 @@ class NVUPOINT: public WAYPOINT
 };
 
 
+
+
 class NVU
 {
 	public:

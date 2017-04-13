@@ -6,14 +6,7 @@
 class QSearchList : public QListWidget
 {
 private:
-    bool showORIGIN_AIRAC_AIRPORTS = true;
-    bool showORIGIN_AIRAC_NAVAIDS = true;
-    bool showORIGIN_AIRAC_WAYPOINTS = true;
-    bool showORIGIN_AIRAC_ATS = true;
-    bool showORIGIN_EARTHNAV = true;
-    bool showORIGIN_RSBN = true;
     bool showORIGIN_XNVU = true;
-
     bool showTYPE_AIRPORT = true;
     bool showTYPE_NDB = true;
     bool showTYPE_VORDME = true;
@@ -21,7 +14,6 @@ private:
     bool showTYPE_DME = true;
     bool showTYPE_RSBN = true;
     bool showTYPE_FIX = true;
-    bool showTYPE_LATLON = true;
     bool showTYPE_AIRWAY = true;
 
     QString currentSearch;
