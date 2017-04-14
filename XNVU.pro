@@ -7,6 +7,7 @@ CONFIG += c++11
 
 QT       += core gui
 QT       += printsupport
+QT       += concurrent
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -34,7 +35,8 @@ SOURCES += main.cpp\
     qsearchlist.cpp \
     dialogcolumns.cpp \
     dialogwpsedit.cpp \
-    qlineeditwp.cpp
+    qlineeditwp.cpp \
+    customloadingdialog.cpp
 
 HEADERS  += mainwindow.h \
     coremag.h \
@@ -55,7 +57,8 @@ HEADERS  += mainwindow.h \
     qsearchlist.h \
     dialogcolumns.h \
     dialogwpsedit.h \
-    qlineeditwp.h
+    qlineeditwp.h \
+    customloadingdialog.h
 
 FORMS    += mainwindow.ui \
     dialogsettings.ui \
@@ -64,3 +67,6 @@ FORMS    += mainwindow.ui \
     dialogoptions.ui \
     dialogcolumns.ui \
     dialogwpsedit.ui
+
+RESOURCES += \
+    images.qrc
