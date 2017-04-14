@@ -5,7 +5,11 @@
 #include <QListWidgetItem>
 #include <QtPrintSupport/QtPrintSupport>
 #include <NVU.h>
+#include "XFMS_DATA.h"
+#include "dialogsettings.h"
 #include "qlineeditwp.h"
+
+#define XNVU_VERSION    "XNVU version 0.35"
 
 namespace Ui {
 class MainWindow;
@@ -20,6 +24,9 @@ private:
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+signals:
+    void finished();
 
 private slots:
     void quit();

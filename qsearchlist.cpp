@@ -69,7 +69,6 @@ void QSearchList::refreshSearch()
     search(currentSearch, currentFilter);
 }
 
-//TODO: We have added some more items with XP11 transition, how should we reprogram this?
 void QSearchList::addItem(QListWidgetItemData *wd, bool filter)
 {
     if(filter) switch(wd->nvupoint->type)
@@ -86,17 +85,14 @@ void QSearchList::addItem(QListWidgetItemData *wd, bool filter)
         case WAYPOINT::TYPE_FIX: if(showTYPE_FIX); else return; break;
         case WAYPOINT::TYPE_AIRWAY: if(showTYPE_AIRWAY); else return; break;
 
-        default: //TODO: Currently showing everything else
-            ;//return;
+        default:;
     }
 
 
     if(filter) switch(wd->nvupoint->wpOrigin)
     {
         case WAYPOINT::ORIGIN_XNVU: if(showORIGIN_XNVU); else return; break;
-
-        default: //TODO: Currently showing everthung else
-            ;//return;
+        default:;
     }
 
     QListWidget::addItem(wd);

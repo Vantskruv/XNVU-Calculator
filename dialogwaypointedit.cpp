@@ -42,7 +42,6 @@ DialogWaypointEdit::DialogWaypointEdit(const NVUPOINT* _nvuPoint, bool isSave, Q
     ui->spinBox_Elev->setValue(nvupoint.elev);
     ui->spinBox_Alt->setValue(nvupoint.alt);
 
-    //TODO: Bad coding, very bad coding. Need to reprogram.
     ui->comboBox_Type->setCurrentIndex(nvupoint.type-1);
     if(nvupoint.type == WAYPOINT::TYPE_AIRPORT ||
        nvupoint.type == WAYPOINT::TYPE_NDB ||

@@ -85,7 +85,8 @@ QString WAYPOINT::getTypeStr(const WAYPOINT* wp, int _type)
 
 std::vector<QString> WAYPOINT::getTypeStrList()
 {
-
+    //TODO: Bad coding, very bad coding. Need to reprogram.
+    //WARNING: THESE NEED TO BE IN ORDER!
     std::vector<QString> rTStr;
     rTStr.push_back(getTypeStr(NULL, TYPE_AIRPORT));
     rTStr.push_back(getTypeStr(NULL, TYPE_NDB));

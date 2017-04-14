@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "XFMS_DATA.h"
 #include "LMATH.h"
 #include "qlistwidgetitemdata.h"
 #include "qtablewidgetitemdata.h"
@@ -8,17 +7,18 @@
 #include <sstream>
 #include <QShortcut>
 #include <coremag.h>
-#include "dialogsettings.h"
+//#include "dialogsettings.h"
 #include "dialogwaypointedit.h"
 #include "dialogrsbn.h"
 #include "dialogoptions.h"
 #include "dialogwpsedit.h"
 #include "dialogcolumns.h"
 #include <ctime>
+#include <QtConcurrent>
+#include <unistd.h>
+#include "customloadingdialog.h"
 
-#define XNVU_VERSION    "XNVU version 0.34"
 
-//XFMS_DATA xdata;
 int dat;
 QLabel* labelWarning;
 QTimer clearFlightplan_timer;
@@ -33,11 +33,6 @@ MainWindow::MainWindow(QWidget *parent) :
     setWindowTitle(XNVU_VERSION);
     ui->tableWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-
-    /*
-    QAction* actionDirectTo = new QAction("Go direct...", this);
-    ui->menuBar->addAction(actionDirectTo);
-    */
 
     //Setup shortcuts
     QShortcut* shortcutDeleteKey = new QShortcut(QKeySequence(Qt::Key_Delete), ui->tableWidget);
@@ -63,7 +58,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->lineEdit_DTCourseFrom, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
     connect(ui->lineEdit_DTCourseTo, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
     connect(ui->lineEdit_DTTo, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
-
 
     //Give tablewidget a reference to labelFork and set its size
     ui->tableWidget->setColumnCount(QFlightplanTable::COL::_SIZE);
@@ -91,7 +85,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     //Load settings and data
-    DialogSettings::loadSettings();
+    //DialogSettings::loadSettings();
     ui->actionShow_feet->setChecked(DialogSettings::showFeet);
     ui->tableWidget->showFeet = DialogSettings::showFeet;
     if(DialogSettings::showFeet)
@@ -117,12 +111,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableWidget->dat = dat;
 
 
-    QString sError = XFMS_DATA::load(dat);
-    if(!sError.isEmpty())
-    {
-        labelWarning->setText("WARNING: " + sError + "is not loaded!");
-    }
-
     ui->label_alignATS->setText("ATS align");
     ui->label_alignEarthNav->setText("EarthNav align");
     ui->label_alignWPS->setText("WPS align");
@@ -138,6 +126,9 @@ MainWindow::MainWindow(QWidget *parent) :
     this->resize(DialogSettings::windowSize);
     this->move(DialogSettings::windowPos);
     ui->tableWidget->horizontalHeader()->restoreState(DialogSettings::tableState);
+
+    if(XFMS_DATA::__ERROR_LOADING.isEmpty()) labelWarning->setText("");
+    else labelWarning->setText("WARNING: " + XFMS_DATA::__ERROR_LOADING + " is not loaded!");
 }
 
 MainWindow::~MainWindow()
@@ -147,58 +138,8 @@ MainWindow::~MainWindow()
     DialogSettings::tableState = ui->tableWidget->horizontalHeader()->saveState();
     DialogSettings::showFeet = ui->actionShow_feet->isChecked();
     DialogSettings::saveSettings();
-/*
-    //Save section position and size of QTableFlightplan
-    DialogSettings::showN_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::N);
-    DialogSettings::showID_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ID);
-    DialogSettings::showType_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::TYPE);
-    DialogSettings::showAlt_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ALT);
-    DialogSettings::showLat_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::LAT);
-    DialogSettings::showLon_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::LON);
-    DialogSettings::showS_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::S);
-    DialogSettings::showSpas_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::SPAS);
-    DialogSettings::showSrem_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::SREM);
-    DialogSettings::showMD_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::MD);
-    DialogSettings::showOZMPUv_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::OZMPUV);
-    DialogSettings::showOZMPUp_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::OZMPUP);
-    DialogSettings::showPv_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::PV);
-    DialogSettings::showPp_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::PP);
-    DialogSettings::showMPU_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::MPU);
-    DialogSettings::showIPU_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::IPU);
-    DialogSettings::showRSBN_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::RSBN);
-    DialogSettings::showSm_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::SM);
-    DialogSettings::showZm_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ZM);
-    DialogSettings::showMapAngle_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::MAPA);
-    DialogSettings::showAtarg_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ATRG);
-    DialogSettings::showDtarg_pos = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::DTRG);
-
-
-    DialogSettings::showN_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::N);
-    DialogSettings::showID_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ID);
-    DialogSettings::showType_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::TYPE);
-    DialogSettings::showAlt_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ALT);
-    DialogSettings::showLat_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::LAT);
-    DialogSettings::showLon_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::LON);
-    DialogSettings::showS_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::S);
-    DialogSettings::showSpas_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::SPAS);
-    DialogSettings::showSrem_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::SREM);
-    DialogSettings::showMD_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::MD);
-    DialogSettings::showOZMPUv_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::OZMPUV);
-    DialogSettings::showOZMPUp_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::OZMPUP);
-    DialogSettings::showPv_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::PV);
-    DialogSettings::showPp_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::PP);
-    DialogSettings::showMPU_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::MPU);
-    DialogSettings::showIPU_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::IPU);
-    DialogSettings::showRSBN_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::RSBN);
-    DialogSettings::showSm_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::SM);
-    DialogSettings::showZm_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ZM);
-    DialogSettings::showMapAngle_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::MAPA);
-    DialogSettings::showAtarg_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::ATRG);
-    DialogSettings::showDtarg_size = ui->tableWidget->horizontalHeader()->sectionSize(ui->tableWidget->COL::DTRG);
-*/
 
     XFMS_DATA::saveXNVUData();
-    //nvu.clear();
     XFMS_DATA::clear();
     delete ui;
 }
@@ -350,25 +291,20 @@ void MainWindow::showSearchListContextMenu(const QPoint& pos) // this is a slot
     }//if
 }
 
-
 void MainWindow::showXPlaneSettings()
 {
     DialogSettings dSettings;
     if(QDialog::Rejected == dSettings.exec()) return;
-
-    //DialogSettings::saveSettings();
 
     XFMS_DATA::saveXNVUData();
     ui->lineEdit->clear();
     ui->listWidget->clear();
     XFMS_DATA::clear();
 
-    QString sError = XFMS_DATA::load(dat);
-    if(!sError.isEmpty())
-    {
-        labelWarning->setText("WARNING: " + sError + " is not loaded!");
-    }//if
-    else labelWarning->setText("");
+    CustomLoadingDialog dialogLoadData;
+    dialogLoadData.exec();
+    if(XFMS_DATA::__ERROR_LOADING.isEmpty()) labelWarning->setText("");
+    else labelWarning->setText("WARNING: " + XFMS_DATA::__ERROR_LOADING + " is not loaded!");
 
     ui->label_alignATS->setVisible(DialogSettings::distAlignATS);
     ui->label_alignEarthNav->setVisible(DialogSettings::distAlignEarthNav);
@@ -1416,7 +1352,7 @@ void MainWindow::on_frameDescription_clicked()
             //ui->labelWPMagVar->setText("CLICK TO SHOW WAYPOINTS");
             //if(ui->labelWPMagVar->text().compare("CLICK TO SHOW WAYPOINTS") == 0)
             //{
-                ui->labelWPMagVar->setText("<---- GO BACK");
+                ui->labelWPMagVar->setText("<---- CLICK TO GO BACK");
                 AIRWAY* ats = (AIRWAY*) iD->nvupoint->data;
                 ui->listWidget->clear();
                 for(int i=0; i<ats->lATS.size(); i++)
@@ -1445,7 +1381,7 @@ void MainWindow::on_frameDescription_clicked()
 
     if(ui->labelWPType2->text().compare("AIRWAY") == 0)
     {
-        if(ui->labelWPMagVar->text().compare("<---- GO BACK") == 0)
+        if(ui->labelWPMagVar->text().compare("<---- CLICK TO GO BACK") == 0)
         {
             ui->labelWPMagVar->setText("SELECT AIRWAY IN LIST");
             ui->listWidget->search(ui->labelWPType->text(), 0);

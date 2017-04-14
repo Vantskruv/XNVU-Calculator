@@ -24,10 +24,6 @@ class WAYPOINT
         static constexpr int ORIGIN_X11_CUSTOM_AIRPORTS = 11;
         static constexpr int ORIGIN_X11_DEFAULT_AIRPORTS = 12;
         static constexpr int ORIGIN_X11_GATEWAY_AIRPORTS = 13;
-        //static constexpr int ORIGIN_X11_CUSTOM_AIRPORTS = 12;
-        //static constexpr int ORIGIN_X11_GATEWAY_AIRPORTS = 13;
-        //static constexpr int ORIGIN_X11_DEFAULT_AIRPORTS = 14;
-        //TODO: Add these X11 airport definitions, note that these definitions is used to return strings and show text, search uses for ORIGIN_AIRAC_AIRPORTS to know where to add them.
 
         static constexpr int TYPE_AIRPORT = 1;
         static constexpr int TYPE_NDB = 2;

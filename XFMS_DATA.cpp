@@ -18,6 +18,12 @@
 #include "dialogsettings.h"
 #include <QDebug>
 
+
+volatile int XFMS_DATA::__DATA_LOADED[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+volatile int XFMS_DATA::__CURRENT_LOADING = 0;
+QStringList XFMS_DATA::__SL_FINISHED;
+QString XFMS_DATA::__ERROR_LOADING;
+
 int XFMS_DATA::dat; //Current date
 
 std::multimap<QString, NVUPOINT*> XFMS_DATA::lWP;
@@ -610,23 +616,20 @@ int XFMS_DATA::_loadAirwaysXP11(QString& sError)
     return 0;
 }
 
-QString XFMS_DATA::load(int _dat)
+void XFMS_DATA::load(int _dat)
 {
-    dat = _dat;
-
-/*
-    if(!_load(directory + "Airports.txt", 0))   re = 0x00001;
-    if(!_load(directory + "Navaids.txt", 1))    re&= 0x00010;
-    if(!_load(directory + "Waypoints.txt", 2))  re&= 0x00100;
-    if(!_load(directory + "rsbn.dat", 3))       re&= 0x01000;
-    if(!_load(directory + "earth_nav.dat", 4))  re&= 0x10000;
-*/
-
     QString sError;
     QString rError;
+    dat = _dat;
+
+    __SL_FINISHED.clear();
+    __CURRENT_LOADING = 0;
+    for(int i=0; i<8; i++) __DATA_LOADED[i] = 0;
+    __ERROR_LOADING = "";
 
     if(DialogSettings::XP11)
     {
+        __SL_FINISHED.push_back("Airports");
         if(!_loadAirportsXP11(sError))
         {
             //1. Default apt.dat: "Resources\default scenery\default apt dat\Earth nav data\apt.dat"
@@ -634,6 +637,8 @@ QString XFMS_DATA::load(int _dat)
             //3. Custom apt.dat (overrides both above): "Custom Scenery/XXXXX/Earth nav data\apt.dat"
             //We should load in above steps reversed, i.e. 3, 2 then 1 and ignoring previously added airports, using ICAO as identifier.
         }
+        __SL_FINISHED.push_back("Fixes");
+        __CURRENT_LOADING++;
         if(!_loadWaypointsXP11(rError))
         {
             //1. "Resources/default data/earth_fix.dat"
@@ -641,6 +646,8 @@ QString XFMS_DATA::load(int _dat)
             //If number 2 exist, we ignore number 1.
             sError = sError + " " + rError;
         }
+        __SL_FINISHED.push_back("Navaids");
+        __CURRENT_LOADING++;
         if(!_loadNavDataXP11(rError))
         {
             //1. "Resources/default data/earth_nav.dat"
@@ -650,6 +657,8 @@ QString XFMS_DATA::load(int _dat)
             //EDIT: Change, we skip loading ILS beacons (step 3) for now.
             sError = sError + " " + rError;
         }
+        __SL_FINISHED.push_back("Airways");
+        __CURRENT_LOADING++;
         if(!_loadAirwaysXP11(rError))
         {
             //1. "Resources/default data/earth_awy.dat"
@@ -660,39 +669,55 @@ QString XFMS_DATA::load(int _dat)
     }
     else
     {
+        __SL_FINISHED.push_back("Airports");
         if(!_loadXP10(DialogSettings::fileAirports, 0))
         {
             sError = " [Airports.txt]";
         }
+
+        __SL_FINISHED.push_back("Navaids");
+        __CURRENT_LOADING++;
         if(!_loadXP10(DialogSettings::fileNavaids, 1))
         {
             sError = sError + " [Navaids.txt]";
         }
+        __SL_FINISHED.push_back("Fixes");
+        __CURRENT_LOADING++;
         if(!_loadXP10(DialogSettings::fileWaypoints, 2))
         {
             sError = sError + " [Waypoints.txt]";
         }
+        __SL_FINISHED.push_back("Earthnav");
+        __CURRENT_LOADING++;
         if(!_loadXP10(DialogSettings::fileNavdata, 4))
         {
             sError = sError + " [earth_nav.txt]";
         }
+        __SL_FINISHED.push_back("Airways");
+        __CURRENT_LOADING++;
         if(!_loadXP10(DialogSettings::fileAirways, 6))
         {
             sError = sError + " [ats.txt]";
         }
     }//else
 
+    __SL_FINISHED.push_back("RSBN");
+    __CURRENT_LOADING++;
     if(!_loadXP10(DialogSettings::fileRSBN, 3))
     {
         sError = sError + " [rsbn.dat]";
     }
+    __SL_FINISHED.push_back("XNVU");
+    __CURRENT_LOADING++;
     if(!_loadXP10(XNVU_WPS_FILENAME, 5))
     {
         sError = sError + " [xnvu_wps.txt]";
 
     }
+    __SL_FINISHED.push_back("FINISHED");
+    __CURRENT_LOADING++;
 
-    return sError;
+   __ERROR_LOADING = sError;
 }
 
 void XFMS_DATA::addXNVUData(std::vector<NVUPOINT*> lP)
@@ -797,14 +822,14 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                         //If first item in row is 1, 16 or 17, it tells us this is the start of an airport data.
                         //We set the currentState to 1 to show we begin with a new initialization of an airport.
 
-                        //TODO: Maybe we should optimize the search function, note also that this search is also searching for the names of the airports, maybe that is not so good
-                        //if an airport has the same name as an other airports ICAO name, but the chance is very small though...
                         //Note that similar code is also placed in the end of this function, to grab the last found airport.
                         wp.wpOrigin = wpOrigin;
                         wp.type = WAYPOINT::TYPE_AIRPORT;
-                        std::vector<NVUPOINT*> lFound;
-                        lFound = search(wp.name, WAYPOINT::TYPE_AIRPORT, 1);
-                        if(lFound.size()>0); //We have already this airport in list
+                        //std::vector<NVUPOINT*> lFound;
+                        //lFound = search(wp.name, WAYPOINT::TYPE_AIRPORT, 1);
+                        //if(lFound.size()>0); //We have already this airport in list
+
+                        if(lWP.find(wp.name) != lWP.end());
                         else if(lat_set && lon_set)
                         {
                             wp.longest_runway = longestRunway*1000.0;
@@ -812,6 +837,7 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                             nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
                             lWP.insert(std::make_pair(nwp->name, nwp));
                             lWP2.insert(std::make_pair(nwp->name2, nwp));
+                            __DATA_LOADED[__CURRENT_LOADING]++;
                             //lAirports.push_back(nwp);
                         }//if
                         else if(longestRunway>=0.0)
@@ -823,6 +849,7 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                             nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
                             lWP.insert(std::make_pair(nwp->name, nwp));
                             lWP2.insert(std::make_pair(nwp->name2, nwp));
+                            __DATA_LOADED[__CURRENT_LOADING]++;
                             //lAirports.push_back(nwp);
                         }
 
@@ -968,11 +995,11 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
     //Add the last airport, if valid
     wp.wpOrigin = wpOrigin;
     wp.type = WAYPOINT::TYPE_AIRPORT;
-    std::vector<NVUPOINT*> lFound;
+    //std::vector<NVUPOINT*> lFound;
+    //lFound = search(wp.name, WAYPOINT::TYPE_AIRPORT, 1);
+    //if(lFound.size()>0); //We have already this airport in list
 
-
-    lFound = search(wp.name, WAYPOINT::TYPE_AIRPORT, 1);
-    if(lFound.size()>0); //We have already this airport in list
+    if(lWP.find(wp.name) != lWP.end());
     else if(lon_set && lat_set)
     {
         wp.longest_runway = longestRunway*1000.0;
@@ -980,6 +1007,7 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
         nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
         lWP.insert(std::make_pair(nwp->name, nwp));
         lWP2.insert(std::make_pair(nwp->name2, nwp));
+        __DATA_LOADED[__CURRENT_LOADING]++;
         //lAirports.push_back(nwp);
     }
     else if(longestRunway>=0.0)
@@ -991,6 +1019,7 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
         nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
         lWP.insert(std::make_pair(nwp->name, nwp));
         lWP2.insert(std::make_pair(nwp->name2, nwp));
+        __DATA_LOADED[__CURRENT_LOADING]++;
         //lAirports.push_back(new NVUPOINT(nwp));
     }
 }
@@ -1043,6 +1072,7 @@ void XFMS_DATA::validate_waypoint_XP11(const QStringList& record)
 
     lWP.insert(std::make_pair(wp->name, wp));
     lWP2.insert(std::make_pair(wp->name2, wp));
+    __DATA_LOADED[__CURRENT_LOADING]++;
     //lFixes.push_back(wp);
 }
 
@@ -1294,6 +1324,7 @@ void XFMS_DATA::validate_airways_XP11(QFile& infile)
 
             //lAirways.push_back(ats);
             lWP.insert(std::make_pair(wpA->name, wpA));
+            __DATA_LOADED[__CURRENT_LOADING]++;
         }//while
 
         if(it == lASegs.end()) break;
@@ -1352,7 +1383,7 @@ void XFMS_DATA::validate_earthnav_XP11(const QStringList &record)
             case 7: //Identifier
                 wp->name = qstr;
             break;
-            case 8: //TODO: Airport or enroute (ENRT), store it also
+            case 8: //TODO: Airport or enroute (ENRT), maybe store it also
             break;
             case 9: //Country
                 wp->country = qstr;
@@ -1470,6 +1501,7 @@ void XFMS_DATA::validate_earthnav_XP11(const QStringList &record)
     {
         lWP.insert(std::make_pair(wp->name, wp));
         lWP2.insert(std::make_pair(wp->name2, wp));
+        __DATA_LOADED[__CURRENT_LOADING]++;
 
         if(wp->type == WAYPOINT::TYPE_VORDME || wp->type == WAYPOINT::TYPE_VORTAC) lXVORDME.push_back(wp);
         /*
@@ -1823,6 +1855,7 @@ void XFMS_DATA::validate_airport_XP10(const QStringList& record)
     wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat, (double(LMATH::feetToMeter(wp->elev))/1000.0));
     lWP.insert(std::make_pair(wp->name, wp));
     lWP2.insert(std::make_pair(wp->name2, wp));
+    __DATA_LOADED[__CURRENT_LOADING]++;
     //lAirports.push_back(wp);
 }
 
@@ -1885,6 +1918,7 @@ void XFMS_DATA::validate_navaid_XP10(const QStringList &record)
     wp->MD = calc_magvar(wp->latlon.x, wp->latlon.y, dat, (double(LMATH::feetToMeter(wp->elev))/1000.0));
     lWP.insert(std::make_pair(wp->name, wp));
     lWP2.insert(std::make_pair(wp->name2, wp));
+    __DATA_LOADED[__CURRENT_LOADING]++;
 
 
     /*
@@ -2028,6 +2062,7 @@ void XFMS_DATA::validate_earthnav_XP10(const QStringList &record)
     {
         lWP.insert(std::make_pair(wp->name, wp));
         lWP2.insert(std::make_pair(wp->name2, wp));
+        __DATA_LOADED[__CURRENT_LOADING]++;
     }//else
 
 
@@ -2083,6 +2118,7 @@ void XFMS_DATA::validate_waypoint_XP10(const QStringList& record)
 
     lWP.insert(std::make_pair(wp->name, wp));
     lWP2.insert(std::make_pair(wp->name2, wp));
+    __DATA_LOADED[__CURRENT_LOADING]++;
     //lFixes.push_back(wp);
 }
 
@@ -2128,6 +2164,7 @@ void XFMS_DATA::validate_airways_XP10(QFile& infile)
                                 }
                                 //lAirways.push_back(ats);
                                 lWP.insert(std::make_pair(wpA->name, wpA));
+                                __DATA_LOADED[__CURRENT_LOADING]++;
                             }//if
                             else delete ats;
                         }//if
@@ -2437,6 +2474,7 @@ void XFMS_DATA::validate_RSBN(const QStringList &record)
     lWP.insert(std::make_pair(wp->name, wp));
     lWP2.insert(std::make_pair(wp->name2, wp));
     lRSBN.push_back(wp);
+    __DATA_LOADED[__CURRENT_LOADING]++;
 }
 
 void XFMS_DATA::validate_xnvu(const QStringList& RAW)
@@ -2499,6 +2537,7 @@ void XFMS_DATA::validate_xnvu(const QStringList& RAW)
     lWP.insert(std::make_pair(nwp->name, nwp));
     lWP2.insert(std::make_pair(nwp->name2, nwp));
     lXNVU.push_back(nwp);
+    __DATA_LOADED[__CURRENT_LOADING]++;
 }
 
 int XFMS_DATA::saveXNVUData()

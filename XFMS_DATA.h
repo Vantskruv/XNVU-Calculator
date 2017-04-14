@@ -43,6 +43,14 @@ class XFMS_DATA
     public:
         static int dat;
 
+        //Variables accessable for the initial loading process of data, no practical use otherwise.
+        static volatile int __DATA_LOADED[8];
+        static volatile int __CURRENT_LOADING;
+        static QStringList __SL_FINISHED;
+        static QString __ERROR_LOADING;
+        //---------------------------------------
+
+
         //Loaded from i.e. navigraph (airports.txt, navaids.txt, waypoints.txt, ats.txt)
         //static std::vector<NVUPOINT*> lAirports;
         //static std::vector<NVUPOINT*> lNDB;
@@ -103,7 +111,7 @@ class XFMS_DATA
         //static void addXNVUWaypointTempory(NVUPOINT* lP);
         static void addXNVUData(std::vector<NVUPOINT*> lP);
         static void removeXNVUWaypoint(NVUPOINT* lP);
-        static QString load(int dat);
+        static void load(int dat);
 
         static int saveXNVUData();
 
