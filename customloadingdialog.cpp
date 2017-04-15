@@ -1,7 +1,9 @@
 #include "customloadingdialog.h"
 #include <QFuture>
 #include <QtConcurrent>
-#include <unistd.h>
+#ifndef _WIN32
+    #include <unistd.h>
+#endif
 
 /*
 void CustomLoadingDialog::drawContents(QPainter* painter)
@@ -90,7 +92,11 @@ void CustomLoadingDialog::runClean(int dat)
                 qStr = qStr + sIDS[i] + "   [" + QString::number(XFMS_DATA::__DATA_LOADED[i]) + "]\n";
             }
             emit loadingStatus(qStr);
-            usleep(250);
+            #ifdef _WIN32
+                Sleep(1);
+            #else
+                sleep(1);
+            #endif
         }//while
     }//if
     else
@@ -104,7 +110,11 @@ void CustomLoadingDialog::runClean(int dat)
                 qStr = qStr + sIDS[i] + "   [" + QString::number(XFMS_DATA::__DATA_LOADED[i]) + "]\n";
             }
             emit loadingStatus(qStr);
-            usleep(250);
+            #ifdef _WIN32
+                Sleep(1);
+            #else
+                sleep(1);
+            #endif
         }//while
     }
     fData.waitForFinished();
