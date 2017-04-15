@@ -63,16 +63,19 @@
 	border-color: rgb(200, 200, 0);
 }
 
-#listWidget, #tableWidget
+#tableWidget, #listWidget
 {
 	background-color: rgb(0, 30, 0);
 	color: rgb(107, 239, 0);
 
 	border: 1px solid;
 	border-color: rgb(73, 163, 0);
+}
 
-	selection-background-color : rgb(73, 163, 0);
-	selection-color: rgb(0, 0, 0);
+#listWidget::item:selected, #menuBar::item:selected, #tableWidget::item:selected, QMenu::item:selected
+{
+	background-color: rgb(107, 239, 0);
+	color: rgb(0, 30, 0);
 }
 
 #pushButtonInsertAfter, #pushButtonInsertBefore, #pushButtonReplace, #pushButtonRouteInsertAfter, #pushButtonRouteReplace, #pushButtonRouteInsertBefore, #pushButton_ClearFlightplan, #pushButton_showAIRAC_Airports, #pushButton_showAIRAC_Airways, #pushButton_showAIRAC_Navaids, #pushButton_showAIRAC_Fixes, #pushButton_showAirports, #pushButton_showDME, #pushButton_showEarthNav, #pushButton_showFix, #pushButton_showNDB, #pushButton_showRSBN, #pushButton_showVOR, #pushButton_showVORDME, #pushButton_showXNVU, #pushButtonSetFL, #pushButtonSetDate, #pushButtonDeleteWaypoint, #pushButtonDirectTo, #pushButtonDTInsert

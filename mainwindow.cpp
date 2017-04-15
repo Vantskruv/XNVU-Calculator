@@ -7,7 +7,6 @@
 #include <sstream>
 #include <QShortcut>
 #include <coremag.h>
-//#include "dialogsettings.h"
 #include "dialogwaypointedit.h"
 #include "dialogrsbn.h"
 #include "dialogoptions.h"
@@ -15,7 +14,6 @@
 #include "dialogcolumns.h"
 #include <ctime>
 #include <QtConcurrent>
-#include <unistd.h>
 #include "customloadingdialog.h"
 
 

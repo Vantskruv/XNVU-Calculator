@@ -8,7 +8,7 @@
 #include <QSettings>
 
 bool DialogSettings::XP11 = false;
-bool DialogSettings::XP11_includeCustomAirports = true;
+bool DialogSettings::XP11_includeCustomAirports = false;
 QString DialogSettings::xDir;
 QString DialogSettings::customAirportsDir; //TODO: Currently a dummy, either implement it or define it.
 QString DialogSettings::fileAirports;
@@ -31,7 +31,7 @@ bool DialogSettings::distAlignATS = false;
 bool DialogSettings::distAlignEarthNav = false;
 double DialogSettings::distAlignMargin = 0.0001;
 bool DialogSettings::showFeet = false;
-bool DialogSettings::customDateIsTrue = false;
+bool DialogSettings::customDateIsTrue = true;
 QString DialogSettings::customDate = "2020.01.01";
 
 /*

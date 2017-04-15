@@ -475,6 +475,7 @@ int XFMS_DATA::_loadAirportsXP11(QString& sError)
     }
     inFile.close();
 
+    return 1;
 }
 
 int XFMS_DATA::_loadWaypointsXP11(QString& sError)

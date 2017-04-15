@@ -95,7 +95,7 @@ void CustomLoadingDialog::runClean(int dat)
             #ifdef _WIN32
                 Sleep(1);
             #else
-                sleep(1);
+                usleep(250);
             #endif
         }//while
     }//if
@@ -113,7 +113,7 @@ void CustomLoadingDialog::runClean(int dat)
             #ifdef _WIN32
                 Sleep(1);
             #else
-                sleep(1);
+                usleep(250);
             #endif
         }//while
     }
