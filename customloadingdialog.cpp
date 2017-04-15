@@ -1,10 +1,23 @@
 #include "customloadingdialog.h"
 #include <QFuture>
 #include <QtConcurrent>
-#ifndef _WIN32
-    #include <unistd.h>
-#endif
+#include <unistd.h>
 
+/*
+void CustomLoadingDialog::drawContents(QPainter* painter)
+{
+
+    painter->setPen(color);
+    QFont font = QFont(painter->font());
+    font.setBold(true);
+    painter->setFont(font);
+    painter->drawText(QRect(0, 40, 320, 240), Qt::AlignHCenter, QString(XNVU_VERSION));
+
+    font.setBold(false);
+    painter->setFont(font);
+    painter->drawText(QRect(40, 80, 280, 220), message);
+}
+*/
 
 CustomLoadingDialog::CustomLoadingDialog(QWidget *parent) : QDialog(parent)
 {
@@ -77,11 +90,7 @@ void CustomLoadingDialog::runClean(int dat)
                 qStr = qStr + sIDS[i] + "   [" + QString::number(XFMS_DATA::__DATA_LOADED[i]) + "]\n";
             }
             emit loadingStatus(qStr);
-            #ifdef _WIN32
-                Sleep(1);
-            #else
-                usleep(250);
-            #endif
+            usleep(250);
         }//while
     }//if
     else
@@ -95,11 +104,7 @@ void CustomLoadingDialog::runClean(int dat)
                 qStr = qStr + sIDS[i] + "   [" + QString::number(XFMS_DATA::__DATA_LOADED[i]) + "]\n";
             }
             emit loadingStatus(qStr);
-            #ifdef _WIN32
-                Sleep(1);
-            #else
-                usleep(250);
-            #endif
+            usleep(250);
         }//while
     }
     fData.waitForFinished();
