@@ -15,6 +15,13 @@ QSearchList::QSearchList(QWidget *&w)
 
     horizontalScrollBar()->setStyleSheet(styleSheet);
     verticalScrollBar()->setStyleSheet(styleSheet);
+
+    /*
+    styleSheet = "background-color: rgb(0, 30, 0);"
+                 "color: rgb(107, 239, 0);"
+                 "selection-background-color: blue;"
+                 "selection-color: white;";
+    */
 }
 
 void QSearchList::mousePressEvent(QMouseEvent* event)
