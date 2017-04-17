@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1600</width>
+    <width>2013</width>
     <height>800</height>
    </rect>
   </property>
@@ -35,14 +35,14 @@
   </property>
   <property name="styleSheet">
    <string notr="true">
-#centralWidget, #label, #labelInsertRoute, #menuBar, #mainToolBar, #statusBar, #menuFile, #menuSettings, #menuView
+#centralWidget, #label, #label_2, #label_3, #label_4, #labelInsertRoute, #menuBar, #mainToolBar, #statusBar, #menuFile, #menuSettings, #menuView
 {
 	background-color: rgb(0, 30, 0);
 	color: rgb(107, 239, 0);
 }
 
 
-#frameDescription, #labelFork, #labelAltitude
+#frameDescription, #labelFork, #labelAltitude, #labelTOD
 {
 	background-color: rgb(0, 30, 0);
 	color: rgb(107, 239, 0);
@@ -84,7 +84,7 @@
 	color: rgb(0, 0, 0);
 }
 
-#lineEdit, #lineEditRoute, #lineEdit_FlightLevel, #spinBoxFL, #dateEdit, #lineEdit_DTCourseFrom, #lineEdit_DTCourseTo, #lineEdit_DTTo, #doubleSpinBox_DTCourseDistRem
+#lineEdit, #lineEditRoute, #lineEdit_FlightLevel, #spinBoxFL, #dateEdit, #lineEdit_DTCourseFrom, #lineEdit_DTCourseTo, #lineEdit_DTTo, #doubleSpinBox_DTCourseDistRem, #doubleSpinBox_MACH, #doubleSpinBox_VS, #doubleSpinBox_ISA, #doubleSpinBox_TWC
 {
 	background-color: rgb(0, 30, 0);
 	color: rgb(107, 239, 0);
@@ -264,7 +264,7 @@
           </property>
           <property name="minimumSize">
            <size>
-            <width>150</width>
+            <width>100</width>
             <height>30</height>
            </size>
           </property>
@@ -1060,11 +1060,282 @@
      </layout>
     </item>
     <item row="0" column="0" colspan="2">
-     <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,0,0,0,0,0,0,0,0,0">
+     <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
       <property name="sizeConstraint">
        <enum>QLayout::SetMinimumSize</enum>
       </property>
-      <item row="0" column="7">
+      <item row="5" column="13" alignment="Qt::AlignRight">
+       <widget class="QLabel" name="label_4">
+        <property name="font">
+         <font>
+          <family>Gentium Basic</family>
+          <pointsize>13</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>TWC:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="16">
+       <widget class="QSpinBox" name="spinBoxFL">
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>13</pointsize>
+         </font>
+        </property>
+        <property name="specialValueText">
+         <string/>
+        </property>
+        <property name="suffix">
+         <string> m</string>
+        </property>
+        <property name="prefix">
+         <string/>
+        </property>
+        <property name="minimum">
+         <number>-999999</number>
+        </property>
+        <property name="maximum">
+         <number>999999</number>
+        </property>
+        <property name="singleStep">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="6">
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Maximum</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>999999999</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="5" column="16">
+       <widget class="QDateEdit" name="dateEdit">
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>29</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Gentium Basic</family>
+          <pointsize>13</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="calendarPopup">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="14">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_MACH">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>13</pointsize>
+         </font>
+        </property>
+        <property name="specialValueText">
+         <string/>
+        </property>
+        <property name="suffix">
+         <string>M</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>-10000.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.800000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="15">
+       <widget class="QLabel" name="label_3">
+        <property name="font">
+         <font>
+          <family>Gentium Basic</family>
+          <pointsize>13</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::LeftToRight</enum>
+        </property>
+        <property name="text">
+         <string>ISA:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="14">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_TWC">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>13</pointsize>
+         </font>
+        </property>
+        <property name="specialValueText">
+         <string/>
+        </property>
+        <property name="suffix">
+         <string>kn</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>-10000.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="13" alignment="Qt::AlignRight">
+       <widget class="QLabel" name="label">
+        <property name="font">
+         <font>
+          <family>Gentium Basic</family>
+          <pointsize>13</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>MACH:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="16">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_ISA">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>13</pointsize>
+         </font>
+        </property>
+        <property name="specialValueText">
+         <string/>
+        </property>
+        <property name="suffix">
+         <string>C</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-10000.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="15">
        <widget class="QLabel" name="labelFlightLevel">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -1091,19 +1362,25 @@
          <string notr="true"/>
         </property>
         <property name="text">
-         <string>    Flight level:</string>
+         <string>FL:</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
-      <item row="0" column="8">
-       <widget class="QSpinBox" name="spinBoxFL">
+      <item row="3" column="14">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_VS">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="minimumSize">
          <size>
           <width>150</width>
-          <height>0</height>
+          <height>30</height>
          </size>
         </property>
         <property name="maximumSize">
@@ -1118,40 +1395,42 @@
          </font>
         </property>
         <property name="specialValueText">
-         <string>test</string>
-        </property>
-        <property name="suffix">
-         <string> m</string>
-        </property>
-        <property name="prefix">
          <string/>
         </property>
+        <property name="suffix">
+         <string>M/S</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
         <property name="minimum">
-         <number>-999999</number>
+         <double>-10000.000000000000000</double>
         </property>
         <property name="maximum">
-         <number>999999</number>
+         <double>10000.000000000000000</double>
         </property>
         <property name="singleStep">
-         <number>100</number>
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>8.000000000000000</double>
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+      <item row="3" column="13" alignment="Qt::AlignRight">
+       <widget class="QLabel" name="label_2">
+        <property name="font">
+         <font>
+          <family>Gentium Basic</family>
+          <pointsize>13</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
         </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Maximum</enum>
+        <property name="text">
+         <string>V/S:</string>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>999999999</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
+       </widget>
       </item>
       <item row="0" column="0">
        <widget class="QLabel" name="labelFork">
@@ -1190,11 +1469,11 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="5">
-       <widget class="QDateEdit" name="dateEdit">
+      <item row="5" column="15">
+       <widget class="QLabel" name="labelDate">
         <property name="maximumSize">
          <size>
-          <width>150</width>
+          <width>16777215</width>
           <height>29</height>
          </size>
         </property>
@@ -1206,12 +1485,12 @@
           <bold>true</bold>
          </font>
         </property>
-        <property name="calendarPopup">
-         <bool>false</bool>
+        <property name="text">
+         <string>Date:</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="6">
+      <item row="3" column="17">
        <widget class="QPushButton" name="pushButtonSetDate">
         <property name="maximumSize">
          <size>
@@ -1230,37 +1509,40 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="9">
-       <widget class="QPushButton" name="pushButtonSetFL">
+      <item row="3" column="0">
+       <widget class="QLabel" name="labelTOD">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="maximumSize">
          <size>
-          <width>75</width>
+          <width>350</width>
           <height>16777215</height>
          </size>
         </property>
-        <property name="text">
-         <string>SET</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QLabel" name="labelDate">
-        <property name="maximumSize">
+        <property name="baseSize">
          <size>
-          <width>50</width>
-          <height>29</height>
+          <width>0</width>
+          <height>0</height>
          </size>
         </property>
         <property name="font">
          <font>
           <family>Gentium Basic</family>
-          <pointsize>13</pointsize>
+          <pointsize>16</pointsize>
           <weight>75</weight>
           <bold>true</bold>
+          <kerning>true</kerning>
          </font>
         </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
         <property name="text">
-         <string>Date:</string>
+         <string>TOD</string>
         </property>
        </widget>
       </item>
@@ -1273,7 +1555,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1600</width>
+     <width>2013</width>
      <height>23</height>
     </rect>
    </property>

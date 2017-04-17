@@ -17,7 +17,7 @@
 #include "customloadingdialog.h"
 
 
-int dat;
+int dat; //TODO
 QLabel* labelWarning;
 QTimer clearFlightplan_timer;
 int clearFlightplan_countdown = -1;
@@ -57,9 +57,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->lineEdit_DTCourseTo, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
     connect(ui->lineEdit_DTTo, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
 
-    //Give tablewidget a reference to labelFork and set its size
+    //Give tablewidget a reference to labelFork and labelTOD and set its size
     ui->tableWidget->setColumnCount(QFlightplanTable::COL::_SIZE);
     ui->tableWidget->qFork = ui->labelFork;
+    ui->tableWidget->qTOD = ui->labelTOD;
     ui->tableWidget->horizontalHeader()->show();
 
 
@@ -1484,34 +1485,24 @@ void MainWindow::on_pushButton_showAirports_clicked()
     ui->listWidget->refreshSearch();
 }
 
-void MainWindow::on_pushButtonSetFL_clicked()
+/*
+void MainWindow::calculateTOD()
 {
-    std::vector<NVUPOINT*> lP = ui->tableWidget->getWaypoints();
-    for(int i=0; i<lP.size(); i++)
-    {
-        NVUPOINT* p = lP[i];
-        if(i==0 || i == (lP.size()-1)) p->alt = p->elev;
-        else p->alt = (ui->actionShow_feet->isChecked() ? ui->spinBoxFL->value() : LMATH::meterToFeet(ui->spinBoxFL->value()));
-    }
+    NVUPOINT *cp = NULL;
+    double d;
+    double fl = ui->spinBoxFL->value();
+    double mach = ui->doubleSpinBox_MACH->value();
+    double vs = ui->doubleSpinBox_VS->value();
+    double twc = ui->doubleSpinBox_TWC->value();
+    double isa = ui->doubleSpinBox_ISA->value();
 
-    ui->tableWidget->refreshFlightplan();
+    if(!ui->actionShow_feet->isChecked()) fl = LMATH::feetToMeter(fl);
+    ui->tableWidget->calculateTOD(cp, d, fl, mach, vs, twc, isa);
+
+    if(cp) ui->labelTOD->setText("TOD " + (int(d) == 0 ? "at " : QString::number(d, 'f', 0) + " km before ") + cp->name);
+    else ui->labelTOD->setText("TOD [UNABLE]");
 }
-
-void MainWindow::on_pushButtonSetDate_clicked()
-{
-    dat = ui->dateEdit->date().toJulianDay();
-    ui->tableWidget->dat = dat;
-    XFMS_DATA::setDate(dat);
-
-    ui->tableWidget->refreshFlightplan();
-    //ui->pushButtonSetDate->setDisabled(true);
-    ui->pushButtonSetDate->setEnabled(false);
-    QString styleSheet = "background-color: rgb(0, 30, 0);"
-                          "color: rgb(107, 239, 0);";
-    ui->pushButtonSetDate->setText("IS SET");
-    ui->pushButtonSetDate->setStyleSheet(styleSheet);
-
-}
+*/
 
 void MainWindow::on_actionShow_feet_triggered()
 {
@@ -1520,11 +1511,13 @@ void MainWindow::on_actionShow_feet_triggered()
     {
         ui->spinBoxFL->setValue(LMATH::meterToFeet(ui->spinBoxFL->value()));
         ui->spinBoxFL->setSuffix(" ft");
+        ui->tableWidget->fplData.fl = ui->spinBoxFL->value();
     }
     else
     {
         ui->spinBoxFL->setValue(LMATH::feetToMeter(ui->spinBoxFL->value()));
         ui->spinBoxFL->setSuffix(" m");
+        ui->tableWidget->fplData.fl = ui->spinBoxFL->value();
     }//else
 
     ui->tableWidget->refreshFlightplan();
@@ -1545,26 +1538,6 @@ void MainWindow::on_actionColumns_2_triggered()
     //ui->tableWidget->updateShownColumns();
 }
 
-
-void MainWindow::on_dateEdit_userDateChanged(const QDate &date)
-{
-    if(date.toJulianDay() == dat)
-    {
-        ui->pushButtonSetDate->setEnabled(false);
-        QString styleSheet = "background-color: rgb(0, 30, 0);"
-                              "color: rgb(107, 239, 0);";
-        ui->pushButtonSetDate->setText("IS SET");
-        ui->pushButtonSetDate->setStyleSheet(styleSheet);
-        return;
-    }
-
-    ui->pushButtonSetDate->setEnabled(true);
-    QString styleSheet = "background-color: rgb(255, 0, 0);"
-                         "color: rgb(255, 255, 255);";
-
-    ui->pushButtonSetDate->setText("SET");
-    ui->pushButtonSetDate->setStyleSheet(styleSheet);
-}
 
 void MainWindow::goDirectToFieldClicked(QLineEditWP *wp)
 {
@@ -1628,4 +1601,154 @@ void MainWindow::on_pushButtonDTInsert_clicked()
 
     ui->tableWidget->insertWaypoint(n, ui->tableWidget->currentRow()+1);
     ui->tableWidget->insertWaypoint(new NVUPOINT(*c), ui->tableWidget->currentRow()+2);
+}
+
+
+void MainWindow::fplDataChangeCheck()
+{
+    bool changed = false;
+
+    if(ui->doubleSpinBox_MACH->value() != ui->tableWidget->fplData.speed)
+    {
+        changed = true;
+        //TODO: Set color to yellow
+    }
+    else; //Set color to default
+
+    if(ui->doubleSpinBox_VS->value() != ui->tableWidget->fplData.vs)
+    {
+        changed = true;
+        //TODO: Set color to yellow
+    }
+    else; //Set color to default
+
+    if(ui->doubleSpinBox_TWC->value() != ui->tableWidget->fplData.twc)
+    {
+        changed = true;
+        //TODO: Set color to yellow
+    }
+    else; //Set color to default
+    if(ui->spinBoxFL->value() != ui->tableWidget->fplData.fl)
+    {
+        changed = true;
+        //TODO: Set color to yellow
+    }
+    else; //Set color to default
+    if(ui->doubleSpinBox_ISA->value() != ui->tableWidget->fplData.isa)
+    {
+        changed = true;
+        //TODO: Set color to yellow
+    }
+    else; //Set color to default
+    if(ui->dateEdit->date().toJulianDay() != dat)
+    {
+        changed = true;
+        //TODO: Set color to yellow
+    }
+    else; //Set color to default
+
+
+    if(!changed)
+    {
+        ui->pushButtonSetDate->setEnabled(false);
+        QString styleSheet = "background-color: rgb(0, 30, 0);"
+                              "color: rgb(107, 239, 0);";
+        ui->pushButtonSetDate->setText("IS SET");
+        ui->pushButtonSetDate->setStyleSheet(styleSheet);
+        return;
+    }
+
+    ui->pushButtonSetDate->setEnabled(true);
+    QString styleSheet = "background-color: rgb(255, 0, 0);"
+                         "color: rgb(255, 255, 255);";
+
+    ui->pushButtonSetDate->setText("SET");
+    ui->pushButtonSetDate->setStyleSheet(styleSheet);
+}
+
+void MainWindow::on_doubleSpinBox_MACH_valueChanged(double _speed)
+{
+    fplDataChangeCheck();
+}
+
+
+void MainWindow::on_doubleSpinBox_VS_valueChanged(double arg1)
+{
+    fplDataChangeCheck();
+}
+
+void MainWindow::on_doubleSpinBox_TWC_valueChanged(double arg1)
+{
+    fplDataChangeCheck();
+}
+
+void MainWindow::on_spinBoxFL_valueChanged(int arg1)
+{
+    fplDataChangeCheck();
+}
+
+void MainWindow::on_doubleSpinBox_ISA_valueChanged(double arg1)
+{
+    fplDataChangeCheck();
+}
+
+void MainWindow::on_dateEdit_userDateChanged(const QDate &date)
+{
+    fplDataChangeCheck();
+
+/*
+    if(date.toJulianDay() == dat)
+    {
+        ui->pushButtonSetDate->setEnabled(false);
+        QString styleSheet = "background-color: rgb(0, 30, 0);"
+                              "color: rgb(107, 239, 0);";
+        ui->pushButtonSetDate->setText("IS SET");
+        ui->pushButtonSetDate->setStyleSheet(styleSheet);
+        return;
+    }
+
+    ui->pushButtonSetDate->setEnabled(true);
+    QString styleSheet = "background-color: rgb(255, 0, 0);"
+                         "color: rgb(255, 255, 255);";
+
+    ui->pushButtonSetDate->setText("SET");
+    ui->pushButtonSetDate->setStyleSheet(styleSheet);
+*/
+}
+
+void MainWindow::on_pushButtonSetDate_clicked()
+{
+    if(dat!=ui->dateEdit->date().toJulianDay())
+    {
+        dat = ui->dateEdit->date().toJulianDay();
+        ui->tableWidget->dat = dat;
+        XFMS_DATA::setDate(dat);
+    }
+
+    if(ui->tableWidget->fplData.fl!=ui->spinBoxFL->value())
+    {
+        std::vector<NVUPOINT*> lP = ui->tableWidget->getWaypoints();
+        for(int i=0; i<lP.size(); i++)
+        {
+            NVUPOINT* p = lP[i];
+            if(i==0 || i == (lP.size()-1)) p->alt = p->elev;
+            else p->alt = (ui->actionShow_feet->isChecked() ? ui->spinBoxFL->value() : LMATH::meterToFeet(ui->spinBoxFL->value()));
+        }
+
+        ui->tableWidget->fplData.fl = ui->spinBoxFL->value();
+
+    }
+
+    ui->tableWidget->fplData.speed = ui->doubleSpinBox_MACH->value();
+    ui->tableWidget->fplData.vs = ui->doubleSpinBox_VS->value();
+    ui->tableWidget->fplData.twc = ui->doubleSpinBox_TWC->value();
+    ui->tableWidget->fplData.isa = ui->doubleSpinBox_ISA->value();
+    ui->tableWidget->refreshFlightplan();
+
+
+    ui->pushButtonSetDate->setEnabled(false);
+    QString styleSheet = "background-color: rgb(0, 30, 0);"
+                          "color: rgb(107, 239, 0);";
+    ui->pushButtonSetDate->setText("IS SET");
+    ui->pushButtonSetDate->setStyleSheet(styleSheet);
 }

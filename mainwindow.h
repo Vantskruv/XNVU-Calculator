@@ -9,7 +9,7 @@
 #include "dialogsettings.h"
 #include "qlineeditwp.h"
 
-#define XNVU_VERSION    "XNVU version 0.35"
+#define XNVU_VERSION    "XNVU version 0.36"
 
 namespace Ui {
 class MainWindow;
@@ -20,6 +20,8 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 private:
+    //void calculateTOD();
+    void fplDataChangeCheck();
 
 public:
     explicit MainWindow(QWidget *parent = 0);
@@ -41,15 +43,6 @@ private slots:
     void tableGoDown();
     void goDirectToFieldClicked(QLineEditWP *wp);
 
-    //void clearFlightplan();
-    //void refreshFlightplan();
-    //void insertRoute(std::vector<NVUPOINT*> route, int row, int offset);
-    //void updateDistanceAndN();
-    //void refreshRow(int row, NVUPOINT* waypoint = NULL);
-    //void insertWaypoint(NVUPOINT* wp, int row, int offset);
-    //void insertTableWidgetWaypoint(NVUPOINT* waypoint, int row);
-    //void replaceTableWidgetWaypoint(NVUPOINT* nvupoint, int row);
-    //void deleteWaypoint(int row);
     void deleteCurrentWaypoint();
     void setWaypointDescription(NVUPOINT* wp);
 
@@ -118,15 +111,11 @@ private slots:
 
     void on_pushButton_showAirports_clicked();
 
-    void on_pushButtonSetFL_clicked();
-
     void on_actionShow_feet_triggered();
 
     void on_pushButtonDeleteWaypoint_clicked();
 
     void on_actionColumns_2_triggered();
-
-    void on_pushButtonSetDate_clicked();
 
     void on_actionXNVU_library_triggered();
 
@@ -135,6 +124,13 @@ private slots:
     void on_listWidget_clicked(const QModelIndex &index);
 
     void on_pushButtonDTInsert_clicked();
+
+    void on_pushButtonSetDate_clicked();
+    void on_doubleSpinBox_MACH_valueChanged(double arg1);
+    void on_doubleSpinBox_VS_valueChanged(double arg1);
+    void on_doubleSpinBox_TWC_valueChanged(double arg1);
+    void on_spinBoxFL_valueChanged(int arg1);
+    void on_doubleSpinBox_ISA_valueChanged(double arg1);
 
 private:
     Ui::MainWindow *ui;

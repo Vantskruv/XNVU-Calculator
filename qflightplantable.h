@@ -44,9 +44,22 @@ class QFlightplanTable : public QTableWidget
         static constexpr int COL_DTRG = 20;
 */
         int dat;
+
+        struct
+        {
+            double speed = 0.80;
+            double vs = 8.0;
+            double twc = 0.0;
+            int fl = 0;
+            double isa = 0.0;
+        }fplData;
+
         QLabel* qFork = NULL;
+        QLabel* qTOD = NULL;
         bool showFeet = false;
 
+        //_KM[KM], _FL[FEET], _MACH[_MACH], _VS[M/S], _TWC[KNOTS], _ISA[CELSIUS]
+        NVUPOINT* calculateTOD(NVUPOINT *&_pc, double& _KM, double _FL, double _MACH, double _VS, double _TWC, double _ISA);
         void deleteWaypoint(int row);                                   //Delete waypoint at row
         //void insertWaypoint(NVUPOINT* wp, int row, int offset);         //Insert a waypoint with an offset value set. Before row (-1), after row (1), or replace the row (0).
         void insertRoute(std::vector<NVUPOINT*>, int row);  //Insert a list of waypoints, before, after or replace and then insert after a row.

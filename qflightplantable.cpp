@@ -54,6 +54,80 @@ QFlightplanTable::QFlightplanTable(QWidget *&w) : QTableWidget(w)
     horizontalHeader()->setStretchLastSection(true);
 }
 
+NVUPOINT* QFlightplanTable::calculateTOD(NVUPOINT*& _pc, double& _KM, double _FL, double _MACH, double _VS, double _TWC, double _ISA)
+{
+    _pc = NULL;
+    if(lNVUPoints.size()<2) return NULL;
+
+    //FL
+    //MACH
+    //VS
+    //ISA
+    //TWC or WD/WS (Average Tail Wind Component or average WindSpeed/WindDirection)
+    _VS = fabs(_VS);
+
+
+    //Calculate the average ground speed
+    double _FL_M = LMATH::feetToMeter((int)_FL);    //Metric flight level
+    double T0 = 288.15 + _ISA;                       //Standard sea level temp plus ISA
+    double T = T0 - (_FL_M/1000.0)*6.5;             //OAT temp (6.5 degree change per 1000 meter);
+    double TAS = 39.0*_MACH*sqrt(T);                  //TAS in KNOTS
+    double GS = TAS + _TWC;
+    GS = GS*1.852;
+
+    //Calculate the distance needed for descent
+    //FL = Flightlevel in thousands feet
+    //VS = Descent rate (m/s)
+    //GS = Ground speed
+    _FL = _FL - (lNVUPoints.back())->elev;
+    _FL = _FL/1000.0;
+    double d = (_FL*(GS - 5.0*_FL)) / (_VS*(15.0/1.27));
+
+
+    std::vector<NVUPOINT*>::reverse_iterator iter;
+    for(iter = lNVUPoints.rbegin(); iter!=lNVUPoints.rend(); iter++)
+    {
+        NVUPOINT* cp = (*iter);
+        if(cp->Srem>d)
+        {
+            _KM = cp->S - (cp->Srem - d);
+            if(iter!=lNVUPoints.rbegin())
+            {
+                iter--;
+                _pc = (*iter);
+            }
+            return NULL; //Should be a new TOD point if decide it.
+        }
+    }
+
+    /*
+    std::vector<NVUPOINT*>::reverse_iterator iter;
+    for(iter = lNVUPoints.rbegin(); iter!=lNVUPoints.rend(); iter++)
+    {
+        NVUPOINT* cp = (*iter);
+        if(cp->Srem>d)
+        {
+            _pc = cp;
+            _KM = cp->Srem - d;
+            return NULL; //Should be a new TOD point if decide it.
+        }
+    }
+    */
+
+    /*
+    //Calculate pressure at height
+    int ISA = 0;   //ISA deviation
+    int p0 = 101325; //Sea standard pressure
+    int t0 = 273.15 + 15 + ISA; //Sea standard temperature (15 degrees) + ISA
+    double g = 9.80665; //Earth gravitation
+    double M = 0.0289644; //Molar mass of dry air
+    double r0 = 8.31447; //Gas constant
+    double pr = p0 * exp(-(g*M*h)/(r0*t0)); //Pressure at height (i.e. 101325)
+    */
+
+    return NULL;
+}
+
 void QFlightplanTable::mousePressEvent(QMouseEvent* event)
 {
     QModelIndex item = indexAt(event->pos());
@@ -265,6 +339,16 @@ void QFlightplanTable::refreshFlightplan()
     for(int i=0; i<rowCount(); i++) refreshRow(i);
 
     qFork->setText("Fork   " + QString::number(fork, 'f', 1));
+
+    NVUPOINT *cp = NULL;
+    double d;
+    double fl = fplData.fl;
+
+    if(!showFeet) fl = LMATH::meterToFeet(fl);
+    calculateTOD(cp, d, fl, fplData.speed, fplData.vs, fplData.twc, fplData.isa);
+
+    if(cp) qTOD->setText("TOD " + (int(d) == 0 ? "at " : QString::number(d, 'f', 0) + " km before ") + cp->name);
+    else qTOD->setText("TOD [UNABLE]");
 }
 
 const std::vector<NVUPOINT*>& QFlightplanTable::getWaypoints()

@@ -1221,7 +1221,10 @@ void XFMS_DATA::validate_airways_XP11(QFile& infile)
             lit = lAW.begin();
             while(lit!=lAW.end())
             {
-                for(cit = lCSeg.begin(); cit!=lCSeg.end(); cit++)
+
+                //for(cit = lCSeg.begin(); cit!=lCSeg.end(); cit++)
+                cit = lCSeg.begin();
+                while(cit!=lCSeg.end())
                 {
                     if((*lit)->end == (*cit)->start && (*lit)->start!=(*cit)->end)
                     {
@@ -1229,14 +1232,8 @@ void XFMS_DATA::validate_airways_XP11(QFile& infile)
                         lAW.erase(lit);
                         lit = lAW.begin();
 
-                        if(lit == lAW.end())
-                        {
-                            goto while_break;
-                            //lit--;
-                            //break;
-                        }//if
+                        if(lit == lAW.end()) goto while_break;
                         cit = lCSeg.begin();
-                        cit--;
                         continue;
                     }//if
                     else if((*lit)->start == (*cit)->end && (*lit)->end!=(*cit)->start)
@@ -1245,17 +1242,13 @@ void XFMS_DATA::validate_airways_XP11(QFile& infile)
                         lAW.erase(lit);
                         lit = lAW.begin();
 
-                        if(lit == lAW.end())
-                        {
-                            goto while_break;
-                            //lit--;
-                            //break;
-                        }//if
+                        if(lit == lAW.end()) goto while_break;
                         cit = lCSeg.begin();
-                        cit--;
                         continue;
                     }//else
-                }//for
+
+                    cit++;
+                }//while
 
                 lit++;
             }//while
