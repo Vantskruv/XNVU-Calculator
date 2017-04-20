@@ -15,6 +15,9 @@
 #include <ctime>
 #include <QtConcurrent>
 #include "customloadingdialog.h"
+#include <QFileDialog>
+#include <QPrintPreviewDialog>
+#include <qlabelclick.h>
 
 
 int dat; //TODO
@@ -57,6 +60,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->lineEdit_DTCourseTo, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
     connect(ui->lineEdit_DTTo, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
 
+    //Connect clickable labels for TOD calculations
+    connect(ui->labelCruise, SIGNAL(clicked(QLabelClick*)), this, SLOT(clickedDataLabels(QLabelClick*)));
+    connect(ui->labelVS, SIGNAL(clicked(QLabelClick*)), this, SLOT(clickedDataLabels(QLabelClick*)));
+    connect(ui->labelTWC, SIGNAL(clicked(QLabelClick*)), this, SLOT(clickedDataLabels(QLabelClick*)));
+    connect(ui->labelFlightLevel, SIGNAL(clicked(QLabelClick*)), this, SLOT(clickedDataLabels(QLabelClick*)));
+
     //Give tablewidget a reference to labelFork and labelTOD and set its size
     ui->tableWidget->setColumnCount(QFlightplanTable::COL::_SIZE);
     ui->tableWidget->qFork = ui->labelFork;
@@ -89,9 +98,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableWidget->showFeet = DialogSettings::showFeet;
     if(DialogSettings::showFeet)
     {
-        ui->spinBoxFL->setSuffix(" ft");
+        ui->doubleSpinBoxFL->setSuffix(" ft");
     }//if
-    else ui->spinBoxFL->setSuffix(" m");
+    else ui->doubleSpinBoxFL->setSuffix(" m");
 
     /*
     time_t t = time(0);   // get time now
@@ -119,6 +128,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->label_alignEarthNav->setVisible(DialogSettings::distAlignEarthNav);
     ui->label_alignWPS->setVisible(DialogSettings::distAlignWPS);
     ui->label_alignFMS->setVisible(DialogSettings::distAlignFMS);
+
+    if(DialogSettings::cruiseFormat == 1) ui->doubleSpinBox_MACH->setSuffix(" km/h");
+    else if(DialogSettings::cruiseFormat == 2) ui->doubleSpinBox_MACH->setSuffix(" kn");
+    else ui->doubleSpinBox_MACH->setSuffix(" M");
+    if(DialogSettings::VSFormat == 1) ui->doubleSpinBox_VS->setSuffix(" ft/m");
+    else ui->doubleSpinBox_VS->setSuffix(" m/s");
+    if(DialogSettings::TWCFormat == 1) ui->doubleSpinBox_TWC->setSuffix(" kn");
+    else ui->doubleSpinBox_TWC->setSuffix(" km/h");
 
     //ui->tableWidget->updateShownColumns();
 
@@ -423,9 +440,10 @@ void MainWindow::printPreview(QPrinter* printer)
 
     QPainter painter(printer); // create a painter which will paint 'on printer'.
 
-#ifdef _WIN32
-    painter.scale(0.5, 0.5);
-#endif
+
+//#ifdef _WIN32
+//    painter.scale(0.5, 0.5);
+//#endif
 
     int y=0;
     drawNVUHeader(painter, lWPs[0], lWPs[lWPs.size() - 1], fork, y);
@@ -753,16 +771,26 @@ void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, 
     painter.drawText(10*xscale, y, "Distance, km.");
     font.setBold(true);
     painter.setFont(font);
-    painter.drawText(2000*xscale, y, QString::number(dep->Srem, 'f', 1));
+    painter.drawText(1500*xscale, y, QString::number(dep->Srem, 'f', 1));
     font.setBold(false);
     painter.setFont(font);
-    painter.drawText(4000*xscale, y, "Fork, deg.");
+    painter.drawText(3000*xscale, y, "Fork, deg.");
     font.setBold(true);
     painter.setFont(font);
-    painter.drawText(6000*xscale, y, QString::number(fork, 'f', 1));
+    painter.drawText(4500*xscale, y, QString::number(fork, 'f', 1));
+    font.setBold(false);
+    painter.setFont(font);
+    painter.drawText(6000*xscale, y, "TOD, km.");
+    font.setBold(true);
+    painter.setFont(font);
+
+    QString str = ui->labelTOD->text();;
+    str.remove(0, 4);
+    painter.drawText(7500*xscale, y, str);
     y+=40;
-    painter.drawRect(2000*xscale, y, 1000, 5);
-    painter.drawRect(6000, y, 1000, 5);
+    painter.drawRect(1500*xscale, y, 500, 5);
+    painter.drawRect(4500*xscale, y, 500, 5);
+    painter.drawRect(7500*xscale, y, 2250, 5);
 
     /*
     //Draw version
@@ -1490,7 +1518,7 @@ void MainWindow::calculateTOD()
 {
     NVUPOINT *cp = NULL;
     double d;
-    double fl = ui->spinBoxFL->value();
+    double fl = ui->doubleSpinBoxFL->value();
     double mach = ui->doubleSpinBox_MACH->value();
     double vs = ui->doubleSpinBox_VS->value();
     double twc = ui->doubleSpinBox_TWC->value();
@@ -1509,15 +1537,15 @@ void MainWindow::on_actionShow_feet_triggered()
     ui->tableWidget->showFeet = ui->actionShow_feet->isChecked();
     if(ui->actionShow_feet->isChecked())
     {
-        ui->spinBoxFL->setValue(LMATH::meterToFeet(ui->spinBoxFL->value()));
-        ui->spinBoxFL->setSuffix(" ft");
-        ui->tableWidget->fplData.fl = ui->spinBoxFL->value();
+        ui->doubleSpinBoxFL->setValue(LMATH::meterToFeet(ui->doubleSpinBoxFL->value()));
+        ui->doubleSpinBoxFL->setSuffix(" ft");
+        ui->tableWidget->fplData.fl = ui->doubleSpinBoxFL->value();
     }
     else
     {
-        ui->spinBoxFL->setValue(LMATH::feetToMeter(ui->spinBoxFL->value()));
-        ui->spinBoxFL->setSuffix(" m");
-        ui->tableWidget->fplData.fl = ui->spinBoxFL->value();
+        ui->doubleSpinBoxFL->setValue(LMATH::feetToMeter(ui->doubleSpinBoxFL->value()));
+        ui->doubleSpinBoxFL->setSuffix(" m");
+        ui->tableWidget->fplData.fl = ui->doubleSpinBoxFL->value();
     }//else
 
     ui->tableWidget->refreshFlightplan();
@@ -1628,7 +1656,7 @@ void MainWindow::fplDataChangeCheck()
         //TODO: Set color to yellow
     }
     else; //Set color to default
-    if(ui->spinBoxFL->value() != ui->tableWidget->fplData.fl)
+    if(ui->doubleSpinBoxFL->value() != ui->tableWidget->fplData.fl)
     {
         changed = true;
         //TODO: Set color to yellow
@@ -1668,6 +1696,8 @@ void MainWindow::fplDataChangeCheck()
 
 void MainWindow::on_doubleSpinBox_MACH_valueChanged(double _speed)
 {
+    if(_speed>10.0) ui->doubleSpinBox_MACH->setSuffix(" km/h");
+    else ui->doubleSpinBox_MACH->setSuffix(" M");
     fplDataChangeCheck();
 }
 
@@ -1682,7 +1712,7 @@ void MainWindow::on_doubleSpinBox_TWC_valueChanged(double arg1)
     fplDataChangeCheck();
 }
 
-void MainWindow::on_spinBoxFL_valueChanged(int arg1)
+void MainWindow::on_doubleSpinBoxFL_valueChanged(double arg1)
 {
     fplDataChangeCheck();
 }
@@ -1725,17 +1755,17 @@ void MainWindow::on_pushButtonSetDate_clicked()
         XFMS_DATA::setDate(dat);
     }
 
-    if(ui->tableWidget->fplData.fl!=ui->spinBoxFL->value())
+    if(ui->tableWidget->fplData.fl!=ui->doubleSpinBoxFL->value())
     {
         std::vector<NVUPOINT*> lP = ui->tableWidget->getWaypoints();
         for(int i=0; i<lP.size(); i++)
         {
             NVUPOINT* p = lP[i];
             if(i==0 || i == (lP.size()-1)) p->alt = p->elev;
-            else p->alt = (ui->actionShow_feet->isChecked() ? ui->spinBoxFL->value() : LMATH::meterToFeet(ui->spinBoxFL->value()));
+            else p->alt = (ui->actionShow_feet->isChecked() ? ui->doubleSpinBoxFL->value() : LMATH::meterToFeet(ui->doubleSpinBoxFL->value()));
         }
 
-        ui->tableWidget->fplData.fl = ui->spinBoxFL->value();
+        ui->tableWidget->fplData.fl = ui->doubleSpinBoxFL->value();
 
     }
 
@@ -1751,4 +1781,86 @@ void MainWindow::on_pushButtonSetDate_clicked()
                           "color: rgb(107, 239, 0);";
     ui->pushButtonSetDate->setText("IS SET");
     ui->pushButtonSetDate->setStyleSheet(styleSheet);
+}
+
+void MainWindow::clickedDataLabels(QLabelClick* _label)
+{
+    if(_label == ui->labelCruise)
+    {
+        if(DialogSettings::cruiseFormat == 0)
+        {
+            double FL = ui->doubleSpinBoxFL->value();
+            if(DialogSettings::showFeet) FL = LMATH::feetToMeter(FL);
+            FL = FL/1000.0;
+            ui->doubleSpinBox_MACH->setValue(LMATH::MACH_to_IAS(ui->doubleSpinBox_MACH->value(), FL, ui->doubleSpinBox_ISA->value()));
+            ui->doubleSpinBox_MACH->setSuffix(" km/h");
+            DialogSettings::cruiseFormat = 1;
+        }
+        else if(DialogSettings::cruiseFormat == 1)
+        {
+            ui->doubleSpinBox_MACH->setValue(ui->doubleSpinBox_MACH->value()/1.852);
+            ui->doubleSpinBox_MACH->setSuffix(" kn");
+            DialogSettings::cruiseFormat = 2;
+        }
+        else
+        {
+            double FL = ui->doubleSpinBoxFL->value();
+            if(DialogSettings::showFeet) FL = LMATH::feetToMeter(FL);
+            FL = FL/1000.0;
+            ui->doubleSpinBox_MACH->setValue(LMATH::IAS_to_MACH(ui->doubleSpinBox_MACH->value()*1.852, FL, ui->doubleSpinBox_ISA->value()));
+            ui->doubleSpinBox_MACH->setSuffix(" M");
+            DialogSettings::cruiseFormat = 0;
+        }
+    }
+    else if(_label == ui->labelVS)
+    {
+        if(DialogSettings::VSFormat == 0)
+        {
+            ui->doubleSpinBox_VS->setValue(LMATH::meterToFeet(ui->doubleSpinBox_VS->value())*60);
+            ui->doubleSpinBox_VS->setSuffix(" ft/m");
+            DialogSettings::VSFormat = 1;
+        }
+        else
+        {
+            ui->doubleSpinBox_VS->setValue(LMATH::feetToMeter(ui->doubleSpinBox_VS->value())/60.0);
+            ui->doubleSpinBox_VS->setSuffix(" m/s");
+            DialogSettings::VSFormat = 0;
+        }
+    }
+    else if(_label == ui->labelTWC)
+    {
+        if(DialogSettings::TWCFormat == 0)
+        {
+            ui->doubleSpinBox_TWC->setValue(ui->doubleSpinBox_TWC->value()/1.852);
+            ui->doubleSpinBox_TWC->setSuffix(" kn");
+            DialogSettings::TWCFormat = 1;
+        }
+        else
+        {
+            ui->doubleSpinBox_TWC->setValue(ui->doubleSpinBox_TWC->value()*1.852);
+            ui->doubleSpinBox_TWC->setSuffix(" km/h");
+            DialogSettings::TWCFormat = 0;
+        }
+    }
+    else if(_label == ui->labelFlightLevel)
+    {
+        DialogSettings::showFeet = !ui->actionShow_feet->isChecked();
+        ui->actionShow_feet->setChecked(DialogSettings::showFeet);
+        ui->tableWidget->showFeet = ui->actionShow_feet->isChecked();
+        if(ui->actionShow_feet->isChecked())
+        {
+            ui->doubleSpinBoxFL->setValue(LMATH::meterToFeet(ui->doubleSpinBoxFL->value()));
+            ui->doubleSpinBoxFL->setSuffix(" ft");
+            ui->tableWidget->fplData.fl = ui->doubleSpinBoxFL->value();
+        }
+        else
+        {
+            ui->doubleSpinBoxFL->setValue(LMATH::feetToMeter(ui->doubleSpinBoxFL->value()));
+            ui->doubleSpinBoxFL->setSuffix(" m");
+            ui->tableWidget->fplData.fl = ui->doubleSpinBoxFL->value();
+        }//else
+
+        ui->tableWidget->refreshFlightplan();
+    }
+
 }

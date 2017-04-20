@@ -50,7 +50,7 @@ class QFlightplanTable : public QTableWidget
             double speed = 0.80;
             double vs = 8.0;
             double twc = 0.0;
-            int fl = 0;
+            double fl = 0;
             double isa = 0.0;
         }fplData;
 
@@ -58,7 +58,7 @@ class QFlightplanTable : public QTableWidget
         QLabel* qTOD = NULL;
         bool showFeet = false;
 
-        //_KM[KM], _FL[FEET], _MACH[_MACH], _VS[M/S], _TWC[KNOTS], _ISA[CELSIUS]
+        //_KM(km) _FL(km), _MACH(mach or km/h), _VS(m/s), _TWC(km/h), _ISA(celsius) NOTE: _MACH is taken as IAS(km/h) if argument > 10.0
         NVUPOINT* calculateTOD(NVUPOINT *&_pc, double& _KM, double _FL, double _MACH, double _VS, double _TWC, double _ISA);
         void deleteWaypoint(int row);                                   //Delete waypoint at row
         //void insertWaypoint(NVUPOINT* wp, int row, int offset);         //Insert a waypoint with an offset value set. Before row (-1), after row (1), or replace the row (0).

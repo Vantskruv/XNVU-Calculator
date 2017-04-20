@@ -4,6 +4,53 @@
 
 #define KM_RADIUS 6371.009
 
+double LMATH::IAS_to_MACH(double IAS, double FL, double ISA)
+{
+    const double EARTH_RADIUS = 6356.766; //KM
+    FL = (EARTH_RADIUS*FL) / (EARTH_RADIUS + FL);
+    const double G = 9.80665; //Earth gravitation
+    const double M = 0.0289644; //Molar mass of dry air
+    const double R = 0.0083144598; //Gas constant
+    const double LP = -6.5;     //Laps rate (6.5C/KM)
+    const double A0 = 340.3; //Speed of sound at sea level (m/s)
+    const double D0 = 1.2250; //Sea standard air density (kg/m3)
+
+    //Temperatures at sea level and altitude
+    double T0 = 273.15 + 15 + ISA; //Sea standard temperature (15 degrees) + ISA
+    double T = T0 + LP*FL;       //OAT temp (6.5 degree change per 1000 meter);
+
+    //Calculate density of air (kg/m3)
+    double DA = D0 * pow(T0/T,  (1.0 + (G*M)/(R*LP)));
+
+    //Convert IAS to MACH if value given is bigger than 10, otherwise _MACH is already in the correct format.
+    return (IAS/3.6)/(A0*sqrt(T/T0)*sqrt(DA/D0));
+}
+
+double LMATH::MACH_to_IAS(double MACH, double FL, double ISA)
+{
+    const double EARTH_RADIUS = 6356.766; //KM
+    FL = (EARTH_RADIUS*FL) / (EARTH_RADIUS + FL);
+    const double G = 9.80665; //Earth gravitation
+    const double M = 0.0289644; //Molar mass of dry air
+    const double R = 0.0083144598; //Gas constant
+    const double LP = -6.5;     //Laps rate (6.5C/KM)
+    const double A0 = 340.3; //Speed of sound at sea level (m/s)
+    const double D0 = 1.2250; //Sea standard air density (kg/m3)
+
+    //Temperatures at sea level and altitude
+    double T0 = 273.15 + 15 + ISA; //Sea standard temperature (15 degrees) + ISA
+    double T = T0 + LP*FL;       //OAT temp (6.5 degree change per 1000 meter);
+
+    //Calculate density of air (kg/m3)
+    double DA = D0 * pow(T0/T,  (1.0 + (G*M)/(R*LP)));
+
+    //Calculate TAS(m/s) from MACH
+    double TAS = A0*MACH*sqrt(T/T0);
+
+    //Calculate IAS(m/s) from TAS. Equation is actually for EAS, but IAS is the same as EAS if there is a 0 error.
+    return TAS*sqrt(DA/D0)*3.6;
+}
+
 bool LMATH::GetLineIntersection(const CPoint& A, const CPoint & B, const CPoint& C, const CPoint& D, double& mua)
 {
 	CPoint lA[] = {A, B};

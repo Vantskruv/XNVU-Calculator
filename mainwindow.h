@@ -3,11 +3,13 @@
 
 #include <QMainWindow>
 #include <QListWidgetItem>
-#include <QtPrintSupport/QtPrintSupport>
+#include <QPrinter>
+#include <QtPrintSupport>
 #include <NVU.h>
 #include "XFMS_DATA.h"
 #include "dialogsettings.h"
 #include "qlineeditwp.h"
+#include <qlabelclick.h>
 
 #define XNVU_VERSION    "XNVU version 0.36"
 
@@ -42,6 +44,7 @@ private slots:
     void tableGoUp();
     void tableGoDown();
     void goDirectToFieldClicked(QLineEditWP *wp);
+    void clickedDataLabels(QLabelClick *_label);
 
     void deleteCurrentWaypoint();
     void setWaypointDescription(NVUPOINT* wp);
@@ -129,7 +132,7 @@ private slots:
     void on_doubleSpinBox_MACH_valueChanged(double arg1);
     void on_doubleSpinBox_VS_valueChanged(double arg1);
     void on_doubleSpinBox_TWC_valueChanged(double arg1);
-    void on_spinBoxFL_valueChanged(int arg1);
+    void on_doubleSpinBoxFL_valueChanged(double arg1);
     void on_doubleSpinBox_ISA_valueChanged(double arg1);
 
 private:

@@ -7,6 +7,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    QCoreApplication::setLibraryPaths(QStringList() << "");
     DialogSettings::loadSettings();
 
     CustomLoadingDialog loadDataDialog;

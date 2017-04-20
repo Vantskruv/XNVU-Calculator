@@ -54,7 +54,8 @@ QFlightplanTable::QFlightplanTable(QWidget *&w) : QTableWidget(w)
     horizontalHeader()->setStretchLastSection(true);
 }
 
-NVUPOINT* QFlightplanTable::calculateTOD(NVUPOINT*& _pc, double& _KM, double _FL, double _MACH, double _VS, double _TWC, double _ISA)
+//_FL(km), _MACH(mach or km/h), _VS(m/s), _TWC(km/h), _ISA(celsius)
+NVUPOINT* QFlightplanTable::calculateTOD(NVUPOINT*& _pc, double& _KM, double __FL, double _MACH, double _VS, double _TWC, double _ISA)
 {
     _pc = NULL;
     if(lNVUPoints.size()<2) return NULL;
@@ -66,22 +67,56 @@ NVUPOINT* QFlightplanTable::calculateTOD(NVUPOINT*& _pc, double& _KM, double _FL
     //TWC or WD/WS (Average Tail Wind Component or average WindSpeed/WindDirection)
     _VS = fabs(_VS);
 
+    //Convert altitude to km, and correct it to earth radius
+    const double EARTH_RADIUS = 6356.766; //KM
+    double _FL = (EARTH_RADIUS*__FL) / (EARTH_RADIUS + __FL);
 
-    //Calculate the average ground speed
-    double _FL_M = LMATH::feetToMeter((int)_FL);    //Metric flight level
-    double T0 = 288.15 + _ISA;                       //Standard sea level temp plus ISA
-    double T = T0 - (_FL_M/1000.0)*6.5;             //OAT temp (6.5 degree change per 1000 meter);
-    double TAS = 39.0*_MACH*sqrt(T);                  //TAS in KNOTS
+    //Const values
+    const double P0 = 101325; //Sea standard pressure
+    const double G = 9.80665; //Earth gravitation
+    const double M = 0.0289644; //Molar mass of dry air
+    const double R = 0.0083144598; //Gas constant
+    const double LP = -6.5;     //Laps rate (6.5C/KM)
+    const double A0 = 340.3; //Speed of sound at sea level (m/s)
+    const double D0 = 1.2250; //Sea standard air density (kg/m3)
+    const double K = 0.0; //Error correction for CAS
+
+    //Temperatures at sea level and altitude
+    double T0 = 273.15 + 15 + _ISA; //Sea standard temperature (15 degrees) + ISA
+    double T = T0 + LP*_FL;       //OAT temp (6.5 degree change per 1000 meter);
+
+    //Calculate pressure at altitude (Pa)
+    double PA = P0 * pow(T0/T, (G*M)/(R*LP));
+
+    //Calculate density of air (kg/m3)
+    double DA = D0 * pow(T0/T,  (1.0 + (G*M)/(R*LP)));
+
+    //Convert IAS to MACH if value given is bigger than 10, otherwise _MACH is already in the correct format.
+    if(_MACH>10.0) _MACH = (_MACH/3.6)/(A0*sqrt(T/T0)*sqrt(DA/D0));
+
+    //Calculate TAS(m/s) from MACH
+    double TAS = A0*_MACH*sqrt(T/T0);
+
+    //Calculate CAS(m/s) from TAS
+    double CAS = A0*sqrt(5.0*(pow(1.0 + ((0.5*DA*TAS*TAS)/P0), 2.0/7.0) - 1.0)) + K;
+
+    //Calculate IAS(m/s) from TAS. Equation is actually for EAS, but IAS is the same as EAS if there is a 0 error.
+    double IAS = TAS*sqrt(DA/D0);
+
+    //Convert to km/h
+    IAS = IAS*3.6;
+    TAS = TAS*3.6;
+    CAS = CAS*3.6;
+
+    //Calculate GS(km/h) from TAS
     double GS = TAS + _TWC;
-    GS = GS*1.852;
 
     //Calculate the distance needed for descent
     //FL = Flightlevel in thousands feet
     //VS = Descent rate (m/s)
-    //GS = Ground speed
-    _FL = _FL - (lNVUPoints.back())->elev;
-    _FL = _FL/1000.0;
-    double d = (_FL*(GS - 5.0*_FL)) / (_VS*(15.0/1.27));
+    //GS = Ground speed (km/h)
+    __FL = LMATH::meterToFeet(__FL) - (lNVUPoints.back())->elev/1000.0;
+    double d = (__FL*(GS - 5.0*__FL)) / (_VS*(15.0/1.27));
 
 
     std::vector<NVUPOINT*>::reverse_iterator iter;
@@ -99,6 +134,8 @@ NVUPOINT* QFlightplanTable::calculateTOD(NVUPOINT*& _pc, double& _KM, double _FL
             return NULL; //Should be a new TOD point if decide it.
         }
     }
+
+
 
     /*
     std::vector<NVUPOINT*>::reverse_iterator iter;
@@ -344,11 +381,12 @@ void QFlightplanTable::refreshFlightplan()
     double d;
     double fl = fplData.fl;
 
-    if(!showFeet) fl = LMATH::meterToFeet(fl);
+    if(showFeet) fl = LMATH::feetToMeter(fl);
+    fl = fl/1000.0;
     calculateTOD(cp, d, fl, fplData.speed, fplData.vs, fplData.twc, fplData.isa);
 
-    if(cp) qTOD->setText("TOD " + (int(d) == 0 ? "at " : QString::number(d, 'f', 0) + " km before ") + cp->name);
-    else qTOD->setText("TOD [UNABLE]");
+    if(cp) qTOD->setText("TOD: " + (int(d) == 0 ? "at " : QString::number(d, 'f', 1) + " km before ") + cp->name);
+    else qTOD->setText("TOD: ");
 }
 
 const std::vector<NVUPOINT*>& QFlightplanTable::getWaypoints()

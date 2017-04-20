@@ -35,7 +35,7 @@
   </property>
   <property name="styleSheet">
    <string notr="true">
-#centralWidget, #label, #label_2, #label_3, #label_4, #labelInsertRoute, #menuBar, #mainToolBar, #statusBar, #menuFile, #menuSettings, #menuView
+#centralWidget, #labelCruise, #labelVS, #label_3, #labelTWC, #labelInsertRoute, #menuBar, #mainToolBar, #statusBar, #menuFile, #menuSettings, #menuView
 {
 	background-color: rgb(0, 30, 0);
 	color: rgb(107, 239, 0);
@@ -84,7 +84,7 @@
 	color: rgb(0, 0, 0);
 }
 
-#lineEdit, #lineEditRoute, #lineEdit_FlightLevel, #spinBoxFL, #dateEdit, #lineEdit_DTCourseFrom, #lineEdit_DTCourseTo, #lineEdit_DTTo, #doubleSpinBox_DTCourseDistRem, #doubleSpinBox_MACH, #doubleSpinBox_VS, #doubleSpinBox_ISA, #doubleSpinBox_TWC
+#lineEdit, #lineEditRoute, #lineEdit_FlightLevel, #doubleSpinBoxFL, #dateEdit, #lineEdit_DTCourseFrom, #lineEdit_DTCourseTo, #lineEdit_DTTo, #doubleSpinBox_DTCourseDistRem, #doubleSpinBox_MACH, #doubleSpinBox_VS, #doubleSpinBox_ISA, #doubleSpinBox_TWC
 {
 	background-color: rgb(0, 30, 0);
 	color: rgb(107, 239, 0);
@@ -1065,7 +1065,7 @@
        <enum>QLayout::SetMinimumSize</enum>
       </property>
       <item row="5" column="13" alignment="Qt::AlignRight">
-       <widget class="QLabel" name="label_4">
+       <widget class="QLabelClick" name="labelTWC">
         <property name="font">
          <font>
           <family>Gentium Basic</family>
@@ -1076,45 +1076,6 @@
         </property>
         <property name="text">
          <string>TWC:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="16">
-       <widget class="QSpinBox" name="spinBoxFL">
-        <property name="minimumSize">
-         <size>
-          <width>150</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>150</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>13</pointsize>
-         </font>
-        </property>
-        <property name="specialValueText">
-         <string/>
-        </property>
-        <property name="suffix">
-         <string> m</string>
-        </property>
-        <property name="prefix">
-         <string/>
-        </property>
-        <property name="minimum">
-         <number>-999999</number>
-        </property>
-        <property name="maximum">
-         <number>999999</number>
-        </property>
-        <property name="singleStep">
-         <number>100</number>
         </property>
        </widget>
       </item>
@@ -1273,7 +1234,7 @@
        </widget>
       </item>
       <item row="0" column="13" alignment="Qt::AlignRight">
-       <widget class="QLabel" name="label">
+       <widget class="QLabelClick" name="labelCruise">
         <property name="font">
          <font>
           <family>Gentium Basic</family>
@@ -1283,7 +1244,7 @@
          </font>
         </property>
         <property name="text">
-         <string>MACH:</string>
+         <string>CRUISE:</string>
         </property>
        </widget>
       </item>
@@ -1336,7 +1297,7 @@
        </widget>
       </item>
       <item row="0" column="15">
-       <widget class="QLabel" name="labelFlightLevel">
+       <widget class="QLabelClick" name="labelFlightLevel">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -1418,7 +1379,7 @@
        </widget>
       </item>
       <item row="3" column="13" alignment="Qt::AlignRight">
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabelClick" name="labelVS">
         <property name="font">
          <font>
           <family>Gentium Basic</family>
@@ -1519,7 +1480,7 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>350</width>
+          <width>16777215</width>
           <height>16777215</height>
          </size>
         </property>
@@ -1542,7 +1503,43 @@
          <string notr="true"/>
         </property>
         <property name="text">
-         <string>TOD</string>
+         <string>TOD: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="16">
+       <widget class="QDoubleSpinBox" name="doubleSpinBoxFL">
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>13</pointsize>
+         </font>
+        </property>
+        <property name="specialValueText">
+         <string/>
+        </property>
+        <property name="decimals">
+         <number>0</number>
+        </property>
+        <property name="minimum">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>99999.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>100.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -1846,6 +1843,11 @@
    <class>QLineEditWP</class>
    <extends>QLineEdit</extends>
    <header location="global">qlineeditwp.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QLabelClick</class>
+   <extends>QLabel</extends>
+   <header>qlabelclick.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

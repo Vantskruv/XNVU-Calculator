@@ -31,6 +31,9 @@ bool DialogSettings::distAlignATS = false;
 bool DialogSettings::distAlignEarthNav = false;
 double DialogSettings::distAlignMargin = 0.0001;
 bool DialogSettings::showFeet = false;
+int DialogSettings::cruiseFormat = 0;
+int DialogSettings::VSFormat = 0;
+int DialogSettings::TWCFormat = 0;
 bool DialogSettings::customDateIsTrue = true;
 QString DialogSettings::customDate = "2020.01.01";
 
@@ -201,6 +204,9 @@ void DialogSettings::loadSettings()
     distAlignEarthNav = s.value("DistAlignEarthNav", distAlignEarthNav).toBool();
     distAlignMargin = s.value("DistAlignMargin", distAlignMargin).toDouble();
     showFeet = s.value("ShowFeet", showFeet).toBool();
+    cruiseFormat = s.value("CruiseFormat", cruiseFormat).toInt();
+    VSFormat = s.value("VSFormat", VSFormat).toInt();
+    TWCFormat = s.value("TWCFormat", TWCFormat).toInt();
     windowSize = s.value("WindowSize", windowSize).toSize();
     windowPos = s.value("WindowPos", windowPos).toPoint();
     tableState = s.value("TableState", tableState).toByteArray();
@@ -230,6 +236,9 @@ void DialogSettings::saveSettings()
     s.setValue("DistAlignEarthNav", distAlignEarthNav);
     s.setValue("DistAlignMargin", distAlignMargin);
     s.setValue("ShowFeet", showFeet);
+    s.setValue("CruiseFormat", cruiseFormat);
+    s.setValue("VSFormat", VSFormat);
+    s.setValue("TWCFormat", TWCFormat);
     s.setValue("WindowSize", windowSize);
     s.setValue("WindowPos", windowPos);
     s.setValue("TableState", tableState);

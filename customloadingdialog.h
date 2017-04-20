@@ -14,7 +14,6 @@ class CustomLoadingDialog : public QDialog
         //int alignment;
         QColor color;
         QRect rect;
-        QMutex mutex;
 
     signals:
         void loadingFinished();

@@ -7,9 +7,10 @@
 
 namespace LMATH
 {
-
-    static const double feetToMeter(double f){ return 0.3048*f;}
-    static const double meterToFeet(double f){ return f/0.3048;}
+    double IAS_to_MACH(double IAS, double FL, double ISA);
+    double MACH_to_IAS(double MACH, double FL, double ISA);
+    static double feetToMeter(double f){ return 0.3048*f;}
+    static double meterToFeet(double f){ return f/0.3048;}
     static const int KM_RADIUS = 6371.009;
 	bool GetLineIntersection(const CPoint& A, const CPoint & B, const CPoint& C, const CPoint& D, double& mua);
 	double GetClosestPointOnVector(const CPoint& _p, const CPoint& _v);

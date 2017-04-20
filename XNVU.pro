@@ -36,7 +36,8 @@ SOURCES += main.cpp\
     dialogcolumns.cpp \
     dialogwpsedit.cpp \
     qlineeditwp.cpp \
-    customloadingdialog.cpp
+    customloadingdialog.cpp \
+    qlabelclick.cpp
 
 HEADERS  += mainwindow.h \
     coremag.h \
@@ -58,7 +59,8 @@ HEADERS  += mainwindow.h \
     dialogcolumns.h \
     dialogwpsedit.h \
     qlineeditwp.h \
-    customloadingdialog.h
+    customloadingdialog.h \
+    qlabelclick.h
 
 FORMS    += mainwindow.ui \
     dialogsettings.ui \

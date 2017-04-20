@@ -57,6 +57,9 @@ public:
     static bool distAlignEarthNav;
     static double distAlignMargin;
     static bool showFeet;
+    static int cruiseFormat;
+    static int VSFormat;
+    static int TWCFormat;
     static bool customDateIsTrue;
     static QString customDate;
 /*
