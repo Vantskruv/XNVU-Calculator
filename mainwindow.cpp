@@ -51,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionLoad_XNVU_flightplan, SIGNAL(triggered()), this, SLOT(loadNVUFlightplan()));
     connect(ui->actionX_Plane_folder, SIGNAL(triggered()), this, SLOT(showXPlaneSettings()));
     connect(ui->actionPrint, SIGNAL(triggered()), this, SLOT(on_pushButtonPrint_clicked()));
+    connect(ui->actionExport_to_PDF, SIGNAL(triggered()), this, SLOT(printOnPDF()));
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(quit()));
     connect(ui->tableWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showFlightplanContextMenu(const QPoint&)));
     connect(ui->listWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showSearchListContextMenu(const QPoint&)));
@@ -93,8 +94,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     //Load settings and data
-    //DialogSettings::loadSettings();
     ui->actionShow_feet->setChecked(DialogSettings::showFeet);
+    ui->actionNightmode_print_export->setChecked(DialogSettings::nightMode);
+
+
+
     ui->tableWidget->showFeet = DialogSettings::showFeet;
     if(DialogSettings::showFeet)
     {
@@ -129,13 +133,15 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->label_alignWPS->setVisible(DialogSettings::distAlignWPS);
     ui->label_alignFMS->setVisible(DialogSettings::distAlignFMS);
 
-    if(DialogSettings::cruiseFormat == 1) ui->doubleSpinBox_MACH->setSuffix(" km/h");
-    else if(DialogSettings::cruiseFormat == 2) ui->doubleSpinBox_MACH->setSuffix(" kn");
-    else ui->doubleSpinBox_MACH->setSuffix(" M");
-    if(DialogSettings::VSFormat == 1) ui->doubleSpinBox_VS->setSuffix(" ft/m");
-    else ui->doubleSpinBox_VS->setSuffix(" m/s");
+    if(DialogSettings::cruiseFormat == 1){ ui->doubleSpinBox_MACH->setSuffix(" km/h"); ui->doubleSpinBox_MACH->setValue(476);}
+    else if(DialogSettings::cruiseFormat == 2) {ui->doubleSpinBox_MACH->setSuffix(" kn"); ui->doubleSpinBox_MACH->setValue(257);}
+    else {ui->doubleSpinBox_MACH->setSuffix(" M"); ui->doubleSpinBox_MACH->setValue(0.8);}
+    if(DialogSettings::VSFormat == 1){ ui->doubleSpinBox_VS->setSuffix(" ft/m"); ui->doubleSpinBox_VS->setValue(1575);}
+    else{ui->doubleSpinBox_VS->setSuffix(" m/s"); ui->doubleSpinBox_VS->setValue(8.0);}
     if(DialogSettings::TWCFormat == 1) ui->doubleSpinBox_TWC->setSuffix(" kn");
     else ui->doubleSpinBox_TWC->setSuffix(" km/h");
+    if(DialogSettings::showFeet){ui->doubleSpinBoxFL->setSuffix(" ft"); ui->doubleSpinBoxFL->setValue(35000);}
+    else{ui->doubleSpinBoxFL->setSuffix(" m"); ui->doubleSpinBoxFL->setValue(10668);}
 
     //ui->tableWidget->updateShownColumns();
 
@@ -153,6 +159,7 @@ MainWindow::~MainWindow()
     DialogSettings::windowPos = pos();
     DialogSettings::tableState = ui->tableWidget->horizontalHeader()->saveState();
     DialogSettings::showFeet = ui->actionShow_feet->isChecked();
+    DialogSettings::nightMode = ui->actionNightmode_print_export->isChecked();
     DialogSettings::saveSettings();
 
     XFMS_DATA::saveXNVUData();
@@ -427,25 +434,29 @@ void MainWindow::printPreview(QPrinter* printer)
 {
     printer->setPageSize(QPrinter::A4);
     printer->setOrientation(QPrinter::Landscape);
-    printer->setPageMargins (10,10,10,10,QPrinter::Millimeter);
-    printer->setFullPage(false);
-    //printer->setOutputFileName("output.pdf");
-    //printer->setOutputFormat(QPrinter::PdfFormat); //you can use native format of system usin QPrinter::NativeFormat
+    //printer->setPageMargins (0,0,0,0,QPrinter::Millimeter);
+    printer->setFullPage(true);
 
     std::vector<NVUPOINT*> lWPs = ui->tableWidget->getWaypoints();
     double fork;
     if(lWPs.size()<1) return;
 
     NVU::generate(lWPs, fork, dat);
-
     QPainter painter(printer); // create a painter which will paint 'on printer'.
+
+    QRect prect = printer->pageRect();
+    QRect defvp = painter.viewport();
+    if(ui->actionNightmode_print_export->isChecked()) painter.fillRect(prect, Qt::black);
+    prect.setY(1000);
+    prect.setX(1000);
+    painter.setViewport(prect);
 
 
 //#ifdef _WIN32
 //    painter.scale(0.5, 0.5);
 //#endif
 
-    int y=0;
+    int y = 0;
     drawNVUHeader(painter, lWPs[0], lWPs[lWPs.size() - 1], fork, y);
     y+=30;
     int j = 0;
@@ -454,6 +465,12 @@ void MainWindow::printPreview(QPrinter* printer)
         if(j==19)
         {
             printer->newPage();
+            painter.setViewport(defvp);
+            prect = printer->pageRect();
+            if(ui->actionNightmode_print_export->isChecked()) painter.fillRect(prect, Qt::black);
+            prect.setY(1000);
+            prect.setX(1000);
+            painter.setViewport(prect);
             y = 0;
             drawNVUHeader(painter, lWPs[0], lWPs[lWPs.size() - 1], fork, y);
             y+=30;
@@ -734,6 +751,15 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
 
 void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, double fork, int& y)
 {
+    QColor black(0, 0, 0);
+    QColor gray(207, 207, 207);
+
+    if(ui->actionNightmode_print_export->isChecked())
+    {
+        black = QColor(0, 200, 0);
+        gray = QColor(0, 32, 0);
+    }
+
     int fSize = 150;
     int fHOffset = 250;
     //int fWOffset = 100;
@@ -745,7 +771,7 @@ void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, 
     int dx, dy;
     double xscale = 1;
     QString qstr;
-    QPen gridPen(Qt::black, 0, Qt::SolidLine);
+    QPen gridPen(black, 0, Qt::SolidLine);
     QFont font = QFont("FreeSans");
     font.setBold(true);
     font.setPixelSize(fSize);
@@ -801,7 +827,7 @@ void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, 
 
 
     y+=90;
-    painter.setBrush(QColor(207, 207, 207));
+    painter.setBrush(gray);
     //Draw waypoint N
     xscale = 1;
     painter.drawRect(x, y, rectW*xscale, rectH);
@@ -992,11 +1018,22 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     int dx, dy;
     double xscale = 1;
     QString qstr;
+
     QColor red(143, 30, 30, 255);
     QColor blue(6, 6, 131, 255);
+    QColor white(255, 255, 255);
+    QColor black(0, 0, 0);
+
+    if(ui->actionNightmode_print_export->isChecked())
+    {
+        white = QColor(0, 0, 0);
+        black = QColor(0, 154, 0);
+        red = QColor(242, 30, 30, 255);
+        blue = QColor(0, 242, 242, 255);
+    }//if
 
 
-    QPen gridPen(Qt::black, 0, Qt::SolidLine);
+    QPen gridPen(black, 0, Qt::SolidLine);
     painter.setPen(gridPen);
 
     //QFont font = QFont("Liberation Serif");
@@ -1004,8 +1041,7 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     font.setPixelSize(fSize);
     QFontMetrics fM(font);
     painter.setFont(font);
-    painter.setBrush(QColor(255, 255, 255));
-
+    painter.setBrush(white);
 
 
     //Draw waypoint N
@@ -1269,12 +1305,46 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
 
 void MainWindow::on_pushButtonPrint_clicked()
 {
+    const std::vector<NVUPOINT*>& lWP = ui->tableWidget->getWaypoints();
+    if(lWP.size()<2)
+    {
+        QMessageBox box;
+        box.setText("Flightplan cannot be printed with less than 2 waypoints.");
+        box.setIcon(QMessageBox::Information);
+        box.exec();
+        return;
+    }
+
     QPrinter printer(QPrinter::HighResolution); //create your QPrinter (don't need to be high resolution, anyway)
     QPrintPreviewDialog dialog(&printer);
     dialog.setWindowFlags(Qt::Window);
     dialog.setWindowTitle("Print NVU-plan");
     connect(&dialog, SIGNAL(paintRequested(QPrinter *)), SLOT(printPreview(QPrinter *)));
     dialog.exec();
+}
+
+void MainWindow::printOnPDF()
+{
+    const std::vector<NVUPOINT*>& lWP = ui->tableWidget->getWaypoints();
+    if(lWP.size()<2)
+    {
+        QMessageBox box;
+        box.setText("Flightplan cannot be exported with less than 2 waypoints.");
+        box.setIcon(QMessageBox::Information);
+        box.exec();
+        return;
+    }
+
+    QString fileName = (*lWP.begin())->name + "_" + (lWP.back())->name + ".pdf";
+    fileName = QFileDialog::getSaveFileName((QWidget* )0, "Export PDF", fileName, "*.pdf");
+    if(fileName.isEmpty()) return;
+    if(QFileInfo(fileName).suffix().isEmpty()) fileName.append(".pdf");
+
+    QPrinter printer(QPrinter::HighResolution); //create your QPrinter (don't need to be high resolution, anyway)
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setOutputFileName(fileName);
+    printPreview(&printer);
+
 }
 
 void MainWindow::on_tableWidget_itemSelectionChanged()
@@ -1816,7 +1886,7 @@ void MainWindow::clickedDataLabels(QLabelClick* _label)
     {
         if(DialogSettings::VSFormat == 0)
         {
-            ui->doubleSpinBox_VS->setValue(LMATH::meterToFeet(ui->doubleSpinBox_VS->value())*60);
+            ui->doubleSpinBox_VS->setValue(LMATH::meterToFeet(ui->doubleSpinBox_VS->value())*60.0);
             ui->doubleSpinBox_VS->setSuffix(" ft/m");
             DialogSettings::VSFormat = 1;
         }

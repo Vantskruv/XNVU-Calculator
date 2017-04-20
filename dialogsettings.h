@@ -56,6 +56,7 @@ public:
     static bool distAlignATS;
     static bool distAlignEarthNav;
     static double distAlignMargin;
+    static bool nightMode;
     static bool showFeet;
     static int cruiseFormat;
     static int VSFormat;

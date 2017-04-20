@@ -380,10 +380,17 @@ void QFlightplanTable::refreshFlightplan()
     NVUPOINT *cp = NULL;
     double d;
     double fl = fplData.fl;
+    double speed = fplData.speed;
+    double vs = (DialogSettings::VSFormat == 1 ? LMATH::feetToMeter(fplData.vs)/60.0 : fplData.vs);
+    double twc = (DialogSettings::TWCFormat == 1 ? fplData.twc*1.852 : fplData.twc);
 
     if(showFeet) fl = LMATH::feetToMeter(fl);
     fl = fl/1000.0;
-    calculateTOD(cp, d, fl, fplData.speed, fplData.vs, fplData.twc, fplData.isa);
+
+    if(DialogSettings::cruiseFormat == 1) speed = LMATH::IAS_to_MACH(speed, fl, fplData.isa);
+    else if(DialogSettings::cruiseFormat == 2) speed = LMATH::IAS_to_MACH(speed*1.852, fl, fplData.isa);
+
+    calculateTOD(cp, d, fl, speed, vs, twc, fplData.isa);
 
     if(cp) qTOD->setText("TOD: " + (int(d) == 0 ? "at " : QString::number(d, 'f', 1) + " km before ") + cp->name);
     else qTOD->setText("TOD: ");

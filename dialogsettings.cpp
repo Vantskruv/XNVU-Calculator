@@ -30,6 +30,7 @@ bool DialogSettings::distAlignFMS = false;
 bool DialogSettings::distAlignATS = false;
 bool DialogSettings::distAlignEarthNav = false;
 double DialogSettings::distAlignMargin = 0.0001;
+bool DialogSettings::nightMode = true;
 bool DialogSettings::showFeet = false;
 int DialogSettings::cruiseFormat = 0;
 int DialogSettings::VSFormat = 0;
@@ -203,6 +204,7 @@ void DialogSettings::loadSettings()
     distAlignATS = s.value("DistAlignATS", distAlignATS).toBool();
     distAlignEarthNav = s.value("DistAlignEarthNav", distAlignEarthNav).toBool();
     distAlignMargin = s.value("DistAlignMargin", distAlignMargin).toDouble();
+    nightMode = s.value("NightMode", nightMode).toBool();
     showFeet = s.value("ShowFeet", showFeet).toBool();
     cruiseFormat = s.value("CruiseFormat", cruiseFormat).toInt();
     VSFormat = s.value("VSFormat", VSFormat).toInt();
@@ -236,6 +238,7 @@ void DialogSettings::saveSettings()
     s.setValue("DistAlignEarthNav", distAlignEarthNav);
     s.setValue("DistAlignMargin", distAlignMargin);
     s.setValue("ShowFeet", showFeet);
+    s.setValue("NightMode", nightMode);
     s.setValue("CruiseFormat", cruiseFormat);
     s.setValue("VSFormat", VSFormat);
     s.setValue("TWCFormat", TWCFormat);

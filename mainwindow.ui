@@ -1097,18 +1097,24 @@
       </item>
       <item row="5" column="16">
        <widget class="QDateEdit" name="dateEdit">
+        <property name="minimumSize">
+         <size>
+          <width>170</width>
+          <height>30</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
-          <width>150</width>
-          <height>29</height>
+          <width>170</width>
+          <height>30</height>
          </size>
         </property>
         <property name="font">
          <font>
-          <family>Gentium Basic</family>
+          <family>Sans Serif</family>
           <pointsize>13</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
+          <weight>50</weight>
+          <bold>false</bold>
          </font>
         </property>
         <property name="calendarPopup">
@@ -1126,13 +1132,13 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>150</width>
+          <width>170</width>
           <height>30</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>150</width>
+          <width>170</width>
           <height>16777215</height>
          </size>
         </property>
@@ -1195,13 +1201,13 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>150</width>
+          <width>170</width>
           <height>30</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>150</width>
+          <width>170</width>
           <height>16777215</height>
          </size>
         </property>
@@ -1258,13 +1264,13 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>150</width>
+          <width>170</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>150</width>
+          <width>170</width>
           <height>16777215</height>
          </size>
         </property>
@@ -1340,13 +1346,13 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>150</width>
+          <width>170</width>
           <height>30</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>150</width>
+          <width>170</width>
           <height>16777215</height>
          </size>
         </property>
@@ -1511,13 +1517,13 @@
        <widget class="QDoubleSpinBox" name="doubleSpinBoxFL">
         <property name="minimumSize">
          <size>
-          <width>150</width>
+          <width>170</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>150</width>
+          <width>170</width>
           <height>16777215</height>
          </size>
         </property>
@@ -1564,8 +1570,10 @@
     <addaction name="actionSave_XNVU_flightplan"/>
     <addaction name="actionImport_X_Plane_FMS"/>
     <addaction name="actionExport_X_Plane_FMS"/>
+    <addaction name="actionExport_to_PDF"/>
     <addaction name="actionPrint"/>
     <addaction name="separator"/>
+    <addaction name="actionNightmode_print_export"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
@@ -1818,6 +1826,19 @@
   <action name="actionColumns_2">
    <property name="text">
     <string>Columns...</string>
+   </property>
+  </action>
+  <action name="actionExport_to_PDF">
+   <property name="text">
+    <string>Export to PDF...</string>
+   </property>
+  </action>
+  <action name="actionNightmode_print_export">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Nightmode print/export</string>
    </property>
   </action>
  </widget>

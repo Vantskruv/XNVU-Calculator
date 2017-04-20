@@ -39,6 +39,7 @@ private slots:
     void showXPlaneSettings();
     void importFMS();
     void exportFMS();
+    void printOnPDF();
     void loadNVUFlightplan();
     void saveNVUFlightPlan();
     void tableGoUp();
