@@ -73,45 +73,28 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableWidget->qTOD = ui->labelTOD;
     ui->tableWidget->horizontalHeader()->show();
 
-
     //Set color for status bar
     QPalette pal = ui->statusBar->palette();
     pal.setColor(ui->statusBar->foregroundRole(), QColor(255, 255, 0));
     ui->statusBar->setPalette(pal);
 
-    //Set lineEdits to always show as capitalized (not this does not mean that the font IS capitalized)
+    //Set lineEdits to always show as capitalized (NOTE: this does not mean that the font IS capitalized)
     QFont font = ui->lineEdit->font();
     font.setCapitalization(QFont::AllUppercase);
     ui->lineEdit->setFont(font);
     ui->lineEditRoute->setFont(font);
 
-    //Setup warning label
-    labelWarning = new QLabel("");
-    labelWarning->setStyleSheet("background-color: rgb(0, 30, 0);"
-                                "color: rgb(255, 255, 0);");
-    ui->statusBar->addPermanentWidget(labelWarning);
 
-
-
-    //Load settings and data
+    //Restore menu checkboxes
     ui->actionShow_feet->setChecked(DialogSettings::showFeet);
     ui->actionNightmode_print_export->setChecked(DialogSettings::nightMode);
 
-
-
-    ui->tableWidget->showFeet = DialogSettings::showFeet;
-    if(DialogSettings::showFeet)
-    {
-        ui->doubleSpinBoxFL->setSuffix(" ft");
-    }//if
-    else ui->doubleSpinBoxFL->setSuffix(" m");
-
+    //Set current or custom date
     /*
     time_t t = time(0);   // get time now
     struct tm * now = localtime( & t );
     dat = yymmdd_to_julian_days(now->tm_year, now->tm_mon+1, now->tm_mday);
     */
-
     dat = QDate::currentDate().toJulianDay();
     if(DialogSettings::customDateIsTrue)
     {
@@ -123,16 +106,17 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableWidget->dat = dat;
 
 
+    //Show saved align settings TODO: We should scrap this feature later on.
     ui->label_alignATS->setText("ATS align");
     ui->label_alignEarthNav->setText("EarthNav align");
     ui->label_alignWPS->setText("WPS align");
     ui->label_alignFMS->setText("FMS align");
-
     ui->label_alignATS->setVisible(DialogSettings::distAlignATS);
     ui->label_alignEarthNav->setVisible(DialogSettings::distAlignEarthNav);
     ui->label_alignWPS->setVisible(DialogSettings::distAlignWPS);
     ui->label_alignFMS->setVisible(DialogSettings::distAlignFMS);
 
+    //Set flightplan data values to default (in formats saved by user)
     if(DialogSettings::cruiseFormat == 1){ ui->doubleSpinBox_MACH->setSuffix(" km/h"); ui->doubleSpinBox_MACH->setValue(476);}
     else if(DialogSettings::cruiseFormat == 2) {ui->doubleSpinBox_MACH->setSuffix(" kn"); ui->doubleSpinBox_MACH->setValue(257);}
     else {ui->doubleSpinBox_MACH->setSuffix(" M"); ui->doubleSpinBox_MACH->setValue(0.8);}
@@ -142,13 +126,19 @@ MainWindow::MainWindow(QWidget *parent) :
     else ui->doubleSpinBox_TWC->setSuffix(" km/h");
     if(DialogSettings::showFeet){ui->doubleSpinBoxFL->setSuffix(" ft"); ui->doubleSpinBoxFL->setValue(35000);}
     else{ui->doubleSpinBoxFL->setSuffix(" m"); ui->doubleSpinBoxFL->setValue(10668);}
+    on_pushButtonSetDate_clicked(); //Set tableWidget->fplData values
 
-    //ui->tableWidget->updateShownColumns();
 
+    //Restore saved windows state
     this->resize(DialogSettings::windowSize);
     this->move(DialogSettings::windowPos);
     ui->tableWidget->horizontalHeader()->restoreState(DialogSettings::tableState);
 
+    //Show warnings if errors occured when loading data
+    labelWarning = new QLabel("");
+    labelWarning->setStyleSheet("background-color: rgb(0, 30, 0);"
+                                "color: rgb(255, 255, 0);");
+    ui->statusBar->addPermanentWidget(labelWarning);
     if(XFMS_DATA::__ERROR_LOADING.isEmpty()) labelWarning->setText("");
     else labelWarning->setText("WARNING: " + XFMS_DATA::__ERROR_LOADING + " is not loaded!");
 }
@@ -1604,21 +1594,6 @@ void MainWindow::calculateTOD()
 
 void MainWindow::on_actionShow_feet_triggered()
 {
-    ui->tableWidget->showFeet = ui->actionShow_feet->isChecked();
-    if(ui->actionShow_feet->isChecked())
-    {
-        ui->doubleSpinBoxFL->setValue(LMATH::meterToFeet(ui->doubleSpinBoxFL->value()));
-        ui->doubleSpinBoxFL->setSuffix(" ft");
-        ui->tableWidget->fplData.fl = ui->doubleSpinBoxFL->value();
-    }
-    else
-    {
-        ui->doubleSpinBoxFL->setValue(LMATH::feetToMeter(ui->doubleSpinBoxFL->value()));
-        ui->doubleSpinBoxFL->setSuffix(" m");
-        ui->tableWidget->fplData.fl = ui->doubleSpinBoxFL->value();
-    }//else
-
-    ui->tableWidget->refreshFlightplan();
 }
 
 void MainWindow::on_pushButtonDeleteWaypoint_clicked()
@@ -1711,40 +1686,36 @@ void MainWindow::fplDataChangeCheck()
         changed = true;
         //TODO: Set color to yellow
     }
-    else; //Set color to default
 
     if(ui->doubleSpinBox_VS->value() != ui->tableWidget->fplData.vs)
     {
         changed = true;
         //TODO: Set color to yellow
     }
-    else; //Set color to default
 
     if(ui->doubleSpinBox_TWC->value() != ui->tableWidget->fplData.twc)
     {
         changed = true;
         //TODO: Set color to yellow
     }
-    else; //Set color to default
+
     if(ui->doubleSpinBoxFL->value() != ui->tableWidget->fplData.fl)
     {
         changed = true;
         //TODO: Set color to yellow
     }
-    else; //Set color to default
+
     if(ui->doubleSpinBox_ISA->value() != ui->tableWidget->fplData.isa)
     {
         changed = true;
         //TODO: Set color to yellow
     }
-    else; //Set color to default
+
     if(ui->dateEdit->date().toJulianDay() != dat)
     {
         changed = true;
         //TODO: Set color to yellow
     }
-    else; //Set color to default
-
 
     if(!changed)
     {
@@ -1827,16 +1798,15 @@ void MainWindow::on_pushButtonSetDate_clicked()
 
     if(ui->tableWidget->fplData.fl!=ui->doubleSpinBoxFL->value())
     {
+        ui->tableWidget->fplData.fl = ui->doubleSpinBoxFL->value();
+
         std::vector<NVUPOINT*> lP = ui->tableWidget->getWaypoints();
         for(int i=0; i<lP.size(); i++)
         {
             NVUPOINT* p = lP[i];
-            if(i==0 || i == (lP.size()-1)) p->alt = p->elev;
-            else p->alt = (ui->actionShow_feet->isChecked() ? ui->doubleSpinBoxFL->value() : LMATH::meterToFeet(ui->doubleSpinBoxFL->value()));
+            if(i==0 || i == (int(lP.size())-1)) p->alt = p->elev;
+            else p->alt = (DialogSettings::showFeet ? ui->tableWidget->fplData.fl : LMATH::meterToFeet(ui->tableWidget->fplData.fl));
         }
-
-        ui->tableWidget->fplData.fl = ui->doubleSpinBoxFL->value();
-
     }
 
     ui->tableWidget->fplData.speed = ui->doubleSpinBox_MACH->value();
@@ -1916,7 +1886,7 @@ void MainWindow::clickedDataLabels(QLabelClick* _label)
     {
         DialogSettings::showFeet = !ui->actionShow_feet->isChecked();
         ui->actionShow_feet->setChecked(DialogSettings::showFeet);
-        ui->tableWidget->showFeet = ui->actionShow_feet->isChecked();
+        //ui->tableWidget->showFeet = ui->actionShow_feet->isChecked();
         if(ui->actionShow_feet->isChecked())
         {
             ui->doubleSpinBoxFL->setValue(LMATH::meterToFeet(ui->doubleSpinBoxFL->value()));

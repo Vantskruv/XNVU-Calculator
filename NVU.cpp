@@ -75,7 +75,7 @@ void NVU::generate(std::vector<NVUPOINT*>& lWPs, double& NVU_FORK, long dat)
 	double Spas = 0;
 	double e = 0;
 	int i=0;		
-    for(; i<lWPs.size()-1; i++)
+    for(; i<int(lWPs.size())-1; i++)
 	{
         CPoint a = lWPs[i]->latlon;
         CPoint b = lWPs[i+1]->latlon;

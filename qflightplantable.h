@@ -16,33 +16,8 @@ class QFlightplanTable : public QTableWidget
 
     public:
         enum COL{N, ID, TYPE, ALT, LAT, LON, MD, OZMPUV, OZMPUP, PV, PP, MPU, IPU, S, SPAS, SREM, RSBN, SM, ZM, MAPA, ATRG, DTRG, _SIZE};
-        //const QStringList COL_STR  = (QStringList() << "N" << "ID" <<  "TYPE" <<  "ALT" <<  "LAT" <<  "LON" <<  "MD" <<  "OZMPUV" <<  "OZMPUP" <<  "PV" <<  "PP" <<  "MPU" <<  "IPU" <<  "S" <<  "SPAS" <<  "SREM" <<  "RSBN" <<  "SM" <<  "ZM" <<  "MAPA" <<  "ATRG" <<  "DTRG");
         const QStringList COL_STR = (QStringList() << "N" << "Identifier" << "Type" << "Altitude" << "Latitude" << "Longitude" << "MD" << "OZMPUv" << "OZMPUp" << "Pv" << "Pp"
                                                    << "MPU" << "IPU" << "S" << "Spas" << "Srem" << "RSBN and/or VORDME" << "Sm" << "Zm" << "Map Angle" << "A targ" << "D targ");
-/*
-        static constexpr int COL_N = 0;
-        static constexpr int COL_ID = 1;
-        static constexpr int COL_TYPE = 2;
-        static constexpr int COL_ALT = 3;
-        static constexpr int COL_LAT = 4;
-        static constexpr int COL_LON = 5;
-        static constexpr int COL_MD;
-        static constexpr int COL_S = 6;
-        static constexpr int COL_SPAS = 7;
-        static constexpr int COL_SREM = 8;
-        static constexpr int COL_RSBN = 9;
-        static constexpr int COL_OZMPUV = 10;
-        static constexpr int COL_OZMPUP = 11;
-        static constexpr int COL_PV = 12;
-        static constexpr int COL_PP = 13;
-        static constexpr int COL_MPU = 14;
-        static constexpr int COL_IPU = 15;
-        static constexpr int COL_ZM = 16;
-        static constexpr int COL_SM = 17;
-        static constexpr int COL_MAPA = 18;
-        static constexpr int COL_ATRG = 19;
-        static constexpr int COL_DTRG = 20;
-*/
         int dat;
 
         struct
@@ -56,12 +31,10 @@ class QFlightplanTable : public QTableWidget
 
         QLabel* qFork = NULL;
         QLabel* qTOD = NULL;
-        bool showFeet = false;
 
-        //_KM(km) _FL(km), _MACH(mach or km/h), _VS(m/s), _TWC(km/h), _ISA(celsius) NOTE: _MACH is taken as IAS(km/h) if argument > 10.0
+        //_KM(km) _FL(km), _MACH(mach or km/h), _VS(m/s), _TWC(km/h), _ISA(celsius)
         NVUPOINT* calculateTOD(NVUPOINT *&_pc, double& _KM, double _FL, double _MACH, double _VS, double _TWC, double _ISA);
         void deleteWaypoint(int row);                                   //Delete waypoint at row
-        //void insertWaypoint(NVUPOINT* wp, int row, int offset);         //Insert a waypoint with an offset value set. Before row (-1), after row (1), or replace the row (0).
         void insertRoute(std::vector<NVUPOINT*>, int row);  //Insert a list of waypoints, before, after or replace and then insert after a row.
         void insertWaypoint(NVUPOINT* wp, int row);                     //Insert a waypoint before the row.
         void replaceWaypoint(NVUPOINT* wp, int row);                    //Replace waypoint at row
@@ -69,9 +42,8 @@ class QFlightplanTable : public QTableWidget
         void refreshFlightplan();                                       //Refresh all waypoints
         void clearFlightplan();                                         //Delete all waypoints and clear the flightplan
         const std::vector<NVUPOINT *> &getWaypoints();
-        NVUPOINT* getWaypoint(int row, bool lastOutOfIndex = false);                                 //Returns NULL if out of index
+        NVUPOINT* getWaypoint(int row, bool lastOutOfIndex = false);    //Returns NULL if out of index (if lastOutOfIndex is set to true, it instead returns last waypoint, if any exist)
         void selectNone();
-        void updateShownColumns();
         void mousePressEvent(QMouseEvent* event);
         QFlightplanTable(QWidget*&w);
 };

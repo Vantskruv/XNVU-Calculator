@@ -267,7 +267,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route,
                 sError = "Route: First point in route should not be an airway [" + ats->name + "].";
                 goto rError;
             }
-            if(i==(cRoute.size()-1))
+            if(i==(int(cRoute.size())-1))
             {
                 sError = "Route: Last point in route should not be an airway [" + ats->name + "].";
                 goto rError;
@@ -837,7 +837,7 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                     }
                     else if(currentState == 1302)
                     {
-                        if(i<(record.size()-1))
+                        if(i<(int(record.size())-1))
                         {
                             i++;
                             if(qstr.compare("datum_lat") == 0)
