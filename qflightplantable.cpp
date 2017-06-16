@@ -91,7 +91,9 @@ NVUPOINT* QFlightplanTable::calculateTOD(NVUPOINT*& _pc, double& _KM, double __F
     double TAS = A0*_MACH*sqrt(T/T0);
 
     //Calculate CAS(m/s) from TAS
-    double CAS = A0*sqrt(5.0*(pow(1.0 + ((0.5*DA*TAS*TAS)/P0), 2.0/7.0) - 1.0)) + K;
+    double Q = 0.5*DA*TAS*TAS;	//Dynamic pressure
+    double QC = Q*(1.0 + pow(_MACH, 2.0)/4.0 + pow(_MACH, 4.0)/40.0 + pow(_MACH, 6.0)/1600.0); //Impact pressure
+    double CAS = A0*sqrt(5.0*(pow((QC/P0) + 1.0, 2.0/7.0) - 1.0)) + K;
 
     //Calculate IAS(m/s) from TAS. Equation is actually for EAS, but IAS is the same as EAS if there is a 0 error.
     double IAS = TAS*sqrt(DA/D0);

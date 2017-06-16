@@ -5,8 +5,112 @@
 #include <CPoint.h>
 #include <cmath>
 #include <vector>
+#include <LMATH.h>
 
+//AIRPORT DATA definitions
 #define DEFAULT_WAYPOINT_MARGIN 0.0001 //1 meter
+#define SURFACE_ASPHALT		1	//(HRD)
+#define SURFACE_CONCRETE 	2	//(HRD)
+#define SURACE_TURF			3	//GRASS	(TRF)
+#define SURFACE_DIRT		4	//(DRT)
+#define SURFACE_GRAVEL		5	//(GRV)
+#define SURFACE_DRY_LAKEBED 12	//(SND)
+#define SURFACE_WATER		13
+#define SURFACE_SNOW_ICE	14	//(SNW)
+#define SURFACE_UNKOWN		15	//Transparent, custom airports
+#define ATC_ATIS	50
+#define ATC_UNICOM	51
+#define ATC_DEL		52
+#define ATC_GND		53
+#define ATC_TWR		54
+#define ATC_APP		55
+#define ATC_DEP		56
+
+
+class WAYPOINT;
+
+class AIRWAY
+{
+    public:
+        QString name;
+        double distance;
+        std::vector<WAYPOINT*> lATS;    //Waypoints are not deleted when removing this airway, as they already are contained and manager in the lWP list.
+
+        AIRWAY()
+        {
+            name = "";
+            distance = -1;
+        }
+
+        AIRWAY(const AIRWAY& awy)
+        {
+            name = awy.name;
+            distance = awy.distance;
+            for(unsigned int i=0; i<awy.lATS.size(); i++) lATS.push_back(awy.lATS[i]);
+        }
+};
+class RUNWAY
+{
+    public:
+        QString rwyA;   //Runway identifer
+        QString rwyB;   //Runway opposite identifer
+        int lightA;		//Runway approach lightning
+        int lightB;		//Runway approach lightning opposite
+        int surface;	//Runway surface
+        CPoint start;   //Coordinates of runway start threshold
+        CPoint end;     //Coordinates of runway end threshold
+
+        RUNWAY(const QString& _rwyA, const CPoint& _startA, int _lightA, const QString _rwyB, const CPoint& _startB, int _lightB, int _surface)
+        {
+            rwyA = _rwyA;
+            start = _startA;
+            lightA = _lightA;
+            rwyB = _rwyB;
+            end = _startB;
+            lightB = _lightB;
+            surface = _surface;
+        }
+
+        RUNWAY(const RUNWAY& r)
+        {
+            rwyA = r.rwyA;
+            rwyB = r.rwyB;
+            lightA = r.lightA;
+            lightB = r.lightB;
+            surface = r.surface;
+            start = r.start;
+            end = r.end;
+        }
+
+        int getLength()	//In feet
+        {
+            return LMATH::meterToFeet(LMATH::calc_distance(start, end)*1000);
+        }
+};
+class AIRPORT_DATA
+{
+    public:
+        QString city;                               //The city airport belongs to
+        std::vector<RUNWAY*> lRunways;              //List of runways belonging to airport
+        std::vector<std::pair<int, int> > lFreq;
+
+        AIRPORT_DATA()
+        {
+            city = "";
+        }
+
+        AIRPORT_DATA(const AIRPORT_DATA& ad)
+        {
+            city = ad.city;
+            for(unsigned int i=0; i<ad.lRunways.size(); i++) lRunways.push_back(new RUNWAY(*ad.lRunways[i]));
+            for(unsigned int i=0; i<ad.lFreq.size(); i++) lFreq.push_back(std::make_pair(ad.lFreq[i].first, ad.lFreq[i].second));
+        }
+
+        ~AIRPORT_DATA()
+        {
+            for(unsigned int i=0; i<lRunways.size(); i++) delete lRunways[i];
+        }
+};
 
 class WAYPOINT
 {
@@ -70,20 +174,131 @@ class WAYPOINT
         static bool isNavaid(int _type);
 
 
-		WAYPOINT(){};
-        virtual ~WAYPOINT(){};
+        WAYPOINT()
+        {
+            data = NULL;
+        }
+
+        WAYPOINT(const WAYPOINT& wp)
+        {
+            latlon = wp.latlon;
+            type = wp.type;
+            name = wp.name;
+            name2 = wp.name2;
+            range = wp.range;
+            freq = wp.freq;
+            alt = wp.alt;
+            elev = wp.elev;
+            trans_alt = wp.trans_alt;
+            trans_level = wp.trans_level;
+            longest_runway = wp.longest_runway;
+            country = wp.country;
+            MD = wp.MD;
+            ADEV = wp.ADEV;          //Angle deviation of VOR/DME from X-Plane earth_nav.dat
+            wpOrigin = wp.wpOrigin;         //If waypoint has not been converted from FMS (1), is retrieved from earth_nav.dat (2), or is custom made (3)
+            data = NULL;
+            if(wp.type == TYPE_AIRPORT && wp.data!=NULL)
+            {
+                AIRPORT_DATA* apd = (AIRPORT_DATA*) wp.data;
+                data = (void*) new AIRPORT_DATA(*apd);
+            }
+            else if(wp.type == TYPE_AIRWAY && wp.data!=NULL)
+            {
+                AIRWAY* awy = (AIRWAY*) wp.data;
+                data = (void*) new AIRWAY(*awy);
+            }
+        }
+
+        virtual ~WAYPOINT()
+        {
+            if(type == TYPE_AIRWAY && data!=NULL)
+            {
+                AIRWAY* awy = (AIRWAY*) data;
+                delete awy;
+            }//if
+            else if(type == TYPE_AIRPORT && data!=NULL)
+            {
+                AIRPORT_DATA* aRwys = (AIRPORT_DATA*) data;
+                delete aRwys;
+            }//if
+        }
 };
 
-class AIRWAY
+
+
+
+/*
+
+//SIDS identifers
+#define PROC_TYPE_ENGOUT_SID            0       //RWYxxy -> col4
+#define PROC_TYPE_SID_RWY_TRANS         1       //RWYxxy -> col4
+#define PROC_TYPE_SID                   2       //If there is no 1, 4 or F in any SID identifiers same as this one
+#define PROC_TYPE_SID_ENR_TRANS         3       //Transition identifer -> col4
+#define PROC_TYPE_RNAV_SID_RWY_TRANS    4       //RWYxxy -> col4
+#define PROC_TYPE_RNAV_SID              5
+#define PROC_TYPE_RNAV_SID_ENR_TRANS    6       //Transition identifier ->col4
+#define PROC_TYPE_FMS_SID_RWY_TRANS     'F'     //RWYxxy -> col4
+#define PROC_TYPE_FMS_SID               'M'
+#define PROC_TYPE_FMS_SID_ENR_TRANS     'S'
+#define PROC_TYPE_VECTOR_SID_RWY_TRANS  'T'     //RWYxxy -> col4
+#define PROC_TYPE_VECTOR_SID_ENR_TRANS  'V'
+
+//STARS identifiers
+#define PROC_TYPE_STAR_ENR_TRANS        1       //Transition identifer -> col4
+#define PROC_TYPE_STAR                  2
+#define PROC_TYPE_STAR_RWY_TRANS        3       //RWYxxy -> col4 or blank
+#define PROC_TYPE_RNAV_STAR_ENR_TRANS   4       //Transition identifer -> col4
+#define PROC_TYPE_RNAV_STAR             5
+#define PROC_TYPE_RNAV_RWY_TRANS        6       //RWYxxy -> col4 or blank
+#define PROC_TYPE_PRF_DES_ENR_TRANS     7
+#define PROC_TYPE_PRF_DES_COM_RTE       8
+#define PROC_TYPE_PRF_DES_RWY_TRANS     9       //RWYxxy -> col4 or blank
+#define PROC_TYPE_FMS_STAR_ENR_TRANS    'F'     //Transition identifer -> col4
+#define PROC_TYPE_FMS_STAR              'M'
+#define PROC_TYPE_FMS_STAR_RWY_TRANS    'S'
+
+//APPR first column
+#define PROC_TYPE_APPR_TRANS            'A'
+#define PROC_TYPE_APPR_BCRS             'B'
+#define PROC_TYPE_APPR_GPS_REQ          'E'
+#define PROC_TYPE_APPR_FMS_GUI          'F'
+#define PROC_TYPE_APPR_IGS              'G'
+#define PROC_TYPE_APPR_ILS              'I'
+#define PROC_TYPE_APPR_GLS              'J'
+#define PROC_TYPE_APPR_WAAS             'K'
+#define PROC_TYPE_APPR_LOC_ONLY         'L'
+#define PROC_TYPE_APPR_MLS              'M'
+#define PROC_TYPE_APPR_NDB              'N'
+#define PROC_TYPE_APPR_GPS              'P'
+#define PROC_TYPE_APPR_RNAV             'R'
+#define PROC_TYPE_APPR_TACAN            'T'
+#define PROC_TYPE_APPR_SDF              'U'
+#define PROC_TYPE_APPR_VOR              'V'
+#define PROC_TYPE_APPR_MLS_A            'W'
+#define PROC_TYPE_APPR_LDA              'X'
+#define PROC_TYPE_APPR_MLS_B            'Y'
+#define PROC_TYPE_APPR_MISSED           'Z'
+
+//APPR second column
+#define PROC_TYPE_APPR_DME_REQ          'D'
+#define PROC_TYPE_APPR_DME_NOT_REQ      'N'
+#define PROC_TYPE_APPR_DMEDME_REQ       'T'
+#define PROC_TYPE_APPR_PRI_MISSED       'P'
+#define PROC_TYPE_APPR_SEC_MISSED       'S'
+
+//APPR third column
+#define PROC_TYPE_APPR_CTL_MIN          'C'
+#define PROC_TYPE_APPR_SI_MIN           'S'
+#define PROC_TYPE_APPR_HELI             'H'
+
+class PROC  //SID, STAR, APPR
 {
     public:
-        QString name;
-        double distance;
-        std::vector<WAYPOINT*> lATS;
-
-        AIRWAY(){};
+        //int
+        QString routeType; //See above definitions for SID, STAR and APPR
+        WAYPOINT* airport;  //This is the airport the sid/star/appr belongs to.
 };
 
-
+*/
 
 #endif

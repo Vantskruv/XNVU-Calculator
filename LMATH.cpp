@@ -4,8 +4,10 @@
 
 #define KM_RADIUS 6371.009
 
-double LMATH::IAS_to_MACH(double IAS, double FL, double ISA)
+
+double LMATH::IAS_to_MACH(double CAS, double FL, double ISA)
 {
+    /*
     const double EARTH_RADIUS = 6356.766; //KM
     FL = (EARTH_RADIUS*FL) / (EARTH_RADIUS + FL);
     const double G = 9.80665; //Earth gravitation
@@ -22,33 +24,81 @@ double LMATH::IAS_to_MACH(double IAS, double FL, double ISA)
     //Calculate density of air (kg/m3)
     double DA = D0 * pow(T0/T,  (1.0 + (G*M)/(R*LP)));
 
-    //Convert IAS to MACH if value given is bigger than 10, otherwise _MACH is already in the correct format.
-    return (IAS/3.6)/(A0*sqrt(T/T0)*sqrt(DA/D0));
+    //Convert CAS to m/s from km/h
+    CAS = CAS/3.6;
+
+
+    double q = 0.5*DA*TAS*TAS;	//Dynamic pressure
+    double qc = q*pow(_MACH + 1.0, 2.0/7.0); //Impact pressure
+    double CAS = A0*sqrt(5.0*(pow((qc/P0) + 1.0, 2.0/7.0) - 1.0)) + K;
+    _MACH = pow( P0*(pow(pow(CAS/A0, 2.0)/5.0 + 1.0, 7.0/2.0) - 1.0)/q, 7.0/2.0) - 1.0;
+
+
+    double Q = 0.5*DA*TAS*TAS;	//Dynamic pressure
+    double QC = Q*(1.0 + pow(_MACH, 2.0)/4.0 + pow(_MACH, 4.0)/40.0 + pow(_MACH, 6.0)/1600.0); //Impact pressure
+    double CAS = A0*sqrt(5.0*(pow((QC/P0) + 1.0, 2.0/7.0) - 1.0)) + K;
+    */
+
+    return 0.0;
+
+
+    //CAS = A*sqrt(5*((((0.5*D*(A*M*sqrt(T/t))²*(1 + M²/4 + M⁴/40 + M⁶/1600)  / p) + 1)² - 1))
+
 }
 
 double LMATH::MACH_to_IAS(double MACH, double FL, double ISA)
 {
+    /*
     const double EARTH_RADIUS = 6356.766; //KM
     FL = (EARTH_RADIUS*FL) / (EARTH_RADIUS + FL);
+    const double P0 = 101325; //Sea standard pressure
     const double G = 9.80665; //Earth gravitation
     const double M = 0.0289644; //Molar mass of dry air
     const double R = 0.0083144598; //Gas constant
     const double LP = -6.5;     //Laps rate (6.5C/KM)
     const double A0 = 340.3; //Speed of sound at sea level (m/s)
     const double D0 = 1.2250; //Sea standard air density (kg/m3)
+    const double K = 0.0; //Margin of error
 
     //Temperatures at sea level and altitude
     double T0 = 273.15 + 15 + ISA; //Sea standard temperature (15 degrees) + ISA
     double T = T0 + LP*FL;       //OAT temp (6.5 degree change per 1000 meter);
 
-    //Calculate density of air (kg/m3)
+    //Calculate density of air (kg/m3) (affected by ISA and flightlevel)
     double DA = D0 * pow(T0/T,  (1.0 + (G*M)/(R*LP)));
 
     //Calculate TAS(m/s) from MACH
     double TAS = A0*MACH*sqrt(T/T0);
 
+    //Calculate CAS (it seems this is what the airspeed indicator shows...) (affected by ISA, flightlevel and MACH speed)
+    double Q = 0.5*DA*TAS*TAS;	//Dynamic pressure
+    double QC = Q*(1.0 + pow(_MACH, 2.0)/4.0 + pow(_MACH, 4.0)/40.0 + pow(_MACH, 6.0)/1600.0); //Impact pressure
+    double CAS = A0*sqrt(5.0*(pow((QC/P0) + 1.0, 2.0/7.0) - 1.0)) + K;
+
+    return CAS;
+    */
+
+    return 0.0;
+
     //Calculate IAS(m/s) from TAS. Equation is actually for EAS, but IAS is the same as EAS if there is a 0 error.
-    return TAS*sqrt(DA/D0)*3.6;
+    //return TAS*sqrt(DA/D0)*3.6;
+
+/*
+    S = A*M*sqrt(T/t);
+    Q = 0.5*D*S^2
+    q = Q*(1 + (M^2)/4 + (M^4)/40 + (M^6)/1600)
+    C = A*sqrt(5*( (q/P)+1)^(2/7) - 1)
+
+
+    Q = 0.5*D*(A*M)^2*T/t
+    q = Q*(1 + (M^2)/4 + (M^4)/40 + (M^6)/1600)
+    C = A*sqrt(5*( (q/P)+1)^(2/7) - 1)
+
+    q = 0.5*D*(A*M)^2*T*(1 + (M^2)/4 + (M^4)/40 + (M^6)/1600)/t
+    C = A*sqrt(5*( (q/P)+1)^(2/7) - 1)
+
+    */
+
 }
 
 bool LMATH::GetLineIntersection(const CPoint& A, const CPoint & B, const CPoint& C, const CPoint& D, double& mua)

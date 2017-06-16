@@ -226,7 +226,8 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
                 else if(dr==DialogWaypointEdit::SAVE)
                 {
                     WAYPOINT* rsbn = wp->rsbn;
-                    wp->clone(dEdit.nvupoint);
+                    *wp = dEdit.nvupoint;
+                    //wp->clone(dEdit.nvupoint);
                     wp->rsbn = rsbn;
                     ui->tableWidget->refreshFlightplan();
                 }
@@ -1355,14 +1356,14 @@ void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
     {
         XFMS_DATA::addXNVUWaypoint(new NVUPOINT(dEdit.nvupoint));
         WAYPOINT* rsbn = wp->rsbn;
-        wp->clone(dEdit.nvupoint);
+        *wp = dEdit.nvupoint;
         wp->rsbn = rsbn;
         ui->tableWidget->refreshFlightplan();
     }
     else if(dr==DialogWaypointEdit::SAVE)
     {
         WAYPOINT* rsbn = wp->rsbn;
-        wp->clone(dEdit.nvupoint);
+        *wp = dEdit.nvupoint;
         wp->rsbn = rsbn;
         ui->tableWidget->refreshFlightplan();
     }
@@ -1796,6 +1797,7 @@ void MainWindow::on_pushButtonSetDate_clicked()
         XFMS_DATA::setDate(dat);
     }
 
+    //ERROR: To tired now, what have I done. Recheck this later on (note, not an actual error)
     if(ui->tableWidget->fplData.fl!=ui->doubleSpinBoxFL->value())
     {
         ui->tableWidget->fplData.fl = ui->doubleSpinBoxFL->value();
@@ -1856,12 +1858,14 @@ void MainWindow::clickedDataLabels(QLabelClick* _label)
     {
         if(DialogSettings::VSFormat == 0)
         {
+            ui->tableWidget->fplData.vs = LMATH::meterToFeet(ui->doubleSpinBox_VS->value())*60.0;
             ui->doubleSpinBox_VS->setValue(LMATH::meterToFeet(ui->doubleSpinBox_VS->value())*60.0);
             ui->doubleSpinBox_VS->setSuffix(" ft/m");
             DialogSettings::VSFormat = 1;
         }
         else
         {
+            ui->tableWidget->fplData.vs = LMATH::feetToMeter(ui->doubleSpinBox_VS->value())/60.0;
             ui->doubleSpinBox_VS->setValue(LMATH::feetToMeter(ui->doubleSpinBox_VS->value())/60.0);
             ui->doubleSpinBox_VS->setSuffix(" m/s");
             DialogSettings::VSFormat = 0;
@@ -1884,20 +1888,22 @@ void MainWindow::clickedDataLabels(QLabelClick* _label)
     }
     else if(_label == ui->labelFlightLevel)
     {
-        DialogSettings::showFeet = !ui->actionShow_feet->isChecked();
-        ui->actionShow_feet->setChecked(DialogSettings::showFeet);
-        //ui->tableWidget->showFeet = ui->actionShow_feet->isChecked();
-        if(ui->actionShow_feet->isChecked())
+        if(DialogSettings::showFeet)
         {
-            ui->doubleSpinBoxFL->setValue(LMATH::meterToFeet(ui->doubleSpinBoxFL->value()));
-            ui->doubleSpinBoxFL->setSuffix(" ft");
-            ui->tableWidget->fplData.fl = ui->doubleSpinBoxFL->value();
+            ui->tableWidget->fplData.fl = LMATH::feetToMeter(ui->doubleSpinBoxFL->value());
+            ui->doubleSpinBoxFL->setValue(LMATH::feetToMeter(ui->doubleSpinBoxFL->value()));
+            ui->doubleSpinBoxFL->setSuffix(" m");
+            //ui->tableWidget->fplData.fl = ui->doubleSpinBoxFL->value();
+
+            DialogSettings::showFeet = false;
         }
         else
         {
-            ui->doubleSpinBoxFL->setValue(LMATH::feetToMeter(ui->doubleSpinBoxFL->value()));
-            ui->doubleSpinBoxFL->setSuffix(" m");
-            ui->tableWidget->fplData.fl = ui->doubleSpinBoxFL->value();
+            ui->tableWidget->fplData.fl = LMATH::meterToFeet(ui->doubleSpinBoxFL->value());
+            ui->doubleSpinBoxFL->setValue(LMATH::meterToFeet(ui->doubleSpinBoxFL->value()));
+            ui->doubleSpinBoxFL->setSuffix(" ft");
+            //ui->tableWidget->fplData.fl = ui->doubleSpinBoxFL->value();
+            DialogSettings::showFeet = true;
         }//else
 
         ui->tableWidget->refreshFlightplan();

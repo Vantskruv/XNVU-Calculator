@@ -122,12 +122,13 @@ std::vector<NVUPOINT*> XFMS_DATA::search(const QString& _name, int _type, int _I
     return rWP;
 }
 
-QString XFMS_DATA::getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVUPOINT* wpB, std::vector<NVUPOINT*>& lA, bool allowOpposite)
+QString XFMS_DATA::getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVUPOINT* wpB, std::vector<NVUPOINT*>& lA, NVUPOINT* &_wpAirway, bool allowOpposite)
 {
-    std::vector<NVUPOINT*> llA = XFMS_DATA::search(airway);
+    std::vector<NVUPOINT*> llA = XFMS_DATA::search(airway); //Get a list of all airways with the same identifier (hence the airways are directional, and should logically share the same waypoints)
     QString sError = "";
     bool kAIsFound = false;
     bool kBIsFound = false;
+    _wpAirway = NULL;
 
     lA.clear();
     for(int i=0; i<llA.size(); i++)
@@ -139,7 +140,7 @@ QString XFMS_DATA::getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVU
 
         int kA = -1;
         int kB = -1;
-        for(int k=0; k<aw->lATS.size(); k++)
+        for(int k=0; k<aw->lATS.size(); k++)    //Search for the identifers in the airway (where the airway should start and end).
         {
             NVUPOINT* ap = (NVUPOINT*) aw->lATS[k];
             if(ap->name.compare(wpA->name)==0) kA = k;
@@ -149,37 +150,43 @@ QString XFMS_DATA::getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVU
         if(kA>=0) kAIsFound = true;
         if(kB>=0) kBIsFound = true;
 
-        if(kA<0 || kB<0) continue;
-        else if(kB<kA)
+        if(kA<0 || kB<0) continue;  //If identifiers is not found, continue to next airway in list.
+        else if(kB<kA)              //If wpA is after wpB, and allowing the opposite direction of a directional airway
         {
             if(lA.size()==0 && allowOpposite)
             {
-                for(int k=kA-1; k>kB; k--)
+                for(int k=kA; k>=kB; k--)
                 {
                     lA.push_back((NVUPOINT*) aw->lATS[k]);
                 }
+                _wpAirway = wp;
                 sError = "";
             }//if
             else sError = "Route: Note, airway [" + airway + "] is directional and opposite to waypoints [" + wpA->name + "] -> [" + wpB->name + "].";
             continue;
         }
-        else if(kA<kB)
+        else if(kA<kB)  //If wpB is after wpA
         {
             lA.clear();
-            for(int k=kA+1; k<kB; k++)
+            for(int k=kA; k<=kB; k++)
             {
                 lA.push_back((NVUPOINT*) aw->lATS[k]);
             }
-
+            _wpAirway = wp;
             return "";
         }
     }//for
 
-    if(llA.size()==0) return "Route: Airway [" + airway + "] is not found.";
+    if(llA.size()==0)
+    {
+        _wpAirway = NULL;
+        return "Route: Airway [" + airway + "] is not found.";
+    }
 
     //If nothing is added something is wrong. Set error returns here.
     if(sError.isEmpty() && lA.size()==0)
     {
+        _wpAirway = NULL;
         if(kAIsFound && kBIsFound)
         {
             return "Route: Cannot connect waypoints [" + wpA->name + "] and [" + wpB->name + "].";
@@ -192,20 +199,30 @@ QString XFMS_DATA::getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVU
         return "Route: Major programming error, should not be here, contact confused developer.";
     }
 
+    if(!sError.isEmpty()) _wpAirway = NULL;
     return sError;
 }
 
 //Allocates and returns a list of waypoints. Caller needs to delete the waypoints when not used anymore.
-QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route, NVUPOINT* wpRef)
+//TODO: Make a smart algorithm for deciding which single waypoints should be added, hence there are different
+//waypoints with the same identifer, and it is not enough to check the neareast waypoint
+//(see airway 'R487' and waypoint 'OK').
+QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& _route, NVUPOINT* wpRef)
 {
     QStringList record = _qstr.split(' ', QString::SkipEmptyParts);
     std::vector<NVUPOINT*> sWaypoint;
     std::vector<NVUPOINT*> cRoute;
+    std::vector<NVUPOINT*> route;
+    std::vector<NVUPOINT*> pBuffer; //Buffer of custom created waypoints to delete if error.
 
     QString qstr;
     QString sError;
     NVUPOINT* cwp;
     double dCurrent, dMin;
+    AIRWAY* awyA = NULL;
+    AIRWAY* awyB = NULL;
+    int pBetween = 0;
+
 
 
     route.clear();
@@ -225,6 +242,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route,
             sError = validate_custom_point(cwp, wp, qstr);
             if(wp)
             {
+                pBuffer.push_back(wp);
                 cRoute.push_back(wp);
                 continue;
             }
@@ -234,8 +252,8 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route,
                 goto rError;
             }
          }//if
-        //If more than 1 one is found, choose waypoint that is closest to the last one in current route
-        //Though if this is an airway, it may be bidirectional, so currently we just store the closest beginning of the airway.
+
+        //If more than 1 waypoint is found, choose the waypoint that is closest to the last on in current route.
         dMin = std::numeric_limits<double>::max();
         dCurrent = 0;
         for(int k=0; k<sWaypoint.size(); k++)
@@ -249,7 +267,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route,
             }
         }
 
-        cRoute.push_back(new NVUPOINT(*cwp));
+        cRoute.push_back(cwp);
     }
     sWaypoint.clear();
 
@@ -277,7 +295,8 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route,
             std::vector<NVUPOINT*> lA;
             NVUPOINT* rPrev = cRoute[i-1];
             NVUPOINT* rNext = cRoute[i+1];
-            sError = XFMS_DATA::getAirwayWaypointsBetween(ats->name, rPrev, rNext, lA, true);
+            NVUPOINT* wpAirway = NULL;
+            sError = XFMS_DATA::getAirwayWaypointsBetween(ats->name, rPrev, rNext, lA, wpAirway, true);
 
             //Return error
             if(!sError.isEmpty())
@@ -285,12 +304,22 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route,
                 goto rError;
             }
 
+            //Set the correct airway in cRoute for comparsion algorithm in the for loop below
+            if(wpAirway) cRoute[i] = wpAirway;
+
+            //Set the correct waypoints before and after airway (for comparsion algorithm in the for loop below).
+            if(lA.size()>0)
+            {
+                cRoute[i-1] = lA[0];
+                cRoute[i+1] = lA[lA.size()-1];
+            }//if
+
+            route.pop_back();   //Remove the last waypoint, as a new and more correct one is added from the airway.
             for(int k=0; k<lA.size(); k++)
             {
-                NVUPOINT* cP = new NVUPOINT(*lA[k]);
-                //cP->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
-                route.push_back(cP);
+                route.push_back(lA[k]);
             }//for
+            i++;      //Step forward as we already added the next waypoint
             continue; //Do not push the airway itself to the list
         }//if
 
@@ -307,11 +336,86 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& route,
         route.push_back(wp);
     }//for
 
+    //Now the route is finished. First though we need to check if the start and end points
+    //of connecting airways are the same, if not there is an error in route.
+    //I.e. route R487 and W234 may share the same waypoint identifer between, but the waypoint
+    //itself may be duplicate and placed on several places in world.
+    for(unsigned int i=0; i<cRoute.size(); i++)
+    {
+        if(cRoute[i]->type == WAYPOINT::TYPE_AIRWAY)
+        {
+            if(awyA && pBetween == 1)
+            {
+                awyB = (AIRWAY*) cRoute[i]->data;
+                NVUPOINT* wp = cRoute[i-1];
+
+                //Check if waypoint is the same waypoint in both airways
+                bool okA = false;
+                bool okB = false;
+                for(unsigned int j=0; j<awyA->lATS.size(); j++)
+                {
+                    if(wp == awyA->lATS[j])
+                    {
+                       okA = true;
+                       break;
+                    }
+                }//for
+                for(unsigned int j=0; j<awyB->lATS.size(); j++)
+                {
+                    if(wp == awyB->lATS[j])
+                    {
+                       okB = true;
+                       break;
+                    }
+                }//for
+
+                if(okA == false || okB == false)
+                {
+                    sError = "Route: Waypoint [" + wp->name + "] cannot join airway [" + awyA->name + "] and [" + awyB->name + "].";
+
+                    QString sA = "A: ";
+                    QTextStream ssA(&sA);
+                    for(unsigned int j=0; j<awyA->lATS.size(); j++) ssA << "[" << awyA->lATS[j]->name << "]";
+                    QString sB = "B: ";
+                    QTextStream ssB(&sB);
+                    for(unsigned int j=0; j<awyB->lATS.size(); j++) ssB << "[" << awyB->lATS[j]->name << "]";
+                    qDebug() << sA;
+                    qDebug() << sB;
+
+
+                    goto rError;
+                }
+
+                awyA = NULL;
+                awyB = NULL;
+                pBetween = 0;
+                i--;
+                continue;
+            }//if
+            else
+            {
+                awyA = (AIRWAY*) cRoute[i]->data;
+                pBetween = 0;
+            }//else
+        }//if
+        else
+        {
+            pBetween++;
+        }//eöse
+
+    }//for
+
+    //Allocate and copy the route to flightplan
+    for(unsigned int i=0; i<route.size(); i++)
+    {
+        _route.push_back(new NVUPOINT(*route[i]));
+    }
+
     return "";
 
-    //Deallocate waypoints and return error.
+    //Deallocate custom waypoints and return error.
     rError:
-        for(int k=0; k<cRoute.size(); k++) delete cRoute[k];
+        for(unsigned int i=0; i<pBuffer.size(); i++) delete pBuffer[i];
         cRoute.clear();
         route.clear();
         return sError;
@@ -770,6 +874,14 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
     CPoint latA, latB;
     double longestRunway = -1.0;
     double longestRunwayCompare = 0.0;
+    int surfaceType = 15; //Transparent as default, hence unknown.
+    QString rwyIdentifierA = "";
+    QString rwyIdentifierB = "";
+    int lightA = 0;
+    int lightB = 0;
+    QString city = "";
+    std::vector<RUNWAY*> lRunways;
+    std::vector<std::pair<int, int> > lFreq;
     CPoint latlonX;
 
     NVUPOINT wp;
@@ -796,12 +908,22 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                         wp.wpOrigin = wpOrigin;
                         wp.type = WAYPOINT::TYPE_AIRPORT;
 
-                        if(lWP.find(wp.name) != lWP.end());
+                        AIRPORT_DATA* arwy = new AIRPORT_DATA();
+                        for(unsigned int j=0; j<lRunways.size(); j++) arwy->lRunways.push_back(lRunways[j]);
+                        for(unsigned int j=0; j<lFreq.size(); j++) arwy->lFreq.push_back(lFreq[j]);
+                        arwy->city = city;
+
+
+                        if(lWP.find(wp.name) != lWP.end())  //If airport already exist, delete current allocated data and skip this airport
+                        {
+                            delete arwy;
+                        }
                         else if(lat_set && lon_set)
                         {
                             wp.longest_runway = longestRunway*1000.0;
                             NVUPOINT* nwp = new NVUPOINT(wp);
                             nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
+                            nwp->data = (void*) arwy;
                             lWP.insert(std::make_pair(nwp->name, nwp));
                             lWP2.insert(std::make_pair(nwp->name2, nwp));
                             __DATA_LOADED[__CURRENT_LOADING]++;
@@ -812,21 +934,31 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                             wp.longest_runway = longestRunway*1000.0;
                             NVUPOINT* nwp = new NVUPOINT(wp);
                             nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
+                            nwp->data = (void*) arwy;
                             lWP.insert(std::make_pair(nwp->name, nwp));
                             lWP2.insert(std::make_pair(nwp->name2, nwp));
                             __DATA_LOADED[__CURRENT_LOADING]++;
                         }
 
                         //Reset the flags and continue with this new airport
+                        lFreq.clear();
+                        lRunways.clear();
                         wp = NVUPOINT();
                         lat_set = 0;
                         lon_set = 0;
                         longestRunway = -1.0;
+                        longestRunwayCompare = -1.0;
+                        surfaceType = 15;
+                        rwyIdentifierA = "";
+                        rwyIdentifierB = "";
+                        city = "";
+                        lightA = 0;
+                        lightB = 0;
                         latAB_set = false;
                         currentState = 1;
                         continue;
                     }
-                    else if(cmpData == 1302 || (cmpData>99 && cmpData<103)) currentState = cmpData;
+                    else if(cmpData == 1302 || (cmpData>99 && cmpData<103) || (cmpData>49 && cmpData<57)) currentState = cmpData;
                     else i = record.size(); //Nothing to see here, begone!
                 break;
 
@@ -834,6 +966,10 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                     if(currentState == 1) //Elevation
                     {
                         wp.elev = qstr.toInt();
+                    }
+                    else if(currentState>49 && currentState<57) //ATC FREQ
+                    {
+                        lFreq.push_back(std::make_pair(currentState, qstr.toInt()));
                     }
                     else if(currentState == 1302)
                     {
@@ -870,19 +1006,28 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                                 wp.trans_level = qstr.toInt();
                                 break;
                             }
+                            else if(qstr.compare("city") == 0)
+                            {
+                                city = record[i].simplified();
+                            }
                         }
 
                         i = record.size(); //We have managed to add all data for this row.
                     }
                 break;
 
-                case 2: // (1) Deprecated, (102) Helipad longitude
+                case 2: // (1) Deprecated, (100) Runway surface, (102) Helipad longitude
                     //if(currentState == 102 &&!latAB_set) wp.latlon.x = qstr.toDouble();
-                    if(currentState == 102) latA.x = qstr.toDouble();
+                    if(currentState == 100) surfaceType = qstr.toInt();
+                    else if(currentState == 102) latA.x = qstr.toDouble();
                 break;
 
-                case 3: // (1) Deprecated (102) Helipad latitude
-                    if(currentState == 102)
+                case 3: // (1) Deprecated, (101) Water runway identifier, (102) Helipad latitude
+                    if(currentState == 101)
+                    {
+                        rwyIdentifierA = qstr;
+                    }
+                    else if(currentState == 102)
                     {
                         if(longestRunway>0) break;
                         longestRunway = 0;
@@ -914,14 +1059,23 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                     }//if
                     else if(currentState == 101) latA.y = qstr.toDouble();
                 break;
-
+                case 6: //(101) Water runway end name
+                    if(currentState == 101) rwyIdentifierB = qstr;
+                break;
                 case 7: //(101) Water runway end longitude
                     if(currentState == 101) latB.x = qstr.toDouble();
                 break;
-                case 8: //(101) Water runway end latitude
+                case 8: //(100), Runway identifer (101) Water runway end latitude
+                   if(currentState == 100)
+                   {
+                       rwyIdentifierA = qstr;
+                   }
                    if(currentState == 101)
                    {
                        latB.y = qstr.toDouble();
+                       RUNWAY* rwy = new RUNWAY(rwyIdentifierA, latA, 0, rwyIdentifierB, latB, 0, SURFACE_WATER);
+
+                       lRunways.push_back(rwy);
                        longestRunwayCompare = LMATH::calc_distance(latA.x, latA.y, latB.x, latB.y);
                        if(longestRunway>longestRunwayCompare) break;
                        longestRunway = longestRunwayCompare;
@@ -935,6 +1089,12 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                 break;
                 case 10: //(100) Runway start latitude
                     if(currentState == 100) latA.y = qstr.toDouble();
+                break;
+                case 14: //(100) Runway approach lightning
+                    if(currentState == 100) lightA = qstr.toInt();
+                break;
+                case 17: //(100) Runway end identifier
+                    if(currentState == 100) rwyIdentifierB = qstr;
                 break;
                 case 18: //(100) Runway end longitude
                     if(currentState == 100) latB.x = qstr.toDouble();
@@ -952,6 +1112,14 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                         //latAB_set = true;
                     }//if
                 break;
+                case 23: //(100) Runway end approach lightning
+                    if(currentState == 100)
+                    {
+                        lightB = qstr.toInt();
+                        RUNWAY* rwy = new RUNWAY(rwyIdentifierA, latA, lightA, rwyIdentifierB, latB, lightB, surfaceType);
+                        lRunways.push_back(rwy);
+                    }
+                break;
             }
         }
     }//while
@@ -960,12 +1128,18 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
     wp.wpOrigin = wpOrigin;
     wp.type = WAYPOINT::TYPE_AIRPORT;
 
-    if(lWP.find(wp.name) != lWP.end());
+    AIRPORT_DATA* arwy = new AIRPORT_DATA();
+    for(unsigned int j=0; j<lRunways.size(); j++) arwy->lRunways.push_back(lRunways[j]);
+    for(unsigned int j=0; j<lFreq.size(); j++) arwy->lFreq.push_back(lFreq[j]);
+    arwy->city = city;
+
+    if(lWP.find(wp.name) != lWP.end()) delete arwy;
     else if(lon_set && lat_set)
     {
         wp.longest_runway = longestRunway*1000.0;
         NVUPOINT* nwp = new NVUPOINT(wp);
         nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
+        nwp->data = (void*) arwy;
         lWP.insert(std::make_pair(nwp->name, nwp));
         lWP2.insert(std::make_pair(nwp->name2, nwp));
         __DATA_LOADED[__CURRENT_LOADING]++;
@@ -976,6 +1150,7 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
         wp.latlon = latlonX;
         NVUPOINT* nwp = new NVUPOINT(wp);
         nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
+        nwp->data = (void*) arwy;
         lWP.insert(std::make_pair(nwp->name, nwp));
         lWP2.insert(std::make_pair(nwp->name2, nwp));
         __DATA_LOADED[__CURRENT_LOADING]++;
@@ -1117,17 +1292,85 @@ void XFMS_DATA::validate_airways_XP11(QFile& infile)
         if(bError) continue;
 
 
-        //We set aSeg.start and aSeg.end, if the waypoint is not found in the global waypoint list (lWP), we also allocate it and add it to the global waypoint list.--------------------------------------------------------------
+        //We set aSeg.start and aSeg.end, if the waypoint is not found in the global waypoint list (lWP), we ignore this segment.--------------------------------------------------------------
         std::vector<NVUPOINT*> sPoints;
         aSeg.start = NULL;
         sPoints = search(wp.name, 0, 1, wp.country);
-        for(int i=0; i<sPoints.size(); i++) if(sPoints[i]->wpOrigin!=WAYPOINT::ORIGIN_XNVU) { aSeg.start = sPoints[i]; break;};
+        for(int i=0; i<sPoints.size(); i++)
+        {
+            if(sPoints[i]->wpOrigin!=WAYPOINT::ORIGIN_XNVU)
+            {
+                if(wp.type == WAYPOINT::TYPE_VHFNAV)
+                {
+                    if(sPoints[i]->type == WAYPOINT::TYPE_VORDME || sPoints[i]->type == WAYPOINT::TYPE_VOR ||
+                       sPoints[i]->type == WAYPOINT::TYPE_TACAN || sPoints[i]->type == WAYPOINT::TYPE_VORTAC ||
+                       sPoints[i]->type == WAYPOINT::TYPE_VHFNAV || sPoints[i]->type == WAYPOINT::TYPE_DME)
+                    {
+                        aSeg.start = sPoints[i];
+                        break;
+                    }//if
+                }//if
+                else if(wp.type == sPoints[i]->type)
+                {
+                    aSeg.start = sPoints[i];
+                    break;
+                }//else if
+                else if(wp.type == -2)
+                {
+                    aSeg.start = sPoints[i];
+                    break;
+                }//else if
+            }
+            if(i == (sPoints.size() - 1) && aSeg.start == NULL && wp.type!=-2)
+            {
+                //Special case (something is wrong, hence the combination of identifer and type of waypoint in airway is not found in navaids/fixes)
+                //We then instead add the waypoint the waypoint first in list that is not XNVU.
+                wp.type = -2;
+                i = 0;
+            }
+        }//for
+
         if(aSeg.start == NULL) continue;
 
         aSeg.end = NULL;
         sPoints = search(wp2.name, 0, 1, wp2.country);
-        for(int i=0; i<sPoints.size(); i++) if(sPoints[i]->wpOrigin!=WAYPOINT::ORIGIN_XNVU) { aSeg.end = sPoints[i]; break;};
+        for(int i=0; i<sPoints.size(); i++)
+        {
+            if(sPoints[i]->wpOrigin!=WAYPOINT::ORIGIN_XNVU)
+            {
+                if(wp2.type == WAYPOINT::TYPE_VHFNAV)
+                {
+                    if(sPoints[i]->type == WAYPOINT::TYPE_VORDME || sPoints[i]->type == WAYPOINT::TYPE_VOR ||
+                       sPoints[i]->type == WAYPOINT::TYPE_TACAN || sPoints[i]->type == WAYPOINT::TYPE_VORTAC ||
+                       sPoints[i]->type == WAYPOINT::TYPE_VHFNAV || sPoints[i]->type == WAYPOINT::TYPE_DME)
+                    {
+                        aSeg.end = sPoints[i];
+                        break;
+                    }//if
+                }//if
+                else if(wp2.type == sPoints[i]->type)
+                {
+                    aSeg.end = sPoints[i];
+                    break;
+                }//else if
+                else if(wp2.type == -2)
+                {
+                    aSeg.end = sPoints[i];
+                    break;
+                }//else if
+            }
+
+            if(i == (sPoints.size() - 1) && aSeg.start == NULL && wp2.type!=-2)
+            {
+                //Special case (something is wrong, hence the combination of identifer and type of waypoint in airway is not found in navaids/fixes)
+                //We then instead add the waypoint the waypoint first in list that is not XNVU.
+                wp2.type = -2;
+                i = 0;
+            }
+        }//for
         if(aSeg.end == NULL) continue;
+
+
 
         //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1466,6 +1709,84 @@ void XFMS_DATA::validate_earthnav_XP11(const QStringList &record)
         */
     }//else
 }
+
+/*
+void XFMS_DATA::validate_sidstar_XP11(QFile& _infile, const QString _airport)
+{
+    while(!infile.atEnd())
+    {
+        bool bError = false;
+        int type;
+        QStringList record;
+        QString qstr;
+        QString line;
+
+        line = infile.readLine();
+        record = line.split(',',  QString::SkipEmptyParts);
+        try
+        {
+            for(int i=0; i<record.size(); i++)
+            {
+                qstr = record[i].simplified();
+                switch(i)
+                {
+                case 0: //Procedure array identifer, i.e. SID:10
+                    //wp.name = qstr;
+                    break;
+                case 1: //Region i.e. ES
+                    wp.country = qstr;
+                    break;
+                case 2: //Type of fix 11=fix, 2=enroute NDB, 3 = VOR, TACAN or DME
+                    type = qstr.toInt();
+                    if(type == 11) wp.type = WAYPOINT::TYPE_FIX;
+                    else if(type == 2) wp.type = WAYPOINT::TYPE_NDB;
+                    else if(type == 3) wp.type = WAYPOINT::TYPE_VHFNAV;
+                    else bError = true;
+                    break;
+                case 3: //Fix ICAO
+                    wp2.name = qstr;
+                    break;
+                case 4: //Region i.e. ES
+                    wp2.country = qstr;
+                    break;
+                case 5: //Type of fix 11=fix, 2=enroute NDB, 3 = VOR, TACAN or DME
+                    type = qstr.toInt();
+                    if(type == 11) wp2.type = WAYPOINT::TYPE_FIX;
+                    else if(type == 2) wp2.type = WAYPOINT::TYPE_NDB;
+                    else if(type == 3) wp2.type = WAYPOINT::TYPE_VHFNAV;
+                    else bError = true;
+                    break;
+                case 6: //Directional (N, F, B)
+                    if(qstr.compare("N", Qt::CaseInsensitive) == 0) aSeg.direction = 0;
+                    else if(qstr.compare("F", Qt::CaseInsensitive) == 0) aSeg.direction = 1;
+                    else if(qstr.compare("B", Qt::CaseInsensitive) == 0) aSeg.direction = 2;
+                    else bError = true;
+                    break;
+                case 7: //Airway low (1) or high (2)
+                    aSeg.hilo = qstr.toInt();
+                    break;
+                case 8: //Base of airway FL
+                    aSeg.base = qstr.toInt();
+                    break;
+                case 9: //Top of airway FL
+                    aSeg.top = qstr.toInt();
+                    break;
+                case 10:
+                    //aSeg.sharedAirways = qstr.split('-', QString::SkipEmptyParts);
+                    sharedAirways = qstr.split('-', QString::SkipEmptyParts);
+                    break;
+                }//switch
+            }//for
+        }//try
+        catch(...)
+        {
+            continue;
+        }//catch
+
+        if(bError) continue;
+    }//while
+}
+*/
 
 //KLN90B
 /*
@@ -2515,6 +2836,31 @@ int XFMS_DATA::saveXNVUData()
     outfile.close();
     return 1;
 }
+
+/*
+int XFMS_DATA::saveXNVUDataTest(const char* _filename)
+{
+    //Type | ID | NAME | COUNTRY | LAT | LON | ELEV | FREQ | RANGE | AD | TALT | TLVL | LRWY
+
+    std::multimap<std::string, NVUPOINT*>::iterator it = lWP.begin();
+    QFile outfile(_filename);
+    if(!outfile.open(QIODevice::WriteOnly | QIODevice::Text)) return 0;
+
+    QTextStream out(&outfile);
+
+    for(; it!=lWP.end(); it++)
+    {
+        NVUPOINT* p = (*it).second;
+        out << qSetRealNumberPrecision(16)
+            << p->type << '|' << p->name << '|' << p->name2 << '|' << p->country << '|' << p->latlon.x << '|' << p->latlon.y << '|'
+            << p->elev << '|' << p->freq << '|' << p->range << '|' << p->ADEV << '|'
+            << p->trans_alt << '|' << p->trans_level << '|' << p->longest_runway << "\n";
+    }
+
+    outfile.close();
+    return 1;
+}
+*/
 
 int XFMS_DATA::saveXNVUFlightplan(const QString& file, std::vector<NVUPOINT*> lN)
 {

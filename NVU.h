@@ -27,25 +27,33 @@ class NVUPOINT: public WAYPOINT
         double Dtrg = 0;
 
         NVUPOINT(): WAYPOINT(){}
-		NVUPOINT(const WAYPOINT& wp)
+        NVUPOINT(const NVUPOINT& wp) : WAYPOINT(wp)
 		{
-            latlon = wp.latlon;
-            type = wp.type;
-			name = wp.name;
-			name2 = wp.name2;
-			range = wp.range;
-			freq = wp.freq; 
-			alt = wp.alt;
-			elev = wp.elev;
-			trans_alt = wp.trans_alt;
-			trans_level = wp.trans_level;
-			longest_runway = wp.longest_runway;
-			country = wp.country;
-            MD = wp.MD;
-            ADEV = wp.ADEV;
-            wpOrigin = wp.wpOrigin;
-		}
+            OZMPUv = wp.OZMPUv;
+            OZMPUp = wp.OZMPUp;
+            S = wp.S;
+            LPT = wp.LPT;
+            Pv = wp.Pv;
+            Pp = wp.Pp;
+            MPU = wp.MPU;
+            IPU = wp.IPU;
+            Spas = wp.Spas;
+            Srem = wp.Srem;
 
+            rsbn = wp.rsbn;
+            Sm = wp.Sm;
+            Zm = wp.Zm;
+            MapAngle = wp.MapAngle;
+            Atrg = wp.Atrg;
+            Dtrg = wp.Dtrg;
+        }
+
+        NVUPOINT(const WAYPOINT& wp) : WAYPOINT(wp)
+        {
+
+        }
+
+/*
         void clone(const NVUPOINT& wp)
         {
             latlon = wp.latlon;
@@ -65,6 +73,7 @@ class NVUPOINT: public WAYPOINT
             wpOrigin = wp.wpOrigin;
             rsbn = wp.rsbn;
         }
+*/
 
         void calc_rsbn_corr(CPoint p2R);
 		

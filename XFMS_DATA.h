@@ -40,6 +40,8 @@ class XFMS_DATA
         //If error occurs, a description of error is returned.
         static QString validate_custom_point(const NVUPOINT* wpRef, NVUPOINT *&rPoint, const QString& record);
 
+        static void validate_sidstar_XP11(QFile& _infile, const QString& _airport); //TODO: Under development, only for XP11 currently
+
     public:
         static int dat;
 
@@ -74,16 +76,17 @@ class XFMS_DATA
         static std::vector<NVUPOINT*> lXNVU;
 
 
-        //Get a list of waypoints between two waypoint in an airway
+        //Get a list of waypoints between two waypoint in an airway, including the waypoints wpA and wpB
+        //Note that the first and last waypoint in the airway, may differ and should be used instead of wpA and wpB
         /*
          * airway: Name of airway
          * wpA: Waypoint A
          * wpB: Waypoint B
-         * lA: Returned list of waypoints (note that wpA and wpB is not included in list)
+         * lA: Returned list of waypoints
          * allowOpposite: Allow an opposite direction of airway if the correct direction of airway is not found.
          * Returns a string of description if error occurs.
         */
-        static QString getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVUPOINT* wpB, std::vector<NVUPOINT *> &lA, bool allowOpposite);
+        static QString getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVUPOINT* wpB, std::vector<NVUPOINT *> &lA, NVUPOINT *&_wpAirway, bool allowOpposite);
 
         //Create a route defined by a string. Arguments are:
         /* _qstr: route string,

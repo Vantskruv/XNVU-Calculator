@@ -184,7 +184,7 @@ void DialogWPSEdit::on_pushButton_Edit_clicked()
     switch(rv)
     {
         case DialogWaypointEdit::SAVE:
-            iD->nvupoint->clone(dEdit.nvupoint);
+            *iD->nvupoint = dEdit.nvupoint;
             initializeList(iD->nvupoint);
         break;
 
