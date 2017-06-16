@@ -110,7 +110,7 @@ NVUPOINT* QFlightplanTable::calculateTOD(NVUPOINT*& _pc, double& _KM, double __F
     //FL = Flightlevel in thousands feet
     //VS = Descent rate (m/s)
     //GS = Ground speed (km/h)
-    __FL = LMATH::meterToFeet(__FL) - (lNVUPoints.back())->elev/1000.0;
+    __FL = LMATH::meterToFeet(__FL) - (lNVUPoints.back())->alt/1000.0;
     double d = (__FL*(GS - 5.0*__FL)) / (_VS*(15.0/1.27));
 
 
@@ -406,13 +406,21 @@ void QFlightplanTable::refreshFlightplan()
     if(DialogSettings::showFeet) fl = LMATH::feetToMeter(fl);
     fl = fl/1000.0;
 
+    /*
     if(DialogSettings::cruiseFormat == 1) speed = LMATH::IAS_to_MACH(speed, fl, fplData.isa);
     else if(DialogSettings::cruiseFormat == 2) speed = LMATH::IAS_to_MACH(speed*1.852, fl, fplData.isa);
+    */
 
     calculateTOD(cp, d, fl, speed, vs, twc, fplData.isa);
+    pTOD = cp;
+    dTOD = d;
 
-    if(cp) qTOD->setText("TOD: " + (int(d) == 0 ? "at " : QString::number(d, 'f', 1) + " km before ") + cp->name);
-    else qTOD->setText("TOD: ");
+    if(cp)
+    {
+        if(DialogSettings::showTOD_METRIC) qTOD->setText("TOD: " + (d < 1.0 ? "at " : QString::number(d, 'f', 1) + " km before ") + cp->name);
+        else qTOD->setText("TOD: " + (d < 1.0 ? "at " : QString::number(d/1.852, 'f', 1) + " nm before ") + cp->name);
+    }
+    else qTOD->setText("TOD: ??? " + QString((DialogSettings::showTOD_METRIC == true ? " km" : " nm")));
 }
 
 const std::vector<NVUPOINT*>& QFlightplanTable::getWaypoints()

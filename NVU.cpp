@@ -133,6 +133,7 @@ void NVU::generate(std::vector<NVUPOINT*>& lWPs, double& NVU_FORK, long dat)
 	
     lWPs[i]->S = 0;
     lWPs[i]->Spas = Spas;
+    lWPs[i]->Srem = 0;
 
 	for(i=0 ; i<lWPs.size()-1; i++)
 	{

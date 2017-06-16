@@ -7,7 +7,29 @@
 
 class NVUPOINT: public WAYPOINT
 {
-	public:
+    private:
+        static void swap(NVUPOINT& m, const NVUPOINT& wp)
+        {
+            m.OZMPUv = wp.OZMPUv;
+            m.OZMPUp = wp.OZMPUp;
+            m.S = wp.S;
+            m.LPT = wp.LPT;
+            m.Pv = wp.Pv;
+            m.Pp = wp.Pp;
+            m.MPU = wp.MPU;
+            m.IPU = wp.IPU;
+            m.Spas = wp.Spas;
+            m.Srem = wp.Srem;
+
+            m.rsbn = wp.rsbn;
+            m.Sm = wp.Sm;
+            m.Zm = wp.Zm;
+            m.MapAngle = wp.MapAngle;
+            m.Atrg = wp.Atrg;
+            m.Dtrg = wp.Dtrg;
+        }
+
+    public:
 		double OZMPUv = 0;
 		double OZMPUp = 0;
 		double S = 0;
@@ -29,28 +51,17 @@ class NVUPOINT: public WAYPOINT
         NVUPOINT(): WAYPOINT(){}
         NVUPOINT(const NVUPOINT& wp) : WAYPOINT(wp)
 		{
-            OZMPUv = wp.OZMPUv;
-            OZMPUp = wp.OZMPUp;
-            S = wp.S;
-            LPT = wp.LPT;
-            Pv = wp.Pv;
-            Pp = wp.Pp;
-            MPU = wp.MPU;
-            IPU = wp.IPU;
-            Spas = wp.Spas;
-            Srem = wp.Srem;
-
-            rsbn = wp.rsbn;
-            Sm = wp.Sm;
-            Zm = wp.Zm;
-            MapAngle = wp.MapAngle;
-            Atrg = wp.Atrg;
-            Dtrg = wp.Dtrg;
+            swap(*this, wp);
         }
 
         NVUPOINT(const WAYPOINT& wp) : WAYPOINT(wp)
         {
 
+        }
+
+        NVUPOINT* clone()
+        {
+            return new NVUPOINT(*this);
         }
 
 /*

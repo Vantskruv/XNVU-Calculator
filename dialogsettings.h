@@ -63,6 +63,7 @@ public:
     static int TWCFormat;
     static bool customDateIsTrue;
     static QString customDate;
+    static bool showTOD_METRIC;
 /*
     static bool showN;
     static bool showID;

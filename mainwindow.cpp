@@ -62,10 +62,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->lineEdit_DTTo, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
 
     //Connect clickable labels for TOD calculations
-    connect(ui->labelCruise, SIGNAL(clicked(QLabelClick*)), this, SLOT(clickedDataLabels(QLabelClick*)));
+    //connect(ui->labelCruise, SIGNAL(clicked(QLabelClick*)), this, SLOT(clickedDataLabels(QLabelClick*)));
     connect(ui->labelVS, SIGNAL(clicked(QLabelClick*)), this, SLOT(clickedDataLabels(QLabelClick*)));
     connect(ui->labelTWC, SIGNAL(clicked(QLabelClick*)), this, SLOT(clickedDataLabels(QLabelClick*)));
     connect(ui->labelFlightLevel, SIGNAL(clicked(QLabelClick*)), this, SLOT(clickedDataLabels(QLabelClick*)));
+    connect(ui->labelTOD, SIGNAL(clicked(QLabelClick*)), this, SLOT(clickedDataLabels(QLabelClick*)));
 
     //Give tablewidget a reference to labelFork and labelTOD and set its size
     ui->tableWidget->setColumnCount(QFlightplanTable::COL::_SIZE);
@@ -117,9 +118,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->label_alignFMS->setVisible(DialogSettings::distAlignFMS);
 
     //Set flightplan data values to default (in formats saved by user)
-    if(DialogSettings::cruiseFormat == 1){ ui->doubleSpinBox_MACH->setSuffix(" km/h"); ui->doubleSpinBox_MACH->setValue(476);}
-    else if(DialogSettings::cruiseFormat == 2) {ui->doubleSpinBox_MACH->setSuffix(" kn"); ui->doubleSpinBox_MACH->setValue(257);}
-    else {ui->doubleSpinBox_MACH->setSuffix(" M"); ui->doubleSpinBox_MACH->setValue(0.8);}
+    //if(DialogSettings::cruiseFormat == 1){ ui->doubleSpinBox_MACH->setSuffix(" km/h"); ui->doubleSpinBox_MACH->setValue(476);}
+    //else if(DialogSettings::cruiseFormat == 2) {ui->doubleSpinBox_MACH->setSuffix(" kn"); ui->doubleSpinBox_MACH->setValue(257);}
+    //else {
+        ui->doubleSpinBox_MACH->setSuffix(" M"); ui->doubleSpinBox_MACH->setValue(0.8);//}
     if(DialogSettings::VSFormat == 1){ ui->doubleSpinBox_VS->setSuffix(" ft/m"); ui->doubleSpinBox_VS->setValue(1575);}
     else{ui->doubleSpinBox_VS->setSuffix(" m/s"); ui->doubleSpinBox_VS->setValue(8.0);}
     if(DialogSettings::TWCFormat == 1) ui->doubleSpinBox_TWC->setSuffix(" kn");
@@ -801,7 +803,7 @@ void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, 
     font.setBold(true);
     painter.setFont(font);
 
-    QString str = ui->labelTOD->text();;
+    QString str = ui->labelTOD->text();
     str.remove(0, 4);
     painter.drawText(7500*xscale, y, str);
     y+=40;
@@ -1667,7 +1669,8 @@ void MainWindow::on_pushButtonDTInsert_clicked()
     LMATH::calc_destination_orthodromic(a->latlon, brng, a->S + ui->doubleSpinBox_DTCourseDistRem->value(), cp);
 
     NVUPOINT* n = new NVUPOINT();
-    n->name = a->name + "_DTO";
+    //n->name = a->name + "_DTO";
+    n->name = "DTO_" + c->name;
     n->latlon = cp;
     n->type = WAYPOINT::TYPE_LATLON;
     n->MD = calc_magvar(n->latlon.x, n->latlon.y, dat, LMATH::feetToMeter(a->alt));
@@ -1829,6 +1832,7 @@ void MainWindow::clickedDataLabels(QLabelClick* _label)
 {
     if(_label == ui->labelCruise)
     {
+        /*
         if(DialogSettings::cruiseFormat == 0)
         {
             double FL = ui->doubleSpinBoxFL->value();
@@ -1853,6 +1857,7 @@ void MainWindow::clickedDataLabels(QLabelClick* _label)
             ui->doubleSpinBox_MACH->setSuffix(" M");
             DialogSettings::cruiseFormat = 0;
         }
+        */
     }
     else if(_label == ui->labelVS)
     {
@@ -1907,6 +1912,20 @@ void MainWindow::clickedDataLabels(QLabelClick* _label)
         }//else
 
         ui->tableWidget->refreshFlightplan();
+    }
+    else if(_label == ui->labelTOD)
+    {
+        if(DialogSettings::showTOD_METRIC)
+        {
+            DialogSettings::showTOD_METRIC = false;
+
+        }
+        else
+        {
+            DialogSettings::showTOD_METRIC = true;
+        }
+
+        ui->tableWidget->refreshFlightplan(); //Uncessary CPU nuclear power wattage consumption, refreshing flightplan only because of change from metric to nautical or vice versa feels overkill. :S
     }
 
 }

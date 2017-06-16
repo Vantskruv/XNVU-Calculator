@@ -31,6 +31,8 @@ class QFlightplanTable : public QTableWidget
 
         QLabel* qFork = NULL;
         QLabel* qTOD = NULL;
+        double dTOD = -1;
+        NVUPOINT* pTOD = NULL;
 
         //_KM(km) _FL(km), _MACH(mach or km/h), _VS(m/s), _TWC(km/h), _ISA(celsius)
         NVUPOINT* calculateTOD(NVUPOINT *&_pc, double& _KM, double _FL, double _MACH, double _VS, double _TWC, double _ISA);

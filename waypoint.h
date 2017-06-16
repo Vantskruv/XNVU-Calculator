@@ -31,6 +31,15 @@ class WAYPOINT;
 
 class AIRWAY
 {
+    private:
+        static void swap(AIRWAY& a, const AIRWAY& r)
+        {
+            a.name = r.name;
+            a.distance = r.distance;
+            a.lATS.clear();
+            for(unsigned int i=0; i<r.lATS.size(); i++) a.lATS.push_back(r.lATS[i]);
+        }
+
     public:
         QString name;
         double distance;
@@ -44,13 +53,33 @@ class AIRWAY
 
         AIRWAY(const AIRWAY& awy)
         {
-            name = awy.name;
-            distance = awy.distance;
-            for(unsigned int i=0; i<awy.lATS.size(); i++) lATS.push_back(awy.lATS[i]);
+            swap(*this, awy);
+        }
+        AIRWAY& operator=(const AIRWAY& other)
+        {
+            swap(*this, other);
+            return *this;
+        }
+
+        AIRWAY* clone()
+        {
+            return new AIRWAY(*this);
         }
 };
 class RUNWAY
 {
+    private:
+        static void swap(RUNWAY& me, const RUNWAY& r)
+        {
+            me.rwyA = r.rwyA;
+            me.rwyB = r.rwyB;
+            me.lightA = r.lightA;
+            me.lightB = r.lightB;
+            me.surface = r.surface;
+            me.start = r.start;
+            me.end = r.end;
+        }
+
     public:
         QString rwyA;   //Runway identifer
         QString rwyB;   //Runway opposite identifer
@@ -73,22 +102,44 @@ class RUNWAY
 
         RUNWAY(const RUNWAY& r)
         {
-            rwyA = r.rwyA;
-            rwyB = r.rwyB;
-            lightA = r.lightA;
-            lightB = r.lightB;
-            surface = r.surface;
-            start = r.start;
-            end = r.end;
+            swap(*this, r);
+        }
+
+        RUNWAY& operator=(const RUNWAY& other)
+        {
+            swap(*this, other);
+            return *this;
+        }
+
+        RUNWAY* clone()
+        {
+            return new RUNWAY(*this);
         }
 
         int getLength()	//In feet
         {
             return LMATH::meterToFeet(LMATH::calc_distance(start, end)*1000);
         }
+
+        ~RUNWAY()
+        {
+
+        }
 };
 class AIRPORT_DATA
 {
+    private:
+        static void swap(AIRPORT_DATA& a, const AIRPORT_DATA& r)
+        {
+            for(unsigned int i=0; i<a.lRunways.size(); i++) delete a.lRunways[i];
+            a.lRunways.clear();
+            a.lFreq.clear();
+
+            a.city = r.city;
+            for(unsigned int i=0; i<r.lRunways.size(); i++) a.lRunways.push_back(new RUNWAY(*r.lRunways[i]));
+            for(unsigned int i=0; i<r.lFreq.size(); i++) a.lFreq.push_back(std::make_pair(r.lFreq[i].first, r.lFreq[i].second));
+        }
+
     public:
         QString city;                               //The city airport belongs to
         std::vector<RUNWAY*> lRunways;              //List of runways belonging to airport
@@ -101,9 +152,18 @@ class AIRPORT_DATA
 
         AIRPORT_DATA(const AIRPORT_DATA& ad)
         {
-            city = ad.city;
-            for(unsigned int i=0; i<ad.lRunways.size(); i++) lRunways.push_back(new RUNWAY(*ad.lRunways[i]));
-            for(unsigned int i=0; i<ad.lFreq.size(); i++) lFreq.push_back(std::make_pair(ad.lFreq[i].first, ad.lFreq[i].second));
+            swap(*this, ad);
+        }
+
+        AIRPORT_DATA& operator=(const AIRPORT_DATA& other)
+        {
+            swap(*this, other);
+            return *this;
+        }
+
+        AIRPORT_DATA* clone()
+        {
+            return new AIRPORT_DATA(*this);
         }
 
         ~AIRPORT_DATA()
@@ -114,7 +174,50 @@ class AIRPORT_DATA
 
 class WAYPOINT
 {
-	public:
+    private:
+        static void swap(WAYPOINT& m, const WAYPOINT& wp)
+        {
+            if(m.type == TYPE_AIRWAY && m.data!=NULL)
+            {
+                AIRWAY* awy = (AIRWAY*) m.data;
+                delete awy;
+            }//if
+            else if(m.type == TYPE_AIRPORT && m.data!=NULL)
+            {
+                AIRPORT_DATA* aRwys = (AIRPORT_DATA*) m.data;
+                delete aRwys;
+            }//if
+
+            m.latlon = wp.latlon;
+            m.type = wp.type;
+            m.name = wp.name;
+            m.name2 = wp.name2;
+            m.range = wp.range;
+            m.freq = wp.freq;
+            m.alt = wp.alt;
+            m.elev = wp.elev;
+            m.trans_alt = wp.trans_alt;
+            m.trans_level = wp.trans_level;
+            m.longest_runway = wp.longest_runway;
+            m.country = wp.country;
+            m.MD = wp.MD;
+            m.ADEV = wp.ADEV;          //Angle deviation of VOR/DME from X-Plane earth_nav.dat
+            m.wpOrigin = wp.wpOrigin;         //If waypoint has not been converted from FMS (1), is retrieved from earth_nav.dat (2), or is custom made (3)
+            m.data = NULL;
+
+            if(wp.type == TYPE_AIRPORT && wp.data!=NULL)
+            {
+                AIRPORT_DATA* apd = (AIRPORT_DATA*) wp.data;
+                m.data = (void*) new AIRPORT_DATA(*apd);
+            }
+            else if(wp.type == TYPE_AIRWAY && wp.data!=NULL)
+            {
+                AIRWAY* awy = (AIRWAY*) wp.data;
+                m.data = (void*) new AIRWAY(*awy);
+            }
+        }
+
+    public:
         static constexpr int ORIGIN_AIRAC_AIRPORTS = 1;
         static constexpr int ORIGIN_AIRAC_NAVAIDS = 2;
         static constexpr int ORIGIN_AIRAC_WAYPOINTS = 3;
@@ -163,7 +266,7 @@ class WAYPOINT
         double MD = 0;
         double ADEV = 0;          //Angle deviation of VOR/DME from X-Plane earth_nav.dat
         int wpOrigin = 0;         //If waypoint has not been converted from FMS (1), is retrieved from earth_nav.dat (2), or is custom made (3)
-        void* data;
+        void* data = NULL;
 
         bool compare(WAYPOINT*);
 
@@ -176,37 +279,23 @@ class WAYPOINT
 
         WAYPOINT()
         {
+            type = -1;
             data = NULL;
         }
 
         WAYPOINT(const WAYPOINT& wp)
         {
-            latlon = wp.latlon;
-            type = wp.type;
-            name = wp.name;
-            name2 = wp.name2;
-            range = wp.range;
-            freq = wp.freq;
-            alt = wp.alt;
-            elev = wp.elev;
-            trans_alt = wp.trans_alt;
-            trans_level = wp.trans_level;
-            longest_runway = wp.longest_runway;
-            country = wp.country;
-            MD = wp.MD;
-            ADEV = wp.ADEV;          //Angle deviation of VOR/DME from X-Plane earth_nav.dat
-            wpOrigin = wp.wpOrigin;         //If waypoint has not been converted from FMS (1), is retrieved from earth_nav.dat (2), or is custom made (3)
-            data = NULL;
-            if(wp.type == TYPE_AIRPORT && wp.data!=NULL)
-            {
-                AIRPORT_DATA* apd = (AIRPORT_DATA*) wp.data;
-                data = (void*) new AIRPORT_DATA(*apd);
-            }
-            else if(wp.type == TYPE_AIRWAY && wp.data!=NULL)
-            {
-                AIRWAY* awy = (AIRWAY*) wp.data;
-                data = (void*) new AIRWAY(*awy);
-            }
+            swap(*this, wp);
+        }
+        WAYPOINT& operator=(const WAYPOINT& other)
+        {
+            swap(*this, other);
+            return *this;
+        }
+
+        WAYPOINT* clone()
+        {
+            return new WAYPOINT(*this);
         }
 
         virtual ~WAYPOINT()

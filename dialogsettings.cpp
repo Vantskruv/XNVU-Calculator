@@ -37,6 +37,7 @@ int DialogSettings::VSFormat = 0;
 int DialogSettings::TWCFormat = 0;
 bool DialogSettings::customDateIsTrue = true;
 QString DialogSettings::customDate = "2020.01.01";
+bool DialogSettings::showTOD_METRIC = true;
 
 /*
 bool DialogSettings::showN = true;
@@ -214,6 +215,7 @@ void DialogSettings::loadSettings()
     tableState = s.value("TableState", tableState).toByteArray();
     customDateIsTrue = s.value("CustomDateIsTrue", customDateIsTrue).toBool();
     customDate = s.value("CustomDate", customDate).toString();
+    showTOD_METRIC = s.value("ShowTOD_METRIC", showTOD_METRIC).toBool();
 }
 
 void DialogSettings::saveSettings()
@@ -247,6 +249,7 @@ void DialogSettings::saveSettings()
     s.setValue("TableState", tableState);
     s.setValue("CustomDateIsTrue", customDateIsTrue);
     s.setValue("CustomDate", customDate);
+    s.setValue("ShowTOD_METRIC", showTOD_METRIC);
 }
 
 /*
