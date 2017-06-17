@@ -45,13 +45,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(shortcutUpKey, SIGNAL(activated()), this, SLOT(tableGoUp()));
     connect(shortcutDownKey, SIGNAL(activated()), this, SLOT(tableGoDown()));
     //connect(actionDirectTo, SIGNAL(triggered()), this, SLOT(goDirectTo()));
-    connect(ui->actionExport_X_Plane_FMS, SIGNAL(triggered()), this, SLOT(exportFMS()));
-    connect(ui->actionImport_X_Plane_FMS, SIGNAL(triggered()), this, SLOT(importFMS()));
+    //connect(ui->actionExport_X_Plane_FMS, SIGNAL(triggered()), this, SLOT(exportFMS()));
+    //connect(ui->actionImport_X_Plane_FMS, SIGNAL(triggered()), this, SLOT(importFMS()));
     connect(ui->actionSave_XNVU_flightplan, SIGNAL(triggered()), this, SLOT(saveNVUFlightPlan()));
     connect(ui->actionLoad_XNVU_flightplan, SIGNAL(triggered()), this, SLOT(loadNVUFlightplan()));
     connect(ui->actionX_Plane_folder, SIGNAL(triggered()), this, SLOT(showXPlaneSettings()));
-    connect(ui->actionPrint, SIGNAL(triggered()), this, SLOT(on_pushButtonPrint_clicked()));
-    connect(ui->actionExport_to_PDF, SIGNAL(triggered()), this, SLOT(printOnPDF()));
+    //connect(ui->actionPrint, SIGNAL(triggered()), this, SLOT(on_pushButtonPrint_clicked()));
+    //connect(ui->actionExport_to_PDF, SIGNAL(triggered()), this, SLOT(printOnPDF()));
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(quit()));
     connect(ui->tableWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showFlightplanContextMenu(const QPoint&)));
     connect(ui->listWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showSearchListContextMenu(const QPoint&)));
@@ -60,6 +60,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->lineEdit_DTCourseFrom, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
     connect(ui->lineEdit_DTCourseTo, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
     connect(ui->lineEdit_DTTo, SIGNAL(clicked(QLineEditWP*)), this, SLOT(goDirectToFieldClicked(QLineEditWP*)));
+
+    connect(ui->actionPrint_2, SIGNAL(triggered()), this, SLOT(on_pushButtonPrint_clicked()));
+    connect(ui->actionPrint_to_PDF, SIGNAL(triggered()), this, SLOT(printOnPDF()));
+    connect(ui->actionExport_to_FMS, SIGNAL(triggered()), this, SLOT(exportFMS()));
+    connect(ui->actionExport_to_KLN90B, SIGNAL(triggered()), this, SLOT(exportFMS_KLN90B()));
+    connect(ui->actionImport_X_Plane_FMS_2, SIGNAL(triggered()), this, SLOT(importFMS()));
+    connect(ui->actionKLN_90B, SIGNAL(triggered()), this, SLOT(importFMS_KLN90B()));
+
+
 
     //Connect clickable labels for TOD calculations
     //connect(ui->labelCruise, SIGNAL(clicked(QLabelClick*)), this, SLOT(clickedDataLabels(QLabelClick*)));
@@ -86,9 +95,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->lineEditRoute->setFont(font);
 
 
-    //Restore menu checkboxes
-    ui->actionShow_feet->setChecked(DialogSettings::showFeet);
-    ui->actionNightmode_print_export->setChecked(DialogSettings::nightMode);
+    //Restore menu checkboxes (note the states of these is on application termination saved to DialogSettings)
+    ui->actionNightmode->setChecked(DialogSettings::nightMode);
+    //ui->actionDistance_in_NM->setChecked(DialogSettings::showTOD_METRIC_PRINT);
+    //ui->actionAltitude_in_feet->setChecked(DialogSettings::showFeet_PRINT);
 
     //Set current or custom date
     /*
@@ -150,8 +160,11 @@ MainWindow::~MainWindow()
     DialogSettings::windowSize = size();
     DialogSettings::windowPos = pos();
     DialogSettings::tableState = ui->tableWidget->horizontalHeader()->saveState();
-    DialogSettings::showFeet = ui->actionShow_feet->isChecked();
-    DialogSettings::nightMode = ui->actionNightmode_print_export->isChecked();
+
+    DialogSettings::nightMode = ui->actionNightmode->isChecked();
+    //DialogSettings::showTOD_METRIC_PRINT = ui->actionDistance_in_NM->isChecked();
+    //DialogSettings::showFeet_PRINT = ui->actionAltitude_in_feet->isChecked();
+
     DialogSettings::saveSettings();
 
     XFMS_DATA::saveXNVUData();
@@ -331,6 +344,17 @@ void MainWindow::showXPlaneSettings()
 void MainWindow::importFMS()
 {
     QString fileName = QFileDialog::getOpenFileName(this, "Import FMS flightplan","", "FMS Files (*.fms);;All files (*.*)");
+
+    if(fileName.isEmpty()) return;
+    ui->tableWidget->clearFlightplan();
+    std::vector<NVUPOINT*> lFMS = XFMS_DATA::loadFMS(fileName);
+    ui->tableWidget->insertRoute(lFMS, 0);
+}
+
+void MainWindow::importFMS_KLN90B()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, "Import KLN90B flightplan", DialogSettings::xDir + "//Output//FMS plans//KLN 90B//", "FMS Files (*.fms);;All files (*.*)");
+
     if(fileName.isEmpty()) return;
     ui->tableWidget->clearFlightplan();
     std::vector<NVUPOINT*> lFMS = XFMS_DATA::loadFMS(fileName);
@@ -347,6 +371,24 @@ void MainWindow::exportFMS()
     }
 
     QString fileName = QFileDialog::getSaveFileName(this, "Export FMS flightplan", qstr, "FMS Files (*.fms);;All files (*.*)");
+    if(fileName.isEmpty()) return;
+    XFMS_DATA::saveFMS(fileName, ui->tableWidget->getWaypoints());
+}
+
+void MainWindow::exportFMS_KLN90B()
+{
+    std::vector<NVUPOINT*> lP = ui->tableWidget->getWaypoints();
+    if(lP.size()>30)
+    {
+        QMessageBox box;
+        box.setText("Flightplan with more than 30 waypoints cannot be exported to KLN90B.");
+        box.setIcon(QMessageBox::Information);
+        box.exec();
+        return;
+    }
+
+
+    QString fileName = QFileDialog::getSaveFileName(this, "Export flightplan to KLN90B", DialogSettings::xDir + "//Output//FMS plans//KLN 90B//.fms", "FMS Files (*.fms);;All files (*.*)");
     if(fileName.isEmpty()) return;
     XFMS_DATA::saveFMS(fileName, ui->tableWidget->getWaypoints());
 }
@@ -439,7 +481,7 @@ void MainWindow::printPreview(QPrinter* printer)
 
     QRect prect = printer->pageRect();
     QRect defvp = painter.viewport();
-    if(ui->actionNightmode_print_export->isChecked()) painter.fillRect(prect, Qt::black);
+    if(ui->actionNightmode->isChecked()) painter.fillRect(prect, Qt::black);
     prect.setY(1000);
     prect.setX(1000);
     painter.setViewport(prect);
@@ -449,6 +491,9 @@ void MainWindow::printPreview(QPrinter* printer)
 //    painter.scale(0.5, 0.5);
 //#endif
 
+    //qDebug() << "Width: " << painter.device()->width() << "; Height: " << painter.device()->height();
+    //Width is 14033 and height is 9917
+
     int y = 0;
     drawNVUHeader(painter, lWPs[0], lWPs[lWPs.size() - 1], fork, y);
     y+=30;
@@ -457,10 +502,11 @@ void MainWindow::printPreview(QPrinter* printer)
     {
         if(j==19)
         {
+            //painterDrawSummary(painter, lWPs, y);
             printer->newPage();
             painter.setViewport(defvp);
             prect = printer->pageRect();
-            if(ui->actionNightmode_print_export->isChecked()) painter.fillRect(prect, Qt::black);
+            if(ui->actionNightmode->isChecked()) painter.fillRect(prect, Qt::black);
             prect.setY(1000);
             prect.setX(1000);
             painter.setViewport(prect);
@@ -475,6 +521,8 @@ void MainWindow::printPreview(QPrinter* printer)
 
     painter.end();
 }
+
+
 
 void MainWindow::on_pushButtonInsertBefore_clicked()
 {
@@ -683,7 +731,7 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
            wp->type == WAYPOINT::TYPE_ILS ||
            wp->type == WAYPOINT::TYPE_TACAN ||
            wp->type == WAYPOINT::TYPE_VORTAC
-           ) qstr = qstr + "        Elev: " + (ui->actionShow_feet->isChecked() ? QString::number(wp->elev, 'f', 0) + " ft": QString::number(LMATH::feetToMeter(wp->elev), 'f', 0) + " m");
+           ) qstr = qstr + "        Elev: " + (DialogSettings::showFeet ? QString::number(wp->elev, 'f', 0) + " ft": QString::number(LMATH::feetToMeter(wp->elev), 'f', 0) + " m");
 
         ui->labelWPMagVar->setText(qstr);
     }
@@ -742,12 +790,143 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
     }
 }
 
+
+void MainWindow::painterDrawSummary(QPainter& painter, std::vector<NVUPOINT*>& lWP, int y)
+{
+    int width = 14033 - 1000;
+    int height = 9917 - 1000;
+    int fSize = 150;                    //Font size
+    double xScale = 1;
+    int xBegin = 0;
+    int x = xBegin;
+    QColor red(143, 30, 30, 255);
+    QColor blue(6, 6, 131, 255);
+    QColor white(255, 255, 255);
+    QColor black(0, 0, 0);
+    QColor orange(186, 105, 0, 255);
+
+    if(ui->actionNightmode->isChecked())
+    {
+        white = QColor(0, 0, 0);
+        black = QColor(0, 154, 0);
+        red = QColor(242, 30, 30, 255);
+        blue = QColor(0, 242, 242, 255);
+        orange = QColor(224, 126, 0, 255);
+    }//if
+
+    QPen gridPen(black, 0, Qt::SolidLine);
+    QFont font = QFont("FreeSans");
+    font.setPixelSize(fSize);
+    QFontMetrics fM(font);
+    painter.setFont(font);
+    painter.setBrush(white);
+
+    QRect depRect(x, y, width/2.0, height - y);
+    x+=width/2.0 - 25;
+    x+=50;
+    QRect arrRect(x, y, width/2.0, height - y);
+
+    painter.drawRect(depRect);
+
+    painter.drawRect(arrRect);
+
+    /*
+    //Drawing the runways, works and is nice, but not necessary and takes up much space.
+    NVUPOINT* dep = lWP[0];
+    if(dep->type == WAYPOINT::TYPE_AIRPORT && dep->data!=NULL)
+    {
+        AIRPORT_DATA* ad = (AIRPORT_DATA*) dep->data;
+        //Set top left corner and bottom right corner of airport
+        CPoint pTopLeft(181, 91, 0);
+        CPoint pBottomRight(-181, -91, 0);
+
+        //Get topleft and bottomright extreme corners fitting all the runways in the airport
+        if(ad->lRunways.size()>0)       //Set first point, as we have nothing to compare it to.
+        {
+            RUNWAY* r = ad->lRunways[0];
+            CPoint rs = CPoint(r->start.x, r->start.y, 0.0);
+            CPoint re = CPoint(r->end.x, r->end.y, 0.0);
+            LMATH::latlonToScreen(rs);
+            LMATH::latlonToScreen(re);
+
+            pTopLeft.x = (rs.x<re.x ? rs.x : re.x);
+            pTopLeft.y = (rs.y<re.y ? rs.y : re.y);
+            pBottomRight.x = (rs.x>re.x ? rs.x : re.x);
+            pBottomRight.y = (rs.y>re.y ? rs.y : re.y);
+        }
+        for(unsigned int i=1; i<ad->lRunways.size(); i++)   //Continue comparing
+        {
+            RUNWAY* r = ad->lRunways[i];
+            CPoint rs = CPoint(r->start.x, r->start.y, 0.0);
+            CPoint re = CPoint(r->end.x, r->end.y, 0.0);
+            LMATH::latlonToScreen(rs);
+            LMATH::latlonToScreen(re);
+
+            if(rs.x<pTopLeft.x) pTopLeft.x = rs.x;
+            if(re.x<pTopLeft.x) pTopLeft.x = re.x;
+            if(rs.y<pTopLeft.y) pTopLeft.y = rs.y;
+            if(re.y<pTopLeft.y) pTopLeft.y = re.y;
+
+            if(rs.x>pBottomRight.x) pBottomRight.x = rs.x;
+            if(re.x>pBottomRight.x) pBottomRight.x = re.x;
+            if(rs.y>pBottomRight.y) pBottomRight.y = rs.y;
+            if(re.y>pBottomRight.y) pBottomRight.y = re.y;
+        }
+
+        //Set scale factor of airport
+        CPoint pSize(pBottomRight - pTopLeft);
+        pSize.x = fabs(pSize.x);
+        pSize.y = fabs(pSize.y);
+        double aScale = std::min(depRect.width()/pSize.x, depRect.height()/pSize.y); //std::min(depRect.width()/pSize.x, depRect.height()/pSize.y);
+        pTopLeft = pTopLeft*aScale;
+
+        //Draw the runways
+        gridPen.setWidth(5);
+        painter.setPen(gridPen);
+        for(unsigned int i=0; i<ad->lRunways.size(); i++)
+        {
+            RUNWAY* r = ad->lRunways[i];
+            CPoint rs = CPoint(r->start.x, r->start.y, 0.0);
+            CPoint re = CPoint(r->end.x, r->end.y, 0.0);
+            LMATH::latlonToScreen(rs);
+            LMATH::latlonToScreen(re);
+
+            CPoint rsl = (rs + (re - rs).getNormal(false).getNormalized()*0.000005)*aScale - pTopLeft;       //15 meters left
+            CPoint rsr = (rs + (re - rs).getNormal(true).getNormalized()*0.000005)*aScale - pTopLeft;       //15 meters right
+            CPoint rel = (re + (rs - re).getNormal(false).getNormalized()*0.000005)*aScale - pTopLeft;       //15 meters left
+            CPoint rer = (re + (rs - re).getNormal(true).getNormalized()*0.000005)*aScale - pTopLeft;       //15 meters right
+            QPointF points[4] =
+            {
+                QPointF(rsl.x+10, rsl.y+y+10),
+                QPointF(rer.x+10, rer.y+y+10),
+                QPointF(rel.x+10, rel.y+y+10),
+                QPointF(rsr.x+10, rsr.y+y+10)
+            };
+
+            painter.setBrush(black);
+            painter.drawPolygon(points, 4);
+
+            rs = rs*aScale;
+            re = re*aScale;
+            rs = (rs - pTopLeft);
+            re = (re - pTopLeft);
+
+            rs.x+=10;
+            re.x+=10;
+            rs.y+=y+10;
+            re.y+=y+10;
+            //painter.drawLine(rs.x, rs.y, re.x, re.y);
+        }//for
+    }
+    */
+}
+
 void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, double fork, int& y)
 {
     QColor black(0, 0, 0);
     QColor gray(207, 207, 207);
 
-    if(ui->actionNightmode_print_export->isChecked())
+    if(ui->actionNightmode->isChecked())
     {
         black = QColor(0, 200, 0);
         gray = QColor(0, 32, 0);
@@ -799,12 +978,22 @@ void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, 
     painter.drawText(4500*xscale, y, QString::number(fork, 'f', 1));
     font.setBold(false);
     painter.setFont(font);
-    painter.drawText(6000*xscale, y, "TOD, km.");
+    painter.drawText(6000*xscale, y, "TOD, km/nm.");
     font.setBold(true);
     painter.setFont(font);
 
-    QString str = ui->labelTOD->text();
-    str.remove(0, 4);
+    //Draw TOD
+    //QString str = ui->labelTOD->text();
+    QString str;
+    if(ui->tableWidget->pTOD)
+    {
+        str = QString::number(ui->tableWidget->dTOD,'f', 1) + " / " + QString::number(ui->tableWidget->dTOD/1.852,'f', 1);
+        if(ui->tableWidget->dTOD<1.0) str = "at " + ui->tableWidget->pTOD->name;
+        else str = str + " before " + ui->tableWidget->pTOD->name;
+    }
+    else str = "UNABLE";
+    //str.remove(0, 4);
+
     painter.drawText(7500*xscale, y, str);
     y+=40;
     painter.drawRect(1500*xscale, y, 500, 5);
@@ -1016,13 +1205,15 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     QColor blue(6, 6, 131, 255);
     QColor white(255, 255, 255);
     QColor black(0, 0, 0);
+    QColor orange(186, 105, 0, 255);
 
-    if(ui->actionNightmode_print_export->isChecked())
+    if(ui->actionNightmode->isChecked())
     {
         white = QColor(0, 0, 0);
         black = QColor(0, 154, 0);
         red = QColor(242, 30, 30, 255);
         blue = QColor(0, 242, 242, 255);
+        orange = QColor(224, 126, 0, 255);
     }//if
 
 
@@ -1073,10 +1264,14 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     font.setBold(false);
     fM = QFontMetrics(font);
     painter.setFont(font);
-    qstr = (ui->actionShow_feet->isChecked() ? QString::number(wp->alt, 'f', 0) + " ft" : QString::number(LMATH::feetToMeter(wp->alt), 'f', 0) + " m");
+    //qstr = (ui->actionAltitude_in_feet->isChecked() ? QString::number(wp->alt, 'f', 0) + " ft" : QString::number(LMATH::feetToMeter(wp->alt), 'f', 0) + " m");
+    qstr = QString::number(LMATH::feetToMeter(wp->alt), 'f', 0) + " m";
     //dx = fM.boundingRect(qstr).width();
     //dx = (rectW*xscale/2 - dx/2);
     painter.drawText(x + 50, y + rectH - 50, qstr);
+    qstr = QString::number(wp->alt, 'f', 0) + " ft";
+    dx = fM.boundingRect(qstr).width();
+    painter.drawText(x + rectW*xscale - dx - 50, y + rectH - 50, qstr);
     x+=rectW*xscale;
 
     //Draw waypoint type column
@@ -1242,25 +1437,30 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     painter.drawRect(x, y, rectW*xscale, rectH);
     qstr = QString::number(wp->Sm, 'f', 1);
     dy = fM.boundingRect(qstr).height();
+    painter.setPen(red);
     if(!isArr && wp->rsbn) painter.drawText(x + 50, y + dy + 10, qstr);
     qstr = QString::number(wp->Zm, 'f', 1);
     dx = fM.boundingRect(qstr).width();
+    painter.setPen(blue);
     if(!isArr && wp->rsbn) painter.drawText(x + rectW*xscale - dx - 50, y + rectH - 50, qstr);
     x+=rectW*xscale;
 
     //Draw Map angle
     qstr = "";
     xscale = 1.7;
+    painter.setPen(gridPen);
     painter.drawRect(x, y, rectW*xscale, rectH);
     qstr = QString::number(wp->MapAngle, 'f', 1);
     dx = fM.boundingRect(qstr).width();
     dx = (rectW*xscale)/2 - dx/2;
+    painter.setPen(orange);
     if(!isArr && wp->rsbn) painter.drawText(x + dx, y + fHOffset, qstr);
     x+=rectW*xscale;
 
     //Draw Atrg and Dtrg
     qstr = "";
     xscale = 2.4;
+    painter.setPen(gridPen);
     painter.drawRect(x, y, rectW*xscale, rectH);
     if(!isArr && wp->rsbn) qstr = QString::number(wp->Atrg, 'f', 1);
     dy = fM.boundingRect(qstr).height();

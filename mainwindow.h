@@ -39,6 +39,8 @@ private slots:
     void showXPlaneSettings();
     void importFMS();
     void exportFMS();
+    void importFMS_KLN90B();
+    void exportFMS_KLN90B();
     void printOnPDF();
     void loadNVUFlightplan();
     void saveNVUFlightPlan();
@@ -52,6 +54,7 @@ private slots:
 
     void printPreview(QPrinter*);
     void drawNVUHeader(QPainter& painter, NVUPOINT *dep, NVUPOINT *arr, double fork, int& y);
+    void painterDrawSummary(QPainter& painter, std::vector<NVUPOINT*>& lWP, int y);
     void painterDrawNVUPoint(QPainter& painter, NVUPOINT*wp, int wpNumber, bool isArr, int &y);
     void clearFlightplanTimeout();
 

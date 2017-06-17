@@ -420,7 +420,7 @@ void QFlightplanTable::refreshFlightplan()
         if(DialogSettings::showTOD_METRIC) qTOD->setText("TOD: " + (d < 1.0 ? "at " : QString::number(d, 'f', 1) + " km before ") + cp->name);
         else qTOD->setText("TOD: " + (d < 1.0 ? "at " : QString::number(d/1.852, 'f', 1) + " nm before ") + cp->name);
     }
-    else qTOD->setText("TOD: ??? " + QString((DialogSettings::showTOD_METRIC == true ? " km" : " nm")));
+    else qTOD->setText("TOD: UNABLE ");// + QString((DialogSettings::showTOD_METRIC == true ? " km" : " nm")));
 }
 
 const std::vector<NVUPOINT*>& QFlightplanTable::getWaypoints()

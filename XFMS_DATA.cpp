@@ -372,17 +372,6 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& _route
                 if(okA == false || okB == false)
                 {
                     sError = "Route: Waypoint [" + wp->name + "] cannot join airway [" + awyA->name + "] and [" + awyB->name + "].";
-
-                    QString sA = "A: ";
-                    QTextStream ssA(&sA);
-                    for(unsigned int j=0; j<awyA->lATS.size(); j++) ssA << "[" << awyA->lATS[j]->name << "]";
-                    QString sB = "B: ";
-                    QTextStream ssB(&sB);
-                    for(unsigned int j=0; j<awyB->lATS.size(); j++) ssB << "[" << awyB->lATS[j]->name << "]";
-                    qDebug() << sA;
-                    qDebug() << sB;
-
-
                     goto rError;
                 }
 

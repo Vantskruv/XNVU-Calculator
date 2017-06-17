@@ -119,6 +119,19 @@ bool LMATH::GetLineIntersection(const CPoint& A, const CPoint & B, const CPoint&
 	return true;
 }
 
+//Converting lat/lon coordinates to ???????? But it looks flat and nice on screen
+void LMATH::latlonToScreen(CPoint& _p)
+{
+   CPoint p = _p;
+   p = p*M_PI/180.0;
+   //WORKS NICLEY!!! SIMPLE CODE!!! 536 MILLION HOURS TO SUCCEED!
+   p.y = p.y;
+   p.x = log(tan(M_PI*0.25 + p.x*0.5));
+   //ROTATION!
+   _p.x = p.y;
+   _p.y = -p.x;
+}
+
 //p is any point relative to vector, v is the vector. Returns the point on vector closest to p
 //I.e. what is the nearest point one line A-B to point P?
 //d = GetClosestPointOnVector(P - A, B - A)
