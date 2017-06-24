@@ -592,7 +592,7 @@ int XFMS_DATA::_loadWaypointsXP11(QString& sError)
     }
     inFile.close();
 
-    path = DialogSettings::xDir + "/Custom Data/earth_fix.dat";
+    path = DialogSettings::xDir + "/Resources/default data/earth_fix.dat";
     inFile.setFileName(path);
     if(inFile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
