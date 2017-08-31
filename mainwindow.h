@@ -11,7 +11,7 @@
 #include "qlineeditwp.h"
 #include <qlabelclick.h>
 
-#define XNVU_VERSION    "XNVU version 0.371"
+#define XNVU_VERSION    "XNVU version 0.372"
 
 namespace Ui {
 class MainWindow;

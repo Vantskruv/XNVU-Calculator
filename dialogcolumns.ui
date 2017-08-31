@@ -13,6 +13,107 @@
   <property name="windowTitle">
    <string>Show columns</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QDialog
+{
+	background-color: rgb(0, 30, 0);
+	color: rgb(107, 239, 0);
+}
+
+QLabel
+{
+	color: rgb(107, 239, 0);
+}
+
+QPushButton
+{
+	background-color: rgb(73, 163, 0);
+	color: rgb(0, 0, 0);
+}
+
+QComboBox
+{
+	background-color: rgb(0, 30, 0);
+	color: rgb(107, 239, 0);
+	border: 1px solid;
+	border-color: rgb(73, 163, 0);
+	selection-background-color: rgb(107, 239, 0);
+    selection-color: rgb(0, 0, 0);
+}
+
+QComboBox QAbstractItemView
+{
+	background-color: rgb(0, 30, 0);
+	color: rgb(107, 239, 0);
+	border: 1px solid;
+	border-color: rgb(73, 163, 0);
+}
+
+QLineEdit
+{
+	background-color: rgb(0, 30, 0);
+	color: rgb(107, 239, 0);
+	border: 1px solid;
+	border-color: rgb(73, 163, 0);
+}
+
+QSpinBox
+{
+	background-color: rgb(0, 30, 0);
+	color: rgb(107, 239, 0);
+	border: 1px solid;
+	border-color: rgb(73, 163, 0);
+}
+
+QDoubleSpinBox
+{
+	background-color: rgb(0, 30, 0);
+	color: rgb(107, 239, 0);
+	border: 1px solid;
+	border-color: rgb(73, 163, 0);
+}
+
+QCheckBox
+{
+	background-color: rgb(0, 30, 0);
+	color: rgb(107, 239, 0);
+}
+
+QCheckBox::indicator::checked
+{
+	background-color: rgb(107, 239, 0);
+	color: rgb(107, 239, 0);
+	border: 1px solid;
+	border-color: rgb(73, 163, 0);
+}
+
+QCheckBox::indicator::unchecked
+{
+	background-color: rgb(0, 30, 0);
+	color: rgb(107, 239, 0);
+	border: 1px solid;
+	border-color: rgb(73, 163, 0);
+}
+
+QMenu
+{
+	background-color: rgb(0, 30, 0);
+	color: rgb(107, 239, 0);
+}
+
+QMenu::item:selected
+{
+	background-color: rgb(107, 239, 0);
+	color: rgb(0, 0, 0);
+}
+
+QMenu::item:disabled
+{
+	background-color: rgb(0, 15, 0);
+	color: rgb(27, 159, 0);;
+}
+</string>
+  </property>
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>

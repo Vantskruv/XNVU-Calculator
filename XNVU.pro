@@ -37,7 +37,8 @@ SOURCES += main.cpp\
     dialogwpsedit.cpp \
     qlineeditwp.cpp \
     customloadingdialog.cpp \
-    qlabelclick.cpp
+    qlabelclick.cpp \
+    qrsbntable.cpp
 
 HEADERS  += mainwindow.h \
     coremag.h \
@@ -60,7 +61,8 @@ HEADERS  += mainwindow.h \
     dialogwpsedit.h \
     qlineeditwp.h \
     customloadingdialog.h \
-    qlabelclick.h
+    qlabelclick.h \
+    qrsbntable.h
 
 FORMS    += mainwindow.ui \
     dialogsettings.ui \

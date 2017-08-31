@@ -188,10 +188,18 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
 
     QMenu fpMenu;
     QAction* selectedItem;
-    QString styleSheet = "background-color: rgb(0, 30, 0);"
-                         "color: rgb(107, 239, 0);"
-                         "selected-background-color: rgb(107, 239, 0);"
-                         "selected-color: rgb(0, 0, 0);";
+
+    QString styleSheet = "QMenu"
+                         "{"
+                         "  background-color: rgb(0, 30, 0);"
+                         "  color: rgb(107, 239, 0);"
+                         "}"
+                         "QMenu::item:selected"
+                         "{"
+                         "  background-color: rgb(107, 239, 0);"
+                         "  color: rgb(0, 0, 0);"
+                         "}";
+
     fpMenu.setStyleSheet(styleSheet);
 
     int row = ui->tableWidget->rowAt(pos.y());
@@ -249,7 +257,8 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
             }
             else if(selectedItem == fpMenu.actions()[4])
             {
-                DialogRSBN dRSBN(wp);
+                NVUPOINT* wp2 = ui->tableWidget->getWaypoint(row+1);
+                DialogRSBN dRSBN(wp, wp2);
                 int dr = dRSBN.exec();
                 if(dr == QDialog::Rejected) return;
 
@@ -298,10 +307,16 @@ void MainWindow::showSearchListContextMenu(const QPoint& pos) // this is a slot
 
     QMenu fpMenu;
     QAction* selectedItem;
-    QString styleSheet = "background-color: rgb(0, 30, 0);"
-                         "color: rgb(107, 239, 0);"
-                         "selected-background-color: rgb(107, 239, 0);"
-                         "selected-color: rgb(0, 0, 0);";
+    QString styleSheet = "QMenu"
+                         "{"
+                         "  background-color: rgb(0, 30, 0);"
+                         "  color: rgb(107, 239, 0);"
+                         "}"
+                         "QMenu::item:selected"
+                         "{"
+                         "  background-color: rgb(107, 239, 0);"
+                         "  color: rgb(0, 0, 0);"
+                         "}";
     fpMenu.setStyleSheet(styleSheet);
 
     QListWidgetItemData* iItem = (QListWidgetItemData*) ui->listWidget->itemAt(pos);
