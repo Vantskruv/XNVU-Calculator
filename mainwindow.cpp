@@ -118,13 +118,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     //Show saved align settings TODO: We should scrap this feature later on.
-    ui->label_alignATS->setText("ATS align");
-    ui->label_alignEarthNav->setText("EarthNav align");
     ui->label_alignWPS->setText("WPS align");
     ui->label_alignFMS->setText("FMS align");
-    ui->label_alignATS->setVisible(DialogSettings::distAlignATS);
-    ui->label_alignEarthNav->setVisible(DialogSettings::distAlignEarthNav);
-    ui->label_alignWPS->setVisible(DialogSettings::distAlignWPS);
+    ui->label_alignWPS->setVisible(DialogSettings::distAlignXWP);
     ui->label_alignFMS->setVisible(DialogSettings::distAlignFMS);
 
     //Set flightplan data values to default (in formats saved by user)
@@ -350,9 +346,7 @@ void MainWindow::showXPlaneSettings()
     if(XFMS_DATA::__ERROR_LOADING.isEmpty()) labelWarning->setText("");
     else labelWarning->setText("WARNING: " + XFMS_DATA::__ERROR_LOADING + " is not loaded!");
 
-    ui->label_alignATS->setVisible(DialogSettings::distAlignATS);
-    ui->label_alignEarthNav->setVisible(DialogSettings::distAlignEarthNav);
-    ui->label_alignWPS->setVisible(DialogSettings::distAlignWPS);
+    ui->label_alignWPS->setVisible(DialogSettings::distAlignXWP);
     ui->label_alignFMS->setVisible(DialogSettings::distAlignFMS);
 }
 
@@ -751,58 +745,8 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
         ui->labelWPMagVar->setText(qstr);
     }
 
-    if(wp->wpOrigin == WAYPOINT::ORIGIN_X11_CUSTOM_AIRPORTS)
-    {
-        ui->labelWPNote->setText("Source: Custom airports");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_X11_DEFAULT_AIRPORTS)
-    {
-        ui->labelWPNote->setText("Source: Default airports");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_X11_GATEWAY_AIRPORTS)
-    {
-        ui->labelWPNote->setText("Source: Gateway airports");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_AIRPORTS)
-    {
-        ui->labelWPNote->setText("Source: airports.txt (GNS430 AIRAC)");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_NAVAIDS)
-    {
-        ui->labelWPNote->setText("Source: navaids.txt (GNS430 AIRAC)");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_WAYPOINTS)
-    {
-        ui->labelWPNote->setText("Source: AIRAC waypoints.txt (GNS430 AIRAC)");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_ATS)
-    {
-        ui->labelWPNote->setText("Source: AIRAC ats.txt (GNS430 AIRAC)");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_FMS)
-    {
-        ui->labelWPNote->setText("Source: Imported from user FMS flightplan");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_EARTHNAV)
-    {
-        ui->labelWPNote->setText("Source: earth_nav.dat (X-Plane)");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_XNVU)
-    {
-        ui->labelWPNote->setText("Source: xnvu_wps.txt (XNVU local library)");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_RSBN)
-    {
-        ui->labelWPNote->setText("Source: rsbn.dat (RSBN library)");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_WPS)
-    {
-        ui->labelWPNote->setText("Source: Imported from XNVU flightplan");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_FLIGHTPLAN)
-    {
-        ui->labelWPNote->setText("Source: Current flightplan waypoint");
-    }
+    ui->labelWPNote->setText("Source: " + WAYPOINT::getOriginStr(wp->wpOrigin));
+
 }
 
 
@@ -1640,9 +1584,7 @@ void MainWindow::on_actionOptions_triggered()
 {
     DialogOptions().exec();
 
-    ui->label_alignATS->setVisible(DialogSettings::distAlignATS);
-    ui->label_alignEarthNav->setVisible(DialogSettings::distAlignEarthNav);
-    ui->label_alignWPS->setVisible(DialogSettings::distAlignWPS);
+    ui->label_alignWPS->setVisible(DialogSettings::distAlignXWP);
     ui->label_alignFMS->setVisible(DialogSettings::distAlignFMS);
 
 }

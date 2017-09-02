@@ -107,7 +107,36 @@ std::vector<QString> WAYPOINT::getTypeStrList()
     //rTStr.push_back(getTypeStr(NULL, TYPE_APPTR));
     //rTStr.push_back(getTypeStr(NULL, TYPE_FINAL));
     return rTStr;
-};
+}
+
+QString WAYPOINT::getOriginStr(int _origin)
+{
+    switch(_origin)
+    {
+        case ORIGIN_FMS: return "Imported from user FMS flightplan";
+        case ORIGIN_XWP: return "Imported from user XWP flightplan";
+        case ORIGIN_FLIGHTPLAN: return  "Custom flightplan waypoint";
+
+        case ORIGIN_RSBN: return "rsbn.dat (RSBN library)";
+        case ORIGIN_XNVU: return "xnvu_wps.txt (XNVU library)";
+
+        case ORIGIN_X10_AIRAC_AIRPORTS: return "airports.txt (GNS430 AIRAC)";
+        case ORIGIN_X10_AIRAC_NAVAIDS: return "navaids.txt (GNS430 AIRAC)";
+        case ORIGIN_X10_AIRAC_FIXES: return "waypoints.txt (GNS430 AIRAC)";
+        case ORIGIN_X10_AIRAC_ATS: return "ats.txt (GNS430 AIRAC)";
+        case ORIGIN_X10_EARTHNAV: return "earth_nav.dat";
+
+        case ORIGIN_X11_CUSTOM_AIRPORTS: return "Custom apt.dat";
+        case ORIGIN_X11_DEFAULT_AIRPORTS: return "Default apt.dat";
+        case ORIGIN_X11_GATEWAY_AIRPORTS: return "Gateway apt.dat";
+        case ORIGIN_X11_CUSTOM_EARTHNAV: return "Custom earth_nav.dat";
+        case ORIGIN_X11_DEFAULT_EARTHNAV: return "Default earth_nav.dat";
+        case ORIGIN_X11_CUSTOM_ATS: return "Custom earth_awy.dat";
+        case ORIGIN_X11_DEFAULT_ATS: return "Default earth_awy.dat";
+        case ORIGIN_X11_CUSTOM_FIXES: return "Custom earth_fix.dat";
+        case ORIGIN_X11_DEFAULT_FIXES: return "Default earth_fix.dat";
+    }
+ }
 
 
 bool WAYPOINT::isNavaid(int _type)

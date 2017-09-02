@@ -104,59 +104,7 @@ void DialogWPSEdit::setWaypointDescription(const NVUPOINT* wp)
     }
     else ui->labelWPMagVar->setText("Magnetic Declination: " + QString::number(wp->MD, 'f', 1));
 
-
-    if(wp->wpOrigin == WAYPOINT::ORIGIN_X11_CUSTOM_AIRPORTS)
-    {
-        ui->labelWPNote->setText("Source: Custom airports");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_X11_DEFAULT_AIRPORTS)
-    {
-        ui->labelWPNote->setText("Source: Default airports");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_X11_GATEWAY_AIRPORTS)
-    {
-        ui->labelWPNote->setText("Source: Gateway airports");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_AIRPORTS)
-    {
-        ui->labelWPNote->setText("Source: airports.txt (GNS430 AIRAC)");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_NAVAIDS)
-    {
-        ui->labelWPNote->setText("Source: navaids.txt (GNS430 AIRAC)");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_WAYPOINTS)
-    {
-        ui->labelWPNote->setText("Source: AIRAC waypoints.txt (GNS430 AIRAC)");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_AIRAC_ATS)
-    {
-        ui->labelWPNote->setText("Source: AIRAC ats.txt (GNS430 AIRAC)");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_FMS)
-    {
-        ui->labelWPNote->setText("Source: Imported from user FMS flightplan");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_EARTHNAV)
-    {
-        ui->labelWPNote->setText("Source: earth_nav.dat (X-Plane)");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_XNVU)
-    {
-        ui->labelWPNote->setText("Source: xnvu_wps.txt (XNVU local library)");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_FLIGHTPLAN)
-    {
-        ui->labelWPNote->setText("Source: Current flightplan waypoint");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_RSBN)
-    {
-        ui->labelWPNote->setText("Source: rsbn.dat (RSBN library)");
-    }
-    else if(wp->wpOrigin == WAYPOINT::ORIGIN_WPS)
-    {
-        ui->labelWPNote->setText("Source: Imported from XNVU flightplan");
-    }
+    ui->labelWPNote->setText("Source: " + WAYPOINT::getOriginStr(wp->wpOrigin));
 }
 
 

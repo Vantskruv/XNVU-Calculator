@@ -218,19 +218,25 @@ class WAYPOINT
         }
 
     public:
-        static constexpr int ORIGIN_AIRAC_AIRPORTS = 1;
-        static constexpr int ORIGIN_AIRAC_NAVAIDS = 2;
-        static constexpr int ORIGIN_AIRAC_WAYPOINTS = 3;
-        static constexpr int ORIGIN_AIRAC_ATS = 4;
+        static constexpr int ORIGIN_X10_AIRAC_AIRPORTS = 1;
+        static constexpr int ORIGIN_X10_AIRAC_NAVAIDS = 2;
+        static constexpr int ORIGIN_X10_AIRAC_FIXES = 3;
+        static constexpr int ORIGIN_X10_AIRAC_ATS = 4;
         static constexpr int ORIGIN_FMS = 5;
-        static constexpr int ORIGIN_EARTHNAV = 6;
+        static constexpr int ORIGIN_X10_EARTHNAV = 6;
         static constexpr int ORIGIN_RSBN = 7;
-        static constexpr int ORIGIN_WPS = 8;
+        static constexpr int ORIGIN_XWP = 8;
         static constexpr int ORIGIN_XNVU = 9;
         static constexpr int ORIGIN_FLIGHTPLAN = 10;
         static constexpr int ORIGIN_X11_CUSTOM_AIRPORTS = 11;
         static constexpr int ORIGIN_X11_DEFAULT_AIRPORTS = 12;
         static constexpr int ORIGIN_X11_GATEWAY_AIRPORTS = 13;
+        static constexpr int ORIGIN_X11_CUSTOM_EARTHNAV = 14;
+        static constexpr int ORIGIN_X11_DEFAULT_EARTHNAV = 15;
+        static constexpr int ORIGIN_X11_CUSTOM_ATS = 16;
+        static constexpr int ORIGIN_X11_DEFAULT_ATS = 17;
+        static constexpr int ORIGIN_X11_CUSTOM_FIXES = 18;
+        static constexpr int ORIGIN_X11_DEFAULT_FIXES = 19;
 
         static constexpr int TYPE_AIRPORT = 1;
         static constexpr int TYPE_NDB = 2;
@@ -274,6 +280,7 @@ class WAYPOINT
         static QString latToStr(double x);
         static QString getTypeStr(const WAYPOINT* wp, int _type = 0);
         static std::vector<QString> getTypeStrList();
+        static QString getOriginStr(int _origin);
         static bool isNavaid(int _type);
 
 

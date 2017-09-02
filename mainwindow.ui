@@ -597,20 +597,6 @@ QMenu::item:disabled
          <enum>QLayout::SetMinimumSize</enum>
         </property>
         <item>
-         <widget class="QLabel" name="label_alignATS">
-          <property name="text">
-           <string>TextLabel</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_alignEarthNav">
-          <property name="text">
-           <string>TextLabel</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QLabel" name="label_alignWPS">
           <property name="text">
            <string>TextLabel</string>

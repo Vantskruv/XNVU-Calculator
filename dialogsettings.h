@@ -47,10 +47,8 @@ public:
     static QSize windowSize;
     static QPoint windowPos;
     static QByteArray tableState;
-    static bool distAlignWPS;
+    static bool distAlignXWP;
     static bool distAlignFMS;
-    static bool distAlignATS;
-    static bool distAlignEarthNav;
     static double distAlignMargin;
     static bool nightMode;              //Only in printed flightplan
     static bool showFeet;               //Only in UI

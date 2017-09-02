@@ -22,9 +22,9 @@ class XFMS_DATA
         static int _loadAirwaysXP11(QString& sError);
 
         static void validate_airports_XP11(QFile& infile, int wpOrigin);
-        static void validate_waypoint_XP11(const QStringList &record);
-        static void validate_earthnav_XP11(const QStringList& record);
-        static void validate_airways_XP11(QFile& infile);
+        static void validate_waypoint_XP11(const QStringList &record, int _origin);
+        static void validate_earthnav_XP11(const QStringList& record, int _origin);
+        static void validate_airways_XP11(QFile& infile, int _origin);
 
         static void validate_airport_XP10(const QStringList& record);
         static void validate_navaid_XP10(const QStringList& record);
@@ -108,7 +108,7 @@ class XFMS_DATA
         static std::vector< std::pair<NVUPOINT*, double> > getClosestRSBN(const NVUPOINT* wp, int n, double d, bool includeVOR);
 
         //Returns closest waypoint with same type and name and its distance. If not found, returns NULL.
-        static NVUPOINT* getClosestWaypointType(const CPoint& _latlon, const QString &_name, int _type, double &distance);
+        static std::vector< std::pair<NVUPOINT*, double> > getClosestWaypointType(const CPoint& _latlon, const QString &_name, int _type);//, double &distance);
 
         static void addXNVUWaypoint(NVUPOINT* lP);
         //static void addXNVUWaypointTempory(NVUPOINT* lP);

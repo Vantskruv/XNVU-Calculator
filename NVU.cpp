@@ -38,7 +38,7 @@ void NVUPOINT::calc_rsbn_corr(CPoint _p2R)
     vI = LMATH::vectorToLatlon(vI);
     vI = vI*180.0/M_PI;
     MapAngle = LMATH::calc_bearing(rsbn->latlon, vI);       //YK - A????
-    if(rsbn->wpOrigin == WAYPOINT::ORIGIN_EARTHNAV) MapAngle-=rsbn->ADEV;
+    if(rsbn->wpOrigin == WAYPOINT::ORIGIN_X10_EARTHNAV || WAYPOINT::ORIGIN_X11_CUSTOM_EARTHNAV || WAYPOINT::ORIGIN_X11_DEFAULT_EARTHNAV) MapAngle-=rsbn->ADEV;
 
     //Calculate Atrg
     Atrg = LMATH::calc_bearing(rsbn->latlon, _p2R);

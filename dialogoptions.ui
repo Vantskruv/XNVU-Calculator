@@ -7,8 +7,20 @@
     <x>0</x>
     <y>0</y>
     <width>585</width>
-    <height>480</height>
+    <height>304</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>585</width>
+    <height>304</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>XNVU Options</string>
@@ -114,11 +126,14 @@ QMenu::item:disabled
 }
 </string>
   </property>
+  <property name="sizeGripEnabled">
+   <bool>false</bool>
+  </property>
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>450</y>
+     <x>230</x>
+     <y>260</y>
      <width>341</width>
      <height>32</height>
     </rect>
@@ -133,8 +148,8 @@ QMenu::item:disabled
   <widget class="QDoubleSpinBox" name="doubleSpinBoxDistance">
    <property name="geometry">
     <rect>
-     <x>220</x>
-     <y>310</y>
+     <x>160</x>
+     <y>240</y>
      <width>101</width>
      <height>31</height>
     </rect>
@@ -160,8 +175,8 @@ QMenu::item:disabled
   <widget class="QCheckBox" name="checkBox_FMS">
    <property name="geometry">
     <rect>
-     <x>60</x>
-     <y>260</y>
+     <x>10</x>
+     <y>210</y>
      <width>111</width>
      <height>31</height>
     </rect>
@@ -196,9 +211,9 @@ QMenu::item:disabled
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>140</y>
-     <width>501</width>
-     <height>121</height>
+     <y>150</y>
+     <width>561</width>
+     <height>71</height>
     </rect>
    </property>
    <property name="font">
@@ -207,19 +222,18 @@ QMenu::item:disabled
     </font>
    </property>
    <property name="text">
-    <string>Set XNVU to automatically detect waypoints very close to each other,
-and convert them to a waypoint loaded from the AIRAC GNS430 files:
-* Airport.txt
-* Navaid.txt
-* Waypoint.txt
-Note waypoints from AIRAC airways file ATS.txt may also  be aligned.</string>
+    <string>Set XNVU to automatically convert waypoints in flightplan to the ones
+found in X-Plane database.
+Select FMS and/or XWP flightplans to convert, and which distance margin
+to allow for conversion:
+</string>
    </property>
   </widget>
   <widget class="QCheckBox" name="checkBox_WPS">
    <property name="geometry">
     <rect>
-     <x>60</x>
-     <y>290</y>
+     <x>10</x>
+     <y>240</y>
      <width>111</width>
      <height>31</height>
     </rect>
@@ -228,87 +242,33 @@ Note waypoints from AIRAC airways file ATS.txt may also  be aligned.</string>
     <enum>Qt::RightToLeft</enum>
    </property>
    <property name="text">
-    <string>WPS align</string>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="checkBox_ATS">
-   <property name="geometry">
-    <rect>
-     <x>60</x>
-     <y>320</y>
-     <width>111</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="layoutDirection">
-    <enum>Qt::RightToLeft</enum>
-   </property>
-   <property name="text">
-    <string>ATS align</string>
+    <string>XWP align</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
-     <x>220</x>
-     <y>290</y>
-     <width>171</width>
+     <x>160</x>
+     <y>217</y>
+     <width>401</width>
      <height>18</height>
     </rect>
    </property>
    <property name="text">
-    <string>Distance margin (KM)</string>
+    <string>Distance margin (KM)  (recommended 1 km)</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_Meter">
    <property name="geometry">
     <rect>
-     <x>350</x>
-     <y>310</y>
+     <x>280</x>
+     <y>240</y>
      <width>171</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
     <string>(0.1 meter)</string>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="checkBox_EarthNav">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>350</y>
-     <width>141</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="layoutDirection">
-    <enum>Qt::RightToLeft</enum>
-   </property>
-   <property name="text">
-    <string>EarthNav align</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_4">
-   <property name="geometry">
-    <rect>
-     <x>80</x>
-     <y>400</y>
-     <width>431</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>8</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>Restart neded for changes to take effect
-(except for FMS/WPS flightplans imported after this change)</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
    </property>
   </widget>
   <widget class="QLabel" name="label_5">
