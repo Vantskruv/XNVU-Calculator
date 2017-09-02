@@ -11,7 +11,7 @@
 #include "qlineeditwp.h"
 #include <qlabelclick.h>
 
-#define XNVU_VERSION    "XNVU version 0.373"
+#define XNVU_VERSION    "XNVU version 0.374"
 
 namespace Ui {
 class MainWindow;
@@ -44,6 +44,7 @@ private slots:
     void printOnPDF();
     void loadNVUFlightplan();
     void saveNVUFlightPlan();
+    void autoGenerateCorrectionBeacons();
     void tableGoUp();
     void tableGoDown();
     void goDirectToFieldClicked(QLineEditWP *wp);
@@ -90,17 +91,7 @@ private slots:
 
     void on_frameDescription_clicked();
 
-    //void on_actionXNVU_library_triggered();
-
-    //void on_pushButton_showAIRAC_Airports_clicked();
-
-    //void on_pushButton_showAIRAC_Navaids_clicked();
-
-    //void on_pushButton_showAIRAC_Fixes_clicked();
-
     void on_pushButton_showAIRAC_Airways_clicked();
-
-    //void on_pushButton_showEarthNav_clicked();
 
     void on_pushButton_showRSBN_clicked();
 

@@ -17,10 +17,8 @@ public:
 
 private slots:
     void on_buttonBox_accepted();
-
-    void on_doubleSpinBoxDistance_valueChanged(double arg1);
-
     void on_checkBoxCustomDate_clicked();
+    void on_spinBoxDistance_valueChanged(int arg1);
 
 private:
     Ui::DialogOptions *ui;

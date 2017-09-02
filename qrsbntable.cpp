@@ -46,7 +46,7 @@ QRSBNTable::QRSBNTable(QWidget *w) : QTableWidget(w)
 
 void QRSBNTable::refresh(NVUPOINT* _nvupoint, NVUPOINT* _nvupoint2, int _dist, bool _showVORDME, NVUPOINT *rsbn)
 {
-    int crow;
+    int crow = 0;
     if(rsbn==NULL)
     {
         crow = currentRow();

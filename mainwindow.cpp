@@ -67,8 +67,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionExport_to_KLN90B, SIGNAL(triggered()), this, SLOT(exportFMS_KLN90B()));
     connect(ui->actionImport_X_Plane_FMS_2, SIGNAL(triggered()), this, SLOT(importFMS()));
     connect(ui->actionKLN_90B, SIGNAL(triggered()), this, SLOT(importFMS_KLN90B()));
-
-
+    connect(ui->actionAutogenerate_correction_beacons, SIGNAL(triggered()), this, SLOT(autoGenerateCorrectionBeacons()));
 
     //Connect clickable labels for TOD calculations
     //connect(ui->labelCruise, SIGNAL(clicked(QLabelClick*)), this, SLOT(clickedDataLabels(QLabelClick*)));
@@ -263,7 +262,22 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
             }
             else if(selectedItem == fpMenu.actions()[6])
             {
-                ui->tableWidget->deleteWaypoint(row);
+                QMessageBox msgBox;
+                QString sStyleSheet = "QMessageBox, QLabel{"
+                                      " background-color: rgb(0, 30, 0);"
+                                      " color: rgb(107, 239, 0);"
+                                      "}"
+                                      "QPushButton{"
+                                      " background-color: rgb(73, 163, 0);"
+                                      " color: rgb(0, 0, 0);"
+                                      "}";
+                msgBox.setStyleSheet(sStyleSheet);
+                msgBox.setText("Delete waypoint");
+                msgBox.setInformativeText("Are you sure you want to delete the waypoint?");
+                msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+                msgBox.setDefaultButton(QMessageBox::No);
+                int ret = msgBox.exec();
+                if(ret == QMessageBox::Yes) ui->tableWidget->deleteWaypoint(row);
             }
         }
     }//if
@@ -426,6 +440,11 @@ void MainWindow::saveNVUFlightPlan()
     XFMS_DATA::saveXNVUFlightplan(fileName, ui->tableWidget->getWaypoints());
 }
 
+void MainWindow::autoGenerateCorrectionBeacons()
+{
+    ui->tableWidget->autoGenerateCorrectionBeacons();
+    ui->tableWidget->refreshFlightplan();
+}
 
 
 void MainWindow::deleteCurrentWaypoint()
@@ -442,6 +461,9 @@ void MainWindow::tableGoUp()
     if(c<0) return;
 
     ui->tableWidget->selectRow(c);
+    NVUPOINT* wp = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
+    ui->lineEdit->setText(wp->name);
+    setWaypointDescription(wp);
 }
 
 void MainWindow::tableGoDown()
@@ -451,6 +473,9 @@ void MainWindow::tableGoDown()
     if(c>=ui->tableWidget->rowCount()) return;
 
     ui->tableWidget->selectRow(c);
+    NVUPOINT* wp = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
+    ui->lineEdit->setText(wp->name);
+    setWaypointDescription(wp);
 }
 
 void MainWindow::on_lineEdit_textChanged(const QString &arg1)
@@ -1983,6 +2008,8 @@ void MainWindow::on_pushButtonSetDate_clicked()
                           "color: rgb(107, 239, 0);";
     ui->pushButtonSetDate->setText("IS SET");
     ui->pushButtonSetDate->setStyleSheet(styleSheet);
+
+
 }
 
 void MainWindow::clickedDataLabels(QLabelClick* _label)

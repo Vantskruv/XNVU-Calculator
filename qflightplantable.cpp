@@ -423,6 +423,44 @@ void QFlightplanTable::refreshFlightplan()
     else qTOD->setText("TOD: UNABLE ");// + QString((DialogSettings::showTOD_METRIC == true ? " km" : " nm")));
 }
 
+void QFlightplanTable::autoGenerateCorrectionBeacons()
+{
+    double lWeight = 0.25;
+    double rWeight = 1.50;
+
+    for(unsigned int i=1; i<lNVUPoints.size(); i++)
+    {
+        std::vector< std::pair<NVUPOINT*, double> > lRSBN;
+        lRSBN = XFMS_DATA::getClosestRSBN(lNVUPoints[i-1], -1, DialogSettings::beaconDistance, DialogSettings::correctionVORDME);
+        NVUPOINT* rsbn = NULL;
+        double minZm = 0;
+        lNVUPoints[i-1]->rsbn = NULL;
+
+        if(lRSBN.size()>0)
+        {
+            rsbn = lRSBN[0].first;
+            lNVUPoints[i-1]->rsbn = lRSBN[0].first;
+            lNVUPoints[i-1]->calc_rsbn_corr(lNVUPoints[i]->latlon);
+            minZm = fabs(lNVUPoints[i-1]->Zm) + fabs(lNVUPoints[i-1]->Sm*(lNVUPoints[i-1]->Sm>0 ? rWeight : lWeight));
+        }
+
+        for(unsigned int j=0; j<lRSBN.size(); j++)
+        {
+
+            lNVUPoints[i-1]->rsbn = lRSBN[j].first;
+            lNVUPoints[i-1]->calc_rsbn_corr(lNVUPoints[i]->latlon);
+            double sum  = fabs(lNVUPoints[i-1]->Zm) + fabs(lNVUPoints[i-1]->Sm*(lNVUPoints[i-1]->Sm>0 ? rWeight : lWeight));
+            if(sum<minZm)
+            {
+                rsbn = lRSBN[j].first;
+                minZm = sum;
+            }//if
+        }//for
+
+        lNVUPoints[i-1]->rsbn = rsbn;
+    }
+}
+
 const std::vector<NVUPOINT*>& QFlightplanTable::getWaypoints()
 {
     return lNVUPoints;

@@ -43,6 +43,7 @@ class QFlightplanTable : public QTableWidget
         void moveWaypoint(int row, bool up);                            //Move waypoint at row up or down
         void refreshFlightplan();                                       //Refresh all waypoints
         void clearFlightplan();                                         //Delete all waypoints and clear the flightplan
+        void autoGenerateCorrectionBeacons();
         const std::vector<NVUPOINT *> &getWaypoints();
         NVUPOINT* getWaypoint(int row, bool lastOutOfIndex = false);    //Returns NULL if out of index (if lastOutOfIndex is set to true, it instead returns last waypoint, if any exist)
         void selectNone();

@@ -9,6 +9,14 @@
 
 #define XNVU_WPS_FILENAME "xnvu_wps.txt"
 
+class NAV_SOURCE_DATA
+{
+    public:
+        int airacCycle = -1;
+        int fileVersion = -1;
+        QString validDate = "";
+};
+
 class XFMS_DATA
 {
 	private:
@@ -20,6 +28,9 @@ class XFMS_DATA
         static int _loadWaypointsXP11(QString& sError);
         static int _loadNavDataXP11(QString& sError);
         static int _loadAirwaysXP11(QString& sError);
+
+        static int validate_header(QFile& infile);  //TODO: Currently not used.
+        static void validate_cycle_info(QFile& infile, NAV_SOURCE_DATA& _navSource); //TODO: Currently not used.
 
         static void validate_airports_XP11(QFile& infile, int wpOrigin);
         static void validate_waypoint_XP11(const QStringList &record, int _origin);

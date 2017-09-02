@@ -1609,10 +1609,17 @@ QMenu::item:disabled
     <addaction name="actionPrint_settings"/>
     <addaction name="actionNightmode"/>
    </widget>
+   <widget class="QMenu" name="menuUtils">
+    <property name="title">
+     <string>Utils</string>
+    </property>
+    <addaction name="actionAutogenerate_correction_beacons"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuImport"/>
    <addaction name="menuExport_Print"/>
    <addaction name="menuSettings"/>
+   <addaction name="menuUtils"/>
    <addaction name="menuView"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -1937,6 +1944,11 @@ QMenu::item:disabled
      <bold>true</bold>
      <underline>false</underline>
     </font>
+   </property>
+  </action>
+  <action name="actionAutogenerate_correction_beacons">
+   <property name="text">
+    <string>Autogenerate correction beacons</string>
    </property>
   </action>
  </widget>

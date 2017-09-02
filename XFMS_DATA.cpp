@@ -578,6 +578,9 @@ int XFMS_DATA::_loadAirportsXP11(QString& sError)
 int XFMS_DATA::_loadWaypointsXP11(QString& sError)
 {
     sError = "";
+
+
+    //Read custom earth_fix.dat
     QString path = DialogSettings::xDir + "/Custom Data/earth_fix.dat";
     QFile inFile(path);
 
@@ -590,11 +593,12 @@ int XFMS_DATA::_loadWaypointsXP11(QString& sError)
             list = line.split(' ', QString::SkipEmptyParts);
             validate_waypoint_XP11(list, WAYPOINT::ORIGIN_X11_CUSTOM_FIXES);
         }//while
-
         inFile.close();
         return 1;
     }
     inFile.close();
+
+    //If custom earth_fix.dat is not found, read default earth_fix.dat
 
     path = DialogSettings::xDir + "/Resources/default data/earth_fix.dat";
     inFile.setFileName(path);
@@ -1147,6 +1151,116 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
         lWP2.insert(std::make_pair(nwp->name2, nwp));
         __DATA_LOADED[__CURRENT_LOADING]++;
     }
+}
+
+int XFMS_DATA::validate_header(QFile& infile)
+{
+    while(!infile.atEnd())
+    {
+        QStringList record;
+        QString qstr;
+        QString line;
+
+        line = infile.readLine();
+        record = line.split(' ',  QString::SkipEmptyParts);
+        if(record.size()<6) continue;
+
+        try
+        {
+            for(int i=0; i<record.size(); i++)
+            {
+                qstr = record.at(i).simplified();
+                switch(i)
+                {
+                    case 0: //I.e. 1101
+                        qstr.toInt();
+                    case 1: //"Version"
+                        if(qstr.compare("version", Qt::CaseInsensitive) != 0) continue;
+                    case 2: //'-'
+                        if(qstr.compare("-", Qt::CaseInsensitive) != 0) continue;
+                    break;
+                    case 3: //"data"
+                        if(qstr.compare("data", Qt::CaseInsensitive) != 0) continue;
+                    break;
+                    case 4: //"cycle"
+                        if(qstr.compare("cycle", Qt::CaseInsensitive) != 0) continue;
+                    break;
+                    case 5:
+                        while(qstr.at(qstr.length()-1).isDigit() == false) qstr.chop(1);   //Remove comma, or letters if exist
+                        int airacCycle = qstr.toInt();
+                        return airacCycle;
+                    break;
+                }
+            }
+        }//try
+        catch(...)
+        {
+            continue;
+        }
+    }//while
+
+    return -2;
+}
+
+void XFMS_DATA::validate_cycle_info(QFile& infile, NAV_SOURCE_DATA &_navSource)
+{
+    _navSource.airacCycle = -1;
+    _navSource.validDate = "";
+    int currentState = -1;       //-1 Unknown, 0 AIRAC cycle, 1 version, 2 valid date
+    while(!infile.atEnd())
+    {
+        QStringList record;
+        QString qstr;
+        QString line;
+
+        line = infile.readLine();
+        record = line.split(' ',  QString::SkipEmptyParts);
+        if(record.size()<6) continue;
+
+        try
+        {
+            for(int i=0; i<record.size(); i++)
+            {
+                qstr = record.at(i).simplified();
+                switch(i)
+                {
+                    case 0:
+                        if(qstr.compare("AIRAC", Qt::CaseInsensitive) == 0) currentState = 0;
+                        else if(qstr.compare("Version", Qt::CaseInsensitive) == 0) currentState = 1;
+                        else if(qstr.compare("Valid", Qt::CaseInsensitive) == 0) currentState = 2;
+                        else continue;
+                    break;
+                    case 3:
+                        switch(currentState)
+                        {
+                            case 0:     //AIRAC cycle
+                                _navSource.airacCycle = qstr.toInt();
+                                currentState = -1;
+                            break;
+                            case 1:     //Version
+                                currentState = -1;
+                            break;
+                            case 2:     //Valid date
+                                _navSource.validDate = "";
+                                while(i<record.size())
+                                {
+                                    qstr = record.at(i).simplified();
+                                    _navSource.validDate = _navSource.validDate + qstr + " ";
+                                    i++;
+                                }
+                                _navSource.validDate.chop(1);
+                                currentState = -1;
+                            break;
+                        }//switch
+                    break;
+                }//switch
+            }//for
+        }//try
+        catch(...)
+        {
+            continue;
+        }
+    }//while
 }
 
 void XFMS_DATA::validate_waypoint_XP11(const QStringList& record, int _origin)
