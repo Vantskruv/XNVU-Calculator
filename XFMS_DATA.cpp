@@ -18,6 +18,96 @@
 #include "dialogsettings.h"
 #include <QDebug>
 
+class RUNWAY
+{
+    private:
+        static void swap(RUNWAY& me, const RUNWAY& r)
+        {
+            me.type = r.type;
+            me.length = r.length;
+            me.width = r.width;
+            me.rwyA = r.rwyA;
+            me.rwyB = r.rwyB;
+            me.lightA = r.lightA;
+            me.lightB = r.lightB;
+            me.surface = r.surface;
+            me.start = r.start;
+            me.end = r.end;
+        }
+
+    public:
+        int type;       //WAYPOINT::TYPE_RUNWAY or WAYPOINT::TYPE_HELIPAD
+        double length;  //Length of runway/helipad
+        double width;   //Width of runway/helipad
+        QString rwyA;   //Runway identifer
+        QString rwyB;   //Runway opposite identifer
+        int lightA;		//Runway approach lightning
+        int lightB;		//Runway approach lightning opposite
+        int surface;	//Runway surface
+        CPoint start;   //Coordinates of runway start threshold
+        CPoint end;     //Coordinates of runway end threshold
+
+        RUNWAY(const QString& _rwyA, const CPoint& _startA, int _lightA, const QString _rwyB, const CPoint& _startB, int _lightB, double _rwyWidth, int _surface, int _type)
+        {
+            type = _type;
+            rwyA = _rwyA;
+            start = _startA;
+            lightA = _lightA;
+            rwyB = _rwyB;
+            end = _startB;
+            lightB = _lightB;
+            surface = _surface;
+            width = _rwyWidth;
+            length = LMATH::calc_distance(start, end)*1000;
+        }
+
+        RUNWAY(const QString & _rwy, const CPoint& _startA, double _length, double _width, int _surface, int _type)
+        {
+            type = _type;
+            rwyA = _rwy;
+            start = _startA;
+            length = _length;
+            width = _width;
+            surface = _surface;
+        }
+
+        RUNWAY(const RUNWAY& r)
+        {
+            swap(*this, r);
+        }
+
+        RUNWAY& operator=(const RUNWAY& other)
+        {
+            swap(*this, other);
+            return *this;
+        }
+
+        RUNWAY* clone()
+        {
+            return new RUNWAY(*this);
+        }
+
+        double getLength()	//In meter
+        {
+            return length;
+        }
+
+        double getWidth() { return width; }
+
+        CPoint getMiddlePoint()
+        {
+            if(type == WAYPOINT::TYPE_RUNWAY) return (start + (end - start)*0.5);
+            return start;
+        }
+
+        int getType(){ return type; }
+
+        ~RUNWAY()
+        {
+
+        }
+};
+
 
 volatile int XFMS_DATA::__DATA_LOADED[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 volatile int XFMS_DATA::__CURRENT_LOADING = 0;
@@ -137,6 +227,7 @@ QString XFMS_DATA::getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVU
         if(wp->type != WAYPOINT::TYPE_AIRWAY) continue;
 
         AIRWAY* aw = (AIRWAY*) wp->data;
+        if(!aw) continue;
 
         int kA = -1;
         int kB = -1;
@@ -279,6 +370,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& _route
         if(wp->type == WAYPOINT::TYPE_AIRWAY)
         {
             AIRWAY* ats = (AIRWAY*) wp->data;
+            if(!ats) continue;
             //It is not valid if an airway starts or ends the route
             if(i==0)
             {
@@ -867,19 +959,17 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
     int cmpData;
     bool lat_set = false;
     bool lon_set = false;
-    bool latAB_set = false;
     CPoint latA, latB;
-    double longestRunway = -1.0;
-    double longestRunwayCompare = 0.0;
     int surfaceType = 15; //Transparent as default, hence unknown.
     QString rwyIdentifierA = "";
     QString rwyIdentifierB = "";
+    double rwyLength = -1;
+    double rwyWidth = -1;
     int lightA = 0;
     int lightB = 0;
     QString city = "";
     std::vector<RUNWAY*> lRunways;
     std::vector<std::pair<int, int> > lFreq;
-    CPoint latlonX;
 
     NVUPOINT wp;
     wp.type = WAYPOINT::TYPE_AIRPORT;
@@ -904,37 +994,35 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                         //Note that similar code is also placed in the end of this function, to grab the last found airport.
                         wp.wpOrigin = wpOrigin;
                         wp.type = WAYPOINT::TYPE_AIRPORT;
+                        wp.data = NULL;
 
                         AIRPORT_DATA* arwy = new AIRPORT_DATA();
-                        for(unsigned int j=0; j<lRunways.size(); j++) arwy->lRunways.push_back(lRunways[j]);
+                        //for(unsigned int j=0; j<lRunways.size(); j++) arwy->lRunways.push_back(lRunways[j]);
                         for(unsigned int j=0; j<lFreq.size(); j++) arwy->lFreq.push_back(lFreq[j]);
                         arwy->city = city;
 
-                        if(lWP.find(wp.name) != lWP.end())  //If airport already exist, delete current allocated data and skip this airport
+                        if(lWP.find(wp.name) != lWP.end() || lRunways.size()<1)  //If airport already exist, delete current allocated data and skip this airport
                         {
+                            for(unsigned int j = 0; j<lRunways.size(); j++) delete lRunways[j];
                             delete arwy;
                         }
-                        else if(lat_set && lon_set)
+                        else
                         {
-                            wp.longest_runway = longestRunway*1000.0;
+                            RUNWAY* rwy;
+                            double lMax = -1;
+                            for(unsigned int j = 0; j<lRunways.size(); j++) if(lRunways[j]->getLength()>lMax){ rwy = lRunways[j]; lMax = lRunways[j]->getLength(); }
+                            wp.length = lMax;
+                            if(!lat_set || !lon_set) wp.latlon = rwy->getMiddlePoint();
+
                             NVUPOINT* nwp = new NVUPOINT(wp);
                             nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
                             nwp->data = (void*) arwy;
+                            validate_runways(nwp, lRunways);
+                            for(unsigned int j = 0; j<lRunways.size(); j++) delete lRunways[j];
                             lWP.insert(std::make_pair(nwp->name, nwp));
                             lWP2.insert(std::make_pair(nwp->name2, nwp));
                             __DATA_LOADED[__CURRENT_LOADING]++;
                         }//if
-                        else if(longestRunway>=0.0)
-                        {
-                            wp.latlon = latlonX;
-                            wp.longest_runway = longestRunway*1000.0;
-                            NVUPOINT* nwp = new NVUPOINT(wp);
-                            nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
-                            nwp->data = (void*) arwy;
-                            lWP.insert(std::make_pair(nwp->name, nwp));
-                            lWP2.insert(std::make_pair(nwp->name2, nwp));
-                            __DATA_LOADED[__CURRENT_LOADING]++;
-                        }
 
                         //Reset the flags and continue with this new airport
                         lFreq.clear();
@@ -942,15 +1030,14 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                         wp = NVUPOINT();
                         lat_set = 0;
                         lon_set = 0;
-                        longestRunway = -1.0;
-                        longestRunwayCompare = -1.0;
+                        rwyLength = -1.0;
+                        rwyWidth = -1.0;
                         surfaceType = 15;
                         rwyIdentifierA = "";
                         rwyIdentifierB = "";
                         city = "";
                         lightA = 0;
                         lightB = 0;
-                        latAB_set = false;
                         currentState = 1;
                         continue;
                     }
@@ -967,6 +1054,14 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                     {
                         lFreq.push_back(std::make_pair(currentState, qstr.toInt()));
                     }
+                    else if(currentState == 100 || currentState == 101)
+                    {
+                        rwyWidth = qstr.toDouble();
+                    }
+                    else if(currentState == 102)
+                    {
+                        rwyIdentifierA = qstr;
+                    }
                     else if(currentState == 1302)
                     {
                         if(i<(int(record.size())-1))
@@ -974,36 +1069,42 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                             i++;
                             if(qstr.compare("datum_lat") == 0)
                             {
+                                if(i>=record[i].size()) break;
                                 qstr = record[i].simplified();
                                 wp.latlon.x = qstr.toDouble();
                                 lat_set = true;
                             }
                             else if(qstr.compare("datum_lon") == 0)
                             {
+                                if(i>=record[i].size()) break;
                                 qstr = record[i].simplified();
                                 wp.latlon.y = qstr.toDouble();
                                 lon_set = true;
                             }//if
                             else if(qstr.compare("region_code") == 0)
                             {
+                                if(i>=record[i].size()) break;
                                 qstr = record[i].simplified();
                                 wp.country = qstr;
                                 break;
                             }
                             else if(qstr.compare("transition_alt") == 0)
                             {
+                                if(i>=record[i].size()) break;
                                 qstr = record[i].simplified();
                                 wp.trans_alt = qstr.toInt();
                                 break;
                             }
                             else if(qstr.compare("transition_alt") == 0)
                             {
+                                if(i>=record[i].size()) break;
                                 qstr = record[i].simplified();
                                 wp.trans_level = qstr.toInt();
                                 break;
                             }
                             else if(qstr.compare("city") == 0)
                             {
+                                if(i>=record[i].size()) break;
                                 city = record[i].simplified();
                             }
                         }
@@ -1025,13 +1126,7 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                     }
                     else if(currentState == 102)
                     {
-                        if(longestRunway>0) break;
-                        longestRunway = 0;
-                        latlonX.x = latA.x;
-                        latlonX.y = qstr.toDouble();
-
-                        //wp.latlon.y = qstr.toDouble();
-                        //latAB_set = true;
+                        latA.y = qstr.toDouble();
                     }//if
                 break;
 
@@ -1042,7 +1137,7 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                     }//if
                     else if(currentState == 101) latA.x = qstr.toDouble();
                 break;
-                case 5: // (1) Airport name, (101) Water runway start latitude
+                case 5: // (1) Airport name, (101) Water runway start latitude, (102) length of helipad
                     if(currentState == 1)
                     {
                         while(i<record.size())
@@ -1054,12 +1149,21 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                         }
                     }//if
                     else if(currentState == 101) latA.y = qstr.toDouble();
+                    else if(currentState == 102) rwyLength = qstr.toDouble();
                 break;
-                case 6: //(101) Water runway end name
+                case 6: //(101) Water runway end name, (102) width of helipad
                     if(currentState == 101) rwyIdentifierB = qstr;
+                    else if(currentState == 102) rwyWidth = qstr.toDouble();
                 break;
                 case 7: //(101) Water runway end longitude
                     if(currentState == 101) latB.x = qstr.toDouble();
+                    else if(currentState == 102)
+                    {
+                        surfaceType = qstr.toInt();
+                        RUNWAY* rwy = new RUNWAY(rwyIdentifierA, latA, rwyLength, rwyWidth, surfaceType, WAYPOINT::TYPE_HELIPAD);
+                        lRunways.push_back(rwy);
+                        currentState = 0;
+                    }
                 break;
                 case 8: //(100), Runway identifer (101) Water runway end latitude
                    if(currentState == 100)
@@ -1069,15 +1173,9 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                    if(currentState == 101)
                    {
                        latB.y = qstr.toDouble();
-                       RUNWAY* rwy = new RUNWAY(rwyIdentifierA, latA, 0, rwyIdentifierB, latB, 0, SURFACE_WATER);
-
+                       RUNWAY* rwy = new RUNWAY(rwyIdentifierA, latA, 0, rwyIdentifierB, latB, 0, rwyWidth, SURFACE_WATER, WAYPOINT::TYPE_RUNWAY);
                        lRunways.push_back(rwy);
-                       longestRunwayCompare = LMATH::calc_distance(latA.x, latA.y, latB.x, latB.y);
-                       if(longestRunway>longestRunwayCompare) break;
-                       longestRunway = longestRunwayCompare;
-                       latlonX = latA + (latB - latA)*0.5;
-
-                       //latAB_set = true;
+                       currentState = 0;
                    }
                 break;
                 case 9: //(100) Runway start longitude
@@ -1099,21 +1197,15 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                     if(currentState == 100)
                     {
                         latB.y = qstr.toDouble();
-
-                        longestRunwayCompare = LMATH::calc_distance(latA.x, latA.y, latB.x, latB.y);
-                        if(longestRunway>longestRunwayCompare) break;
-                        longestRunway = longestRunwayCompare;
-                        latlonX = latA + (latB - latA)*0.5;
-
-                        //latAB_set = true;
                     }//if
                 break;
                 case 23: //(100) Runway end approach lightning
                     if(currentState == 100)
                     {
                         lightB = qstr.toInt();
-                        RUNWAY* rwy = new RUNWAY(rwyIdentifierA, latA, lightA, rwyIdentifierB, latB, lightB, surfaceType);
+                        RUNWAY* rwy = new RUNWAY(rwyIdentifierA, latA, lightA, rwyIdentifierB, latB, lightB, rwyWidth, surfaceType, WAYPOINT::TYPE_RUNWAY);
                         lRunways.push_back(rwy);
+                        currentState = 0;
                     }
                 break;
             }
@@ -1123,33 +1215,75 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
     //Add the last airport, if valid
     wp.wpOrigin = wpOrigin;
     wp.type = WAYPOINT::TYPE_AIRPORT;
+    wp.data = NULL;
 
     AIRPORT_DATA* arwy = new AIRPORT_DATA();
-    for(unsigned int j=0; j<lRunways.size(); j++) arwy->lRunways.push_back(lRunways[j]);
+    //for(unsigned int j=0; j<lRunways.size(); j++) arwy->lRunways.push_back(lRunways[j]);
     for(unsigned int j=0; j<lFreq.size(); j++) arwy->lFreq.push_back(lFreq[j]);
     arwy->city = city;
 
-    if(lWP.find(wp.name) != lWP.end()) delete arwy;
-    else if(lon_set && lat_set)
+    if(lWP.find(wp.name) != lWP.end() || lRunways.size()<1)
     {
-        wp.longest_runway = longestRunway*1000.0;
+        for(unsigned int j = 0; j<lRunways.size(); j++) delete lRunways[j];
+        delete arwy;
+    }//if
+    else
+    {
+        RUNWAY* rwy;
+        double lMax = -1;
+        for(unsigned int j = 0; j<lRunways.size(); j++) if(lRunways[j]->getLength()>lMax){ rwy = lRunways[j]; lMax = lRunways[j]->getLength(); }
+        wp.length = lMax;
+        if(!lat_set || !lon_set) wp.latlon = rwy->getMiddlePoint();
+
         NVUPOINT* nwp = new NVUPOINT(wp);
         nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
         nwp->data = (void*) arwy;
+        validate_runways(nwp, lRunways);
+        for(unsigned int j = 0; j<lRunways.size(); j++) delete lRunways[j];
         lWP.insert(std::make_pair(nwp->name, nwp));
         lWP2.insert(std::make_pair(nwp->name2, nwp));
         __DATA_LOADED[__CURRENT_LOADING]++;
-    }
-    else if(longestRunway>=0.0)
+    }//if
+}
+
+void XFMS_DATA::validate_runways(const NVUPOINT* ap, const std::vector<RUNWAY*>& lRunways)
+{
+    AIRPORT_DATA* apd = (AIRPORT_DATA*) ap->data;
+    if(!apd) return;
+
+    NVUPOINT* rwy;
+    for(unsigned int i=0; i<lRunways.size(); i++)
     {
-        wp.longest_runway = longestRunway*1000.0;
-        wp.latlon = latlonX;
-        NVUPOINT* nwp = new NVUPOINT(wp);
-        nwp->MD = calc_magvar(nwp->latlon.x, nwp->latlon.y, dat, (double(LMATH::feetToMeter(nwp->elev))/1000.0));
-        nwp->data = (void*) arwy;
-        lWP.insert(std::make_pair(nwp->name, nwp));
-        lWP2.insert(std::make_pair(nwp->name2, nwp));
-        __DATA_LOADED[__CURRENT_LOADING]++;
+        rwy = new NVUPOINT(*ap);
+        if(rwy->data) delete rwy->data;
+        //rwy->data = (void*) ap;
+        rwy->data = (void*) new WAYPOINT(*ap);
+        rwy->latlon = lRunways[i]->start;
+        rwy->length = lRunways[i]->getLength();
+        rwy->width = lRunways[i]->getWidth();
+        rwy->surface = lRunways[i]->surface;
+        rwy->name = lRunways[i]->rwyA;
+        rwy->name2 = ap->name;// + " - " + ap->name2;
+        rwy->type = lRunways[i]->type;
+        apd->lRunways.push_back(rwy);
+        lWP.insert(std::make_pair(rwy->name, rwy));
+        lWP2.insert(std::make_pair(rwy->name2, rwy));
+
+        if(rwy->type == WAYPOINT::TYPE_HELIPAD) continue;
+
+        rwy = new NVUPOINT(*ap);
+        if(rwy->data) delete rwy->data;
+        rwy->data = (void*) new WAYPOINT(*ap);
+        rwy->latlon = lRunways[i]->end;
+        rwy->length = lRunways[i]->getLength();
+        rwy->width = lRunways[i]->getWidth();
+        rwy->surface = lRunways[i]->surface;
+        rwy->name = lRunways[i]->rwyB;
+        rwy->name2 = ap->name;// + " " + ap->name2;
+        rwy->type = lRunways[i]->type;
+        apd->lRunways.push_back(rwy);
+        lWP.insert(std::make_pair(rwy->name, rwy));
+        lWP2.insert(std::make_pair(rwy->name2, rwy));
     }
 }
 
@@ -2229,7 +2363,7 @@ void XFMS_DATA::validate_airport_XP10(const QStringList& record)
                 wp->trans_level = qstr.toInt();
 			break;
 			case 8:
-                wp->longest_runway = qstr.toInt();
+                wp->length = qstr.toInt();
 			break;
 		}//switch
 	}//for
@@ -2896,7 +3030,7 @@ void XFMS_DATA::validate_xnvu(const QStringList& RAW)
                 wp.trans_level = qstr.toInt();
             break;
             case 12: //Longest Runway
-                wp.longest_runway = qstr.toInt();
+                wp.length = qstr.toInt();
             break;
         }//Switch
     }//for
@@ -2926,7 +3060,7 @@ int XFMS_DATA::saveXNVUData()
         out << qSetRealNumberPrecision(16)
             << p->type << '|' << p->name << '|' << p->name2 << '|' << p->country << '|' << p->latlon.x << '|' << p->latlon.y << '|'
             << p->elev << '|' << p->freq << '|' << p->range << '|' << p->ADEV << '|'
-            << p->trans_alt << '|' << p->trans_level << '|' << p->longest_runway << "\n";
+            << p->trans_alt << '|' << p->trans_level << '|' << p->length << "\n";
     }
 
     outfile.close();
@@ -2972,7 +3106,7 @@ int XFMS_DATA::saveXNVUFlightplan(const QString& file, std::vector<NVUPOINT*> lN
         out << qSetRealNumberPrecision(16)
             << p->type << '|' << p->name << '|' << p->name2 << '|' << p->country << '|' << p->latlon.x << '|' << p->latlon.y << '|' << p->alt << '|'
             << p->elev << '|' << p->freq << '|' << p->range << '|' << p->ADEV << '|'
-            << p->trans_alt << '|' << p->trans_level << '|' << p->longest_runway << '|';
+            << p->trans_alt << '|' << p->trans_level << '|' << p->length << '|';
         if(p->rsbn)
         {
             out << p->rsbn->wpOrigin << '|' << p->rsbn->name << '|' << p->rsbn->name2 << '|' << p->rsbn->freq << '|' << p->rsbn->latlon.x << '|' << p->rsbn->latlon.y << "\n";
@@ -3061,7 +3195,7 @@ void XFMS_DATA::validate_xnvuflightplan(std::vector<NVUPOINT*>& lXNVUFlightplan,
                 wp.trans_level = qstr.toInt();
             break;
             case 13: //Longest Runway
-                wp.longest_runway = qstr.toInt();
+                wp.length = qstr.toInt();
             break;
             case 14: //RSBN origin
                 rsbn.wpOrigin = qstr.toInt();

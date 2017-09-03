@@ -117,7 +117,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     //Show saved align settings TODO: We should scrap this feature later on.
-    ui->label_alignWPS->setText("WPS align");
+    ui->label_alignWPS->setText("XWP align");
     ui->label_alignFMS->setText("FMS align");
     ui->label_alignWPS->setVisible(DialogSettings::distAlignXWP);
     ui->label_alignFMS->setVisible(DialogSettings::distAlignFMS);
@@ -200,6 +200,7 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
     int row = ui->tableWidget->rowAt(pos.y());
     if(row>=0)
     {
+        /*
         fpMenu.addAction("Move up");
         fpMenu.addAction("Move down");
         fpMenu.addAction("Set direct to");
@@ -207,30 +208,40 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
         fpMenu.addAction("Set correction beacon...");
         fpMenu.addSeparator();
         fpMenu.addAction("Delete");
+        */
+
+        fpMenu.addAction("Set correction beacon...");
+        fpMenu.addAction("Set direct to");
+        fpMenu.addAction("Edit waypoint...");
+        fpMenu.addSeparator();
+        fpMenu.addAction("Delete");
+        fpMenu.addSeparator();
+        fpMenu.addAction("Move up");
+        fpMenu.addAction("Move down");
 
         selectedItem = fpMenu.exec(globalPos);
         if(selectedItem)
         {
             NVUPOINT* wp = ui->tableWidget->getWaypoint(row);
-            if(selectedItem == fpMenu.actions()[0])
+            if(selectedItem == fpMenu.actions()[6]) //Move up
             {
                 if(row>0)
                 {
                     ui->tableWidget->moveWaypoint(row, true);
                 }
             }
-            else if(selectedItem == fpMenu.actions()[1])
+            else if(selectedItem == fpMenu.actions()[7]) //Move down
             {
                 if(row<(ui->tableWidget->rowCount()-1))
                 {
                     ui->tableWidget->moveWaypoint(row, false);
                 }
             }
-            else if(selectedItem == fpMenu.actions()[2])
+            else if(selectedItem == fpMenu.actions()[1]) //Direct to
             {
                 ui->lineEdit_DTTo->setWaypoint(wp);
             }
-            else if(selectedItem == fpMenu.actions()[3])
+            else if(selectedItem == fpMenu.actions()[2]) //Edit waypoint
             {
                 DialogWaypointEdit dEdit(wp, true);
                 int dr = dEdit.exec();
@@ -238,19 +249,21 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
 
                 if(dr==DialogWaypointEdit::ADD_XNVU) //Create new
                 {
-                    XFMS_DATA::addXNVUWaypoint(new NVUPOINT(dEdit.nvupoint));
-                    ui->tableWidget->replaceWaypoint(new NVUPOINT(dEdit.nvupoint), row);
+                    XFMS_DATA::addXNVUWaypoint(dEdit.newPoint);
+                    NVUPOINT* nvup = new NVUPOINT(*dEdit.newPoint);
+                    nvup->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
+                    nvup->rsbn = wp->rsbn;
+                    ui->tableWidget->replaceWaypoint(nvup, row);
                 }
                 else if(dr==DialogWaypointEdit::SAVE)
                 {
-                    WAYPOINT* rsbn = wp->rsbn;
-                    *wp = dEdit.nvupoint;
-                    //wp->clone(dEdit.nvupoint);
-                    wp->rsbn = rsbn;
+                    dEdit.newPoint->rsbn = wp->rsbn;
+                    dEdit.newPoint->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
+                    ui->tableWidget->replaceWaypoint(dEdit.newPoint, row);
                     ui->tableWidget->refreshFlightplan();
                 }
             }
-            else if(selectedItem == fpMenu.actions()[4])
+            else if(selectedItem == fpMenu.actions()[0])    //Set correction beacon
             {
                 NVUPOINT* wp2 = ui->tableWidget->getWaypoint(row+1);
                 DialogRSBN dRSBN(wp, wp2);
@@ -260,7 +273,7 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
                 wp->rsbn = dRSBN.rsbn;
                 ui->tableWidget->refreshFlightplan();
             }
-            else if(selectedItem == fpMenu.actions()[6])
+            else if(selectedItem == fpMenu.actions()[4]) //Delete waypoint
             {
                 QMessageBox msgBox;
                 QString sStyleSheet = "QMessageBox, QLabel{"
@@ -293,12 +306,15 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
             if(dr == QDialog::Rejected || dr == DialogWaypointEdit::CANCEL) return;
             if(dr == DialogWaypointEdit::ADD_XNVU)
             {
-                XFMS_DATA::addXNVUWaypoint(new NVUPOINT(dEdit.nvupoint));
-                ui->tableWidget->insertWaypoint(new NVUPOINT(dEdit.nvupoint), ui->tableWidget->rowCount());
+                XFMS_DATA::addXNVUWaypoint(dEdit.newPoint);
+                NVUPOINT* np = new NVUPOINT(*dEdit.newPoint);
+                np->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
+                ui->tableWidget->insertWaypoint(np, ui->tableWidget->rowCount());
             }
             else if(dr==DialogWaypointEdit::SAVE)
             {
-                ui->tableWidget->insertWaypoint(new NVUPOINT(dEdit.nvupoint), ui->tableWidget->rowCount());
+                dEdit.newPoint->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
+                ui->tableWidget->insertWaypoint(dEdit.newPoint, ui->tableWidget->rowCount());
             }
         }
 
@@ -487,7 +503,11 @@ void MainWindow::on_lineEdit_textChanged(const QString &arg1)
 void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *_item)
 {
     QListWidgetItemData* itemData = (QListWidgetItemData*) _item;
-    if(itemData->nvupoint->type == WAYPOINT::TYPE_AIRWAY)
+
+    NVUPOINT* p = ui->listWidget->getWaypoint(_item);
+    if(!p) return;  //Should not happen
+
+    if(itemData->nvupoint->type == WAYPOINT::TYPE_AIRWAY && itemData->nvupoint->data)
     {
         AIRWAY* awy = (AIRWAY*) itemData->nvupoint->data;
         for(int i=0; i<awy->lATS.size(); i++)
@@ -567,6 +587,7 @@ void MainWindow::on_pushButtonInsertBefore_clicked()
     if(row<0) row = 0;
     if(itemData->nvupoint->type == WAYPOINT::TYPE_AIRWAY)
     {
+        if(!itemData->nvupoint->data) return;
         AIRWAY* awy = (AIRWAY*) itemData->nvupoint->data;
         for(int i=0; i<awy->lATS.size(); i++)
         {
@@ -584,6 +605,7 @@ void MainWindow::on_pushButtonReplace_clicked()
     QListWidgetItemData* itemData = (QListWidgetItemData*)ui->listWidget->currentItem();
     if(itemData->nvupoint->type == WAYPOINT::TYPE_AIRWAY)
     {
+        if(!itemData->nvupoint->data) return;
         AIRWAY* awy = (AIRWAY*) itemData->nvupoint->data;
         ui->tableWidget->replaceWaypoint(new NVUPOINT(*awy->lATS[0]), ui->tableWidget->currentRow());
         int row = ui->tableWidget->currentRow();
@@ -609,6 +631,7 @@ void MainWindow::on_pushButtonInsertAfter_clicked()
 
     if(itemData->nvupoint->type == WAYPOINT::TYPE_AIRWAY)
     {
+        if(!itemData->nvupoint->data) return;
         AIRWAY* awy = (AIRWAY*) itemData->nvupoint->data;
         for(int i=0; i<awy->lATS.size(); i++)
         {
@@ -703,9 +726,12 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
 
     QString qstr;
     qstr = WAYPOINT::getTypeStr(wp);
+    if(wp->type == WAYPOINT::TYPE_RUNWAY) qstr = qstr + " " + wp->name + " (" + QString::number(wp->length, 'f', 1) + "m)";
+    else if(wp->type == WAYPOINT::TYPE_HELIPAD) qstr = qstr + " " + wp->name + " (" + QString::number(wp->length, 'f', 1) + "x" + QString::number(wp->width, 'f', 1) + "m)";
     ui->labelWPType2->setText(qstr);
 
-    qstr = wp->name;
+    if(wp->type == WAYPOINT::TYPE_RUNWAY || wp->type == WAYPOINT::TYPE_HELIPAD) qstr = wp->name2;
+    else qstr = wp->name;
     if(!wp->country.isEmpty()) qstr = qstr + " [" + wp->country + "]";
 
     if(wp->type == WAYPOINT::TYPE_NDB ||
@@ -722,19 +748,25 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
     {
         qstr = qstr + "  " + QString::number(wp->freq, 'f', 3);
     }//if
+
     ui->labelWPType->setText(qstr);
 
-    if(wp->type == WAYPOINT::TYPE_AIRWAY)
+    if(wp->type == WAYPOINT::TYPE_AIRWAY && wp->data)
     {
         AIRWAY* ats = (AIRWAY*) wp->data;
         ui->labelIWPName2->setText("[" + ats->lATS[0]->name + "] ---> [" + ats->lATS[ats->lATS.size()-1]->name + "]");
+    }
+    else if((wp->type == WAYPOINT::TYPE_RUNWAY || wp->type == WAYPOINT::TYPE_HELIPAD) && wp->data)
+    {
+        //ui->labelIWPName2->setText("Surface: " + WAYPOINT::getRunwaySurfaceStr(wp));
+        ui->labelIWPName2->setText(((WAYPOINT*)(wp->data))->name2);
     }
     else if(!wp->name2.isEmpty()) ui->labelIWPName2->setText(wp->name2);
 
     if(wp->type == WAYPOINT::TYPE_AIRWAY)
     {
         AIRWAY* ats = (AIRWAY*) wp->data;
-        ui->labelWPLatlon->setText("Fixes: " + QString::number(ats->lATS.size()) + "    Dist: " + QString::number(ats->distance, 'f', 1) + " KM");
+        if(wp->data) ui->labelWPLatlon->setText("Fixes: " + QString::number(ats->lATS.size()) + "    Dist: " + QString::number(ats->distance, 'f', 1) + " KM");
     }
     else
     {
@@ -766,6 +798,7 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
            wp->type == WAYPOINT::TYPE_TACAN ||
            wp->type == WAYPOINT::TYPE_VORTAC
            ) qstr = qstr + "        Elev: " + (DialogSettings::showFeet ? QString::number(wp->elev, 'f', 0) + " ft": QString::number(LMATH::feetToMeter(wp->elev), 'f', 0) + " m");
+        else if(wp->type == WAYPOINT::TYPE_RUNWAY  || wp->type == WAYPOINT::TYPE_HELIPAD) qstr = qstr  + "        Surface: " + WAYPOINT::getRunwaySurfaceStr(wp);
 
         ui->labelWPMagVar->setText(qstr);
     }
@@ -1540,17 +1573,19 @@ void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
 
     if(dr==DialogWaypointEdit::ADD_XNVU) //Create new
     {
-        XFMS_DATA::addXNVUWaypoint(new NVUPOINT(dEdit.nvupoint));
-        WAYPOINT* rsbn = wp->rsbn;
-        *wp = dEdit.nvupoint;
-        wp->rsbn = rsbn;
+        XFMS_DATA::addXNVUWaypoint(dEdit.newPoint);
+        NVUPOINT* np = new NVUPOINT(*dEdit.newPoint);
+        np->rsbn = wp->rsbn;
+        np->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
+        ui->tableWidget->replaceWaypoint(np, row);
         ui->tableWidget->refreshFlightplan();
     }
     else if(dr==DialogWaypointEdit::SAVE)
     {
-        WAYPOINT* rsbn = wp->rsbn;
-        *wp = dEdit.nvupoint;
-        wp->rsbn = rsbn;
+        NVUPOINT* np = dEdit.newPoint;
+        np->rsbn = wp->rsbn;
+        np->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
+        ui->tableWidget->replaceWaypoint(np, row);
         ui->tableWidget->refreshFlightplan();
     }
 }
@@ -1619,7 +1654,7 @@ void MainWindow::on_frameDescription_clicked()
     QListWidgetItemData* iD = (QListWidgetItemData*) ui->listWidget->currentItem();
     if(iD)
     {
-        if(iD->nvupoint->type == WAYPOINT::TYPE_AIRWAY)
+        if(iD->nvupoint->type == WAYPOINT::TYPE_AIRWAY && iD->nvupoint->data)
         {
             //ui->labelWPMagVar->setText("CLICK TO SHOW WAYPOINTS");
             //if(ui->labelWPMagVar->text().compare("CLICK TO SHOW WAYPOINTS") == 0)

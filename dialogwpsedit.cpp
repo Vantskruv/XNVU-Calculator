@@ -72,14 +72,14 @@ void DialogWPSEdit::setWaypointDescription(const NVUPOINT* wp)
     }//if
     ui->labelWPType->setText(qstr);
 
-    if(wp->type == WAYPOINT::TYPE_AIRWAY)
+    if(wp->type == WAYPOINT::TYPE_AIRWAY && wp->data)
     {
         AIRWAY* ats = (AIRWAY*) wp->data;
         ui->labelIWPName2->setText("[" + ats->lATS[0]->name + "] ---> [" + ats->lATS[ats->lATS.size()-1]->name + "]");
     }
     else if(!wp->name2.isEmpty()) ui->labelIWPName2->setText(wp->name2);
 
-    if(wp->type == WAYPOINT::TYPE_AIRWAY)
+    if(wp->type == WAYPOINT::TYPE_AIRWAY && wp->data)
     {
         AIRWAY* ats = (AIRWAY*) wp->data;
         ui->labelWPLatlon->setText("Fixes: " + QString::number(ats->lATS.size()) + "    Dist: " + QString::number(ats->distance, 'f', 1) + " KM");
@@ -132,14 +132,17 @@ void DialogWPSEdit::on_pushButton_Edit_clicked()
     switch(rv)
     {
         case DialogWaypointEdit::SAVE:
-            *iD->nvupoint = dEdit.nvupoint;
+            dEdit.newPoint->wpOrigin = WAYPOINT::ORIGIN_XNVU;
+            XFMS_DATA::addXNVUWaypoint(dEdit.newPoint);
+            XFMS_DATA::removeXNVUWaypoint(iD->nvupoint);
+            delete iD->nvupoint;
+            iD->nvupoint = dEdit.newPoint;
             initializeList(iD->nvupoint);
         break;
 
         case DialogWaypointEdit::ADD_XNVU:
-            NVUPOINT* nP = new NVUPOINT(dEdit.nvupoint);
-            XFMS_DATA::addXNVUWaypoint(nP);
-            initializeList(nP);
+            XFMS_DATA::addXNVUWaypoint(dEdit.newPoint);
+            initializeList(dEdit.newPoint);
         break;
     }
 }
@@ -162,7 +165,7 @@ void DialogWPSEdit::on_pushButton_CreateNew_clicked()
     switch(rv)
     {
         case DialogWaypointEdit::ADD_XNVU:
-            NVUPOINT* nP = new NVUPOINT(dEdit.nvupoint);
+            NVUPOINT* nP = new NVUPOINT(*dEdit.newPoint);
             XFMS_DATA::addXNVUWaypoint(nP);
             initializeList(nP);
         break;

@@ -9,6 +9,8 @@
 
 #define XNVU_WPS_FILENAME "xnvu_wps.txt"
 
+class RUNWAY;
+
 class NAV_SOURCE_DATA
 {
     public:
@@ -20,6 +22,7 @@ class NAV_SOURCE_DATA
 class XFMS_DATA
 {
 	private:
+
         static std::multimap<QString, NVUPOINT*> lWP;               //QString is IDENTIFIER of waypoint NVUPOINT
         static std::multimap<QString, NVUPOINT*> lWP2;              //QString is the NAME of waypoint NVUPOINT
 
@@ -33,6 +36,7 @@ class XFMS_DATA
         static void validate_cycle_info(QFile& infile, NAV_SOURCE_DATA& _navSource); //TODO: Currently not used.
 
         static void validate_airports_XP11(QFile& infile, int wpOrigin);
+        static void validate_runways(const NVUPOINT* ap, const std::vector<RUNWAY*>& lRunways);
         static void validate_waypoint_XP11(const QStringList &record, int _origin);
         static void validate_earthnav_XP11(const QStringList& record, int _origin);
         static void validate_airways_XP11(QFile& infile, int _origin);

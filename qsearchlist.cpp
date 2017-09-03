@@ -61,7 +61,26 @@ void QSearchList::search(const QString &name, bool filter)
         newItem->setText(qstr);
         newItem->nvupoint = lWP[i];
         addItem(newItem, filter);
+
+/*
+        if(lWP[i]->type == WAYPOINT::TYPE_AIRPORT)
+        {
+            AIRPORT_DATA* ap = (AIRPORT_DATA*) lWP[i]->data;
+            if(ap)
+            {
+                for(unsigned int j = 0; j<ap->lRunways.size(); j++)
+                {
+                    QString sString = "    " + ap->lRunways[j]->name + " (" + QString::number(LMATH::feetToMeter(ap->lRunways[j]->longest_runway), 'f', 1) + "m)";
+                    newItem = new QListWidgetItemData;
+                    newItem->setText(sString);
+                    newItem->nvupoint = (NVUPOINT*) ap->lRunways[j];
+                    addItem(newItem, filter);
+                }
+            }
+        }
+*/
     }
+
 }
 
 void QSearchList::refreshSearch()
@@ -73,8 +92,10 @@ void QSearchList::addItem(QListWidgetItemData *wd, bool filter)
 {
     if(filter) switch(wd->nvupoint->type)
     {
+        case WAYPOINT::TYPE_HELIPAD: if(showTYPE_AIRPORT); else return; break;
+        case WAYPOINT::TYPE_RUNWAY: if(showTYPE_AIRPORT); else return; break;
         case WAYPOINT::TYPE_AIRPORT: if(showTYPE_AIRPORT); else return; break;
-        case WAYPOINT::TYPE_NDB: if(showTYPE_NDB); else return;
+        case WAYPOINT::TYPE_NDB: if(showTYPE_NDB); else return; break;
         case WAYPOINT::TYPE_VORDME: if(showTYPE_VORDME); else return; break;
         case WAYPOINT::TYPE_VORTAC: if(showTYPE_VORDME); else return; break;
         case WAYPOINT::TYPE_ILS: if(showTYPE_VORDME); else return; break; //TODO currently we are combining ILS navaids with VOR/DME:s.
@@ -105,8 +126,10 @@ void QSearchList::showType(int type, bool show)
         case WAYPOINT::TYPE_AIRPORT: showTYPE_AIRPORT = show; break;
         case WAYPOINT::TYPE_NDB: showTYPE_NDB = show; break;
         case WAYPOINT::TYPE_VORDME: showTYPE_VORDME = show; break;
+        case WAYPOINT::TYPE_VORTAC: showTYPE_VORDME = show; break;
         case WAYPOINT::TYPE_VOR: showTYPE_VOR = show; break;
         case WAYPOINT::TYPE_DME: showTYPE_DME = show; break;
+        case WAYPOINT::TYPE_TACAN: showTYPE_DME = show; break;
         case WAYPOINT::TYPE_RSBN: showTYPE_RSBN = show; break;
         case WAYPOINT::TYPE_FIX: showTYPE_FIX = show; break;
         case WAYPOINT::TYPE_AIRWAY: showTYPE_AIRWAY = show; break;
@@ -120,5 +143,16 @@ void QSearchList::showOrigin(int origin, bool show)
     {
         case WAYPOINT::ORIGIN_XNVU: showORIGIN_XNVU = show; break;
     }
+}
+NVUPOINT* QSearchList::getWaypoint(int _index)
+{
+    return getWaypoint(item(_index));
+}
+
+NVUPOINT *QSearchList::getWaypoint(QListWidgetItem *_lItem)
+{
+    QListWidgetItemData* lItem = (QListWidgetItemData*) _lItem;
+    if(!lItem) return NULL;
+    return lItem->nvupoint;
 }
 

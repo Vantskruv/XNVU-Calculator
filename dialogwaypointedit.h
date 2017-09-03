@@ -20,7 +20,7 @@ private:
     Ui::DialogWaypointEdit *ui;
 
 public:
-    NVUPOINT nvupoint;
+    NVUPOINT* newPoint;
     constexpr static int CANCEL = 0;
     constexpr static int SAVE = 1;
     constexpr static int ADD_XNVU = 2;

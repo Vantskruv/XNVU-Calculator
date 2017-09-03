@@ -27,6 +27,8 @@ public:
     void addItem(QListWidgetItemData* wd, bool filter);
     void showType(int type, bool show);
     void showOrigin(int origin, bool show);
+    NVUPOINT* getWaypoint(int _index);    //Get waypoint at index, if the waypoint is an airway, return a list of waypoints.
+    NVUPOINT* getWaypoint(QListWidgetItem* _lItem);    //Get waypoint at index, if the waypoint is an airway, return a list of waypoints.
 };
 
 #endif // QSEARCHLIST_H

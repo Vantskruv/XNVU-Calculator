@@ -23,6 +23,7 @@ const int WAYPOINT::TYPE_LATLON = 8;
 const int WAYPOINT::TYPE_AIRWAY = 9;
 */
 
+/*
 bool WAYPOINT::compare(WAYPOINT *p)
 {
     if(latlon.x!=p->latlon.x) return false;
@@ -35,12 +36,13 @@ bool WAYPOINT::compare(WAYPOINT *p)
     if(elev!=p->elev) return false;
     if(trans_alt!=p->trans_alt) return false;
     if(trans_level!=p->trans_level) return false;
-    if(longest_runway!=p->longest_runway) return false;
+    if(length!=p->lent_runway) return false;
     if(country.compare(p->country)!=0) return false;
     if(ADEV!=p->ADEV) return false;
 
     return true;
 }
+*/
 
 
 QString WAYPOINT::lonToStr(double y)
@@ -75,12 +77,30 @@ QString WAYPOINT::getTypeStr(const WAYPOINT* wp, int _type)
     if(t == TYPE_VORTAC) return "VORTAC";
     if(t == TYPE_TACAN) return "TACAN";
     if(t == TYPE_VHFNAV) return "VHF NAV";
+    if(t == TYPE_RUNWAY) return "Runway";
+    if(t == TYPE_HELIPAD) return "Helipad";
     //if(t == TYPE_STAR) return "STAR";
     //if(t == TYPE_SID) return "SID";
     //if(t == TYPE_APPTR) return "TRANSITION";
     //if(t == TYPE_FINAL) return "FINAL";
 
-    return "NAN";
+    return "???";
+}
+
+QString WAYPOINT::getRunwaySurfaceStr(const WAYPOINT* wp, int _surface)
+{
+    int t = (wp) ? wp->surface : _surface;
+
+    if(t == SURFACE_ASPHALT) return "Asphalt";
+    if(t == SURFACE_CONCRETE) return "Concrete";
+    if(t == SURFACE_DIRT) return "Dirt";
+    if(t == SURFACE_DRY_LAKEBED) return "Dry lakebed";
+    if(t == SURFACE_GRAVEL) return "Gravel";
+    if(t == SURFACE_SNOW_ICE) return "Snow/Ice";
+    if(t == SURFACE_TURF) return "Turf";
+    if(t == SURFACE_WATER) return "Water";
+
+    return "Unknown";
 }
 
 std::vector<QString> WAYPOINT::getTypeStrList()
@@ -101,6 +121,8 @@ std::vector<QString> WAYPOINT::getTypeStrList()
     rTStr.push_back(getTypeStr(NULL, TYPE_TACAN));
     rTStr.push_back(getTypeStr(NULL, TYPE_VORTAC));
     rTStr.push_back(getTypeStr(NULL, TYPE_VHFNAV));
+    rTStr.push_back(getTypeStr(NULL, TYPE_RUNWAY));
+    rTStr.push_back(getTypeStr(NULL, TYPE_HELIPAD));
 
     //rTStr.push_back(getTypeStr(NULL, TYPE_STAR));
     //rTStr.push_back(getTypeStr(NULL, TYPE_SID));
@@ -136,7 +158,10 @@ QString WAYPOINT::getOriginStr(int _origin)
         case ORIGIN_X11_CUSTOM_FIXES: return "Custom earth_fix.dat";
         case ORIGIN_X11_DEFAULT_FIXES: return "Default earth_fix.dat";
     }
- }
+
+    return "Unknown";
+}
+
 
 
 bool WAYPOINT::isNavaid(int _type)

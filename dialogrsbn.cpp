@@ -71,14 +71,14 @@ void DialogRSBN::setWaypointDescription(const NVUPOINT* wp)
     }//if
     ui->labelWPType->setText(qstr);
 
-    if(wp->type == WAYPOINT::TYPE_AIRWAY)
+    if(wp->type == WAYPOINT::TYPE_AIRWAY && wp->data)
     {
         AIRWAY* ats = (AIRWAY*) wp->data;
         ui->labelIWPName2->setText("[" + ats->lATS[0]->name + "] ---> [" + ats->lATS[ats->lATS.size()-1]->name + "]");
     }
     else if(!wp->name2.isEmpty()) ui->labelIWPName2->setText(wp->name2);
 
-    if(wp->type == WAYPOINT::TYPE_AIRWAY)
+    if(wp->type == WAYPOINT::TYPE_AIRWAY && wp->data)
     {
         AIRWAY* ats = (AIRWAY*) wp->data;
         ui->labelWPLatlon->setText("Fixes: " + QString::number(ats->lATS.size()) + "    Dist: " + QString::number(ats->distance, 'f', 1) + " KM");

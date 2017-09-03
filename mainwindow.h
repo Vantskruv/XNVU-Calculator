@@ -25,6 +25,7 @@ private:
     //void calculateTOD();
     void fplDataChangeCheck();
 
+
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();

@@ -7,9 +7,7 @@
 class QListWidgetItemData : public QListWidgetItem
 {
     public:
-        NVUPOINT* nvupoint;
-        //WAYPOINT* waypoint;
-
+        NVUPOINT* nvupoint = NULL;
 
         QListWidgetItemData();
 

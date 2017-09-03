@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>633</width>
-    <height>602</height>
+    <height>524</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -251,7 +251,7 @@ QMenu::item:disabled
      <x>10</x>
      <y>380</y>
      <width>611</width>
-     <height>131</height>
+     <height>71</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -266,7 +266,7 @@ QMenu::item:disabled
    <widget class="QLabel" name="label_Freq_TransAlt">
     <property name="geometry">
      <rect>
-      <x>130</x>
+      <x>140</x>
       <y>10</y>
       <width>111</width>
       <height>18</height>
@@ -285,7 +285,7 @@ QMenu::item:disabled
    <widget class="QLabel" name="label_RangeTransLevel">
     <property name="geometry">
      <rect>
-      <x>280</x>
+      <x>270</x>
       <y>10</y>
       <width>111</width>
       <height>18</height>
@@ -304,7 +304,7 @@ QMenu::item:disabled
    <widget class="QLabel" name="label_AngleDev_LongestRwy">
     <property name="geometry">
      <rect>
-      <x>450</x>
+      <x>400</x>
       <y>10</y>
       <width>161</width>
       <height>18</height>
@@ -323,7 +323,7 @@ QMenu::item:disabled
    <widget class="QSpinBox" name="spinBox_Range">
     <property name="geometry">
      <rect>
-      <x>280</x>
+      <x>270</x>
       <y>30</y>
       <width>111</width>
       <height>27</height>
@@ -336,7 +336,7 @@ QMenu::item:disabled
    <widget class="QDoubleSpinBox" name="doubleSpinBox_AngleDev">
     <property name="geometry">
      <rect>
-      <x>450</x>
+      <x>400</x>
       <y>30</y>
       <width>141</width>
       <height>27</height>
@@ -352,7 +352,7 @@ QMenu::item:disabled
    <widget class="QDoubleSpinBox" name="doubleSpinBox_Freq">
     <property name="geometry">
      <rect>
-      <x>130</x>
+      <x>140</x>
       <y>30</y>
       <width>111</width>
       <height>27</height>
@@ -365,125 +365,11 @@ QMenu::item:disabled
      <double>10000.000000000000000</double>
     </property>
    </widget>
-   <widget class="QLabel" name="label_Freq_TransAlt_2">
-    <property name="geometry">
-     <rect>
-      <x>130</x>
-      <y>70</y>
-      <width>151</width>
-      <height>18</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="text">
-     <string>Trans. Alt (ft)</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_RangeTransLevel_2">
-    <property name="geometry">
-     <rect>
-      <x>280</x>
-      <y>70</y>
-      <width>151</width>
-      <height>18</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="text">
-     <string>Trans. Lvl (ft)</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_AngleDev_LongestRwy_2">
-    <property name="geometry">
-     <rect>
-      <x>450</x>
-      <y>70</y>
-      <width>161</width>
-      <height>18</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="text">
-     <string>Longest Rwy (m)</string>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="spinBox_TransAlt">
-    <property name="geometry">
-     <rect>
-      <x>130</x>
-      <y>90</y>
-      <width>111</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="minimum">
-     <number>-100000</number>
-    </property>
-    <property name="maximum">
-     <number>100000</number>
-    </property>
-    <property name="value">
-     <number>0</number>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="spinBox_TransLevel">
-    <property name="geometry">
-     <rect>
-      <x>280</x>
-      <y>90</y>
-      <width>111</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="minimum">
-     <number>-100000</number>
-    </property>
-    <property name="maximum">
-     <number>100000</number>
-    </property>
-    <property name="value">
-     <number>0</number>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="spinBox_LongestRwy">
-    <property name="geometry">
-     <rect>
-      <x>450</x>
-      <y>90</y>
-      <width>141</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="minimum">
-     <number>0</number>
-    </property>
-    <property name="maximum">
-     <number>100000</number>
-    </property>
-    <property name="value">
-     <number>0</number>
-    </property>
-   </widget>
    <widget class="QComboBox" name="comboBox_Type">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>50</y>
+      <y>30</y>
       <width>111</width>
       <height>26</height>
      </rect>
@@ -724,8 +610,8 @@ QMenu::item:disabled
   <widget class="QPushButton" name="pushButton_Cancel">
    <property name="geometry">
     <rect>
-     <x>480</x>
-     <y>560</y>
+     <x>470</x>
+     <y>480</y>
      <width>140</width>
      <height>27</height>
     </rect>
@@ -749,8 +635,8 @@ QMenu::item:disabled
   <widget class="QPushButton" name="pushButton_SaveCurrent">
    <property name="geometry">
     <rect>
-     <x>330</x>
-     <y>560</y>
+     <x>320</x>
+     <y>480</y>
      <width>140</width>
      <height>27</height>
     </rect>
@@ -775,7 +661,7 @@ QMenu::item:disabled
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>560</y>
+     <y>480</y>
      <width>240</width>
      <height>27</height>
     </rect>
@@ -809,9 +695,6 @@ QMenu::item:disabled
   <tabstop>doubleSpinBox_Freq</tabstop>
   <tabstop>spinBox_Range</tabstop>
   <tabstop>doubleSpinBox_AngleDev</tabstop>
-  <tabstop>spinBox_TransAlt</tabstop>
-  <tabstop>spinBox_TransLevel</tabstop>
-  <tabstop>spinBox_LongestRwy</tabstop>
   <tabstop>pushButton_SaveCurrent</tabstop>
   <tabstop>pushButton_CreateNew</tabstop>
   <tabstop>pushButton_Cancel</tabstop>
