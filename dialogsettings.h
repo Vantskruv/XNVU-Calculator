@@ -24,6 +24,8 @@ private slots:
     void on_buttonBox_accepted();
     void on_checkBoxManual_clicked(bool checked);
 
+    void on_toolButton_5_clicked();
+
 private:
     Ui::DialogSettings *ui;
 
@@ -34,6 +36,7 @@ public:
     static bool XP11;
     static bool XP11_includeCustomAirports;
     static QString xDir;
+    static QString defaultLoadSaveDir;
     static QString customAirportsDir; //TODO: Currently a dummy, either implement it or define it.
     static QString fileAirports;
     static QString fileNavaids;

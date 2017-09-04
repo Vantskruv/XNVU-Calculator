@@ -23,7 +23,7 @@ private:
 public:
     NVUPOINT* nvupoint;
     NVUPOINT* nvupoint2;
-    NVUPOINT* rsbn;
+    WAYPOINT* rsbn;
     QString generateListString(double d, NVUPOINT* rsbn, NVUPOINT* dnvu);
     void setWaypointDescription(const NVUPOINT* wp);
     void initializeList();

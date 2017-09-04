@@ -1,4 +1,6 @@
 #include "waypoint.h"
+#include <airway.h>
+#include <airport_data.h>
 
 /*
 const int WAYPOINT::ORIGIN_AIRAC_AIRPORTS = 1;
@@ -44,6 +46,84 @@ bool WAYPOINT::compare(WAYPOINT *p)
 }
 */
 
+void WAYPOINT::swap(WAYPOINT& m, const WAYPOINT& wp)
+{
+    if(m.type == TYPE_AIRWAY && m.data!=NULL)
+    {
+        AIRWAY* awy = (AIRWAY*) m.data;
+        delete awy;
+    }//if
+    else if(m.type == TYPE_AIRPORT && m.data!=NULL)
+    {
+        AIRPORT_DATA* aRwys = (AIRPORT_DATA*) m.data;
+        delete aRwys;
+    }//if
+
+    m.latlon = wp.latlon;
+    m.type = wp.type;
+    m.name = wp.name;
+    m.name2 = wp.name2;
+    m.range = wp.range;
+    m.freq = wp.freq;
+    m.alt = wp.alt;
+    m.elev = wp.elev;
+    m.trans_alt = wp.trans_alt;
+    m.trans_level = wp.trans_level;
+    m.length = wp.length;
+    m.width = wp.width;
+    m.surface = wp.surface;
+    m.country = wp.country;
+    m.MD = wp.MD;
+    m.ADEV = wp.ADEV;          //Angle deviation of VOR/DME from X-Plane earth_nav.dat
+    m.wpOrigin = wp.wpOrigin;         //If waypoint has not been converted from FMS (1), is retrieved from earth_nav.dat (2), or is custom made (3)
+    m.data = NULL;
+
+    if(wp.type == TYPE_AIRPORT && wp.data!=NULL)
+    {
+        AIRPORT_DATA* apd = (AIRPORT_DATA*) wp.data;
+        m.data = (void*) new AIRPORT_DATA(*apd);
+    }
+    else if(wp.type == TYPE_AIRWAY && wp.data!=NULL)
+    {
+        AIRWAY* awy = (AIRWAY*) wp.data;
+        m.data = (void*) new AIRWAY(*awy);
+    }
+}
+
+WAYPOINT::WAYPOINT()
+{
+    type = -1;
+    data = NULL;
+}
+
+WAYPOINT::WAYPOINT(const WAYPOINT& wp)
+{
+    swap(*this, wp);
+}
+WAYPOINT& WAYPOINT::operator=(const WAYPOINT& other)
+{
+    swap(*this, other);
+    return *this;
+}
+
+WAYPOINT* WAYPOINT::clone()
+{
+    return new WAYPOINT(*this);
+}
+
+WAYPOINT::~WAYPOINT()
+{
+    if(type == TYPE_AIRWAY && data!=NULL)
+    {
+        AIRWAY* awy = (AIRWAY*) data;
+        delete awy;
+    }//if
+    else if(type == TYPE_AIRPORT && data!=NULL)
+    {
+        AIRPORT_DATA* aRwys = (AIRPORT_DATA*) data;
+        delete aRwys;
+    }//if
+}
 
 QString WAYPOINT::lonToStr(double y)
 {

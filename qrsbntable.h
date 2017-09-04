@@ -13,7 +13,7 @@ class QRSBNTable : public QTableWidget
 public:
         enum COL{S, ZM, SM, ID, NAME, _SIZE};
         const QStringList COL_STR = (QStringList() << "S" << "Zm" << "Sm" << "ID" << "Name");
-        void refresh(NVUPOINT* _nvupoint, NVUPOINT* _nvupoint2, int _dist, bool _showVORDME, NVUPOINT* rsbn = NULL);
+        void refresh(NVUPOINT* _nvupoint, NVUPOINT* _nvupoint2, int _dist, bool _showVORDME, WAYPOINT *rsbn = NULL);
         void clearRSBNTable();
         NVUPOINT* getRSBN(int row, bool lastOutOfIndex = false);
 

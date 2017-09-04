@@ -44,7 +44,7 @@ QRSBNTable::QRSBNTable(QWidget *w) : QTableWidget(w)
     selectRow(0);
 }
 
-void QRSBNTable::refresh(NVUPOINT* _nvupoint, NVUPOINT* _nvupoint2, int _dist, bool _showVORDME, NVUPOINT *rsbn)
+void QRSBNTable::refresh(NVUPOINT* _nvupoint, NVUPOINT* _nvupoint2, int _dist, bool _showVORDME, WAYPOINT *rsbn)
 {
     int crow = 0;
     if(rsbn==NULL)
@@ -62,13 +62,13 @@ void QRSBNTable::refresh(NVUPOINT* _nvupoint, NVUPOINT* _nvupoint2, int _dist, b
     {
         insertRow(row+1);
         for(unsigned int i=0; i<COL::_SIZE; i++) setItem(row+1, i, new QTableWidgetItem);
-        NVUPOINT* r = lRSBN[row].first;
+        WAYPOINT* r = (WAYPOINT*) lRSBN[row].first;
         double d = lRSBN[row].second;
 
         item(row+1, COL::S)->setText(QString::number(d, 'f', 0));
         if(_nvupoint2)
         {
-            dnvupoint.rsbn = r;
+            dnvupoint.setRSBN(r);
             dnvupoint.calc_rsbn_corr(_nvupoint2->latlon);
             item(row+1, COL::ZM)->setText(QString::number(dnvupoint.Zm, 'f', 0));
             item(row+1, COL::SM)->setText(QString::number(dnvupoint.Sm, 'f', 0));

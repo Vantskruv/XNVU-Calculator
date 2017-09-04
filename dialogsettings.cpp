@@ -10,6 +10,7 @@
 bool DialogSettings::XP11 = false;
 bool DialogSettings::XP11_includeCustomAirports = false;
 QString DialogSettings::xDir;
+QString DialogSettings::defaultLoadSaveDir="";
 QString DialogSettings::customAirportsDir; //TODO: Currently a dummy, either implement it or define it.
 QString DialogSettings::fileAirports;
 QString DialogSettings::fileNavaids;
@@ -46,6 +47,7 @@ DialogSettings::DialogSettings(QWidget *parent) :
     ui->setupUi(this);
 
     ui->lineEditXPlaneDirectory->setText(xDir);
+    ui->lineEditDefaultLoadSaveDir->setText(defaultLoadSaveDir);
     ui->lineEditAirportsFiles->setText(fileAirports);
     ui->lineEditNavaidsFile->setText(fileNavaids);
     ui->lineEditWaypointsFile->setText(fileWaypoints);
@@ -72,6 +74,7 @@ void DialogSettings::loadSettings()
     XP11 = s.value("XP11", XP11).toBool();
     XP11_includeCustomAirports = s.value("XP11_includeCustomAirports", XP11_includeCustomAirports).toBool();
     xDir = s.value("XPlaneDirectory").toString();
+    defaultLoadSaveDir = s.value("DefaultLoadSaveDir").toString();
     fileAirports = s.value("AirportFile").toString();
     fileNavaids = s.value("NavaidFile").toString();
     fileWaypoints = s.value("WaypointsFile", fileWaypoints).toString();
@@ -106,6 +109,7 @@ void DialogSettings::saveSettings()
     s.setValue("XP11", XP11);
     s.setValue("XP11_includeCustomAirports", XP11_includeCustomAirports);
     s.setValue("XPlaneDirectory", xDir);
+    s.setValue("DefaultLoadSaveDir", defaultLoadSaveDir);
     s.setValue("AirportFile", fileAirports);
     s.setValue("NavaidFile", fileNavaids);
     s.setValue("WaypointsFile", fileWaypoints);
@@ -165,6 +169,14 @@ void DialogSettings::on_toolButton_4_clicked()
     ui->lineEditRSBNFile->setText(fileRSBN);
 }
 
+void DialogSettings::on_toolButton_5_clicked()
+{
+    QString _cDir = QFileDialog::getExistingDirectory(this, "Choose X-Plane directory", DialogSettings::defaultLoadSaveDir);
+    if(_cDir.isEmpty()) return;
+
+    ui->lineEditDefaultLoadSaveDir->setText(_cDir);
+}
+
 void DialogSettings::on_lineEditXPlaneDirectory_textChanged(const QString &arg1)
 {
     xDir = arg1;
@@ -190,6 +202,7 @@ void DialogSettings::on_buttonBox_accepted()
     fileRSBN = ui->lineEditRSBNFile->text();
 
     xDir = ui->lineEditXPlaneDirectory->text();
+    defaultLoadSaveDir = ui->lineEditDefaultLoadSaveDir->text();
     fileAirports = ui->lineEditAirportsFiles->text();
     fileNavaids = ui->lineEditNavaidsFile->text();
     fileWaypoints = ui->lineEditWaypointsFile->text();
@@ -220,3 +233,5 @@ void DialogSettings::on_checkBoxManual_clicked(bool checked)
         ui->lineEditEarthnavFile->setEnabled(false);
     }
 }
+
+

@@ -4,6 +4,8 @@
 #include "dialogwaypointedit.h"
 #include "XFMS_DATA.h"
 
+#include <airway.h>
+
 DialogWPSEdit::DialogWPSEdit(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::DialogWPSEdit)
@@ -128,21 +130,24 @@ void DialogWPSEdit::on_pushButton_Edit_clicked()
 
     DialogWaypointEdit dEdit(iD->nvupoint, true);
     const int rv = dEdit.exec();
-
+    NVUPOINT* np;
     switch(rv)
     {
         case DialogWaypointEdit::SAVE:
-            dEdit.newPoint->wpOrigin = WAYPOINT::ORIGIN_XNVU;
-            XFMS_DATA::addXNVUWaypoint(dEdit.newPoint);
+            np = new NVUPOINT(dEdit.newPoint);
+            np->wpOrigin = WAYPOINT::ORIGIN_XNVU;
+            XFMS_DATA::addXNVUWaypoint(np);
             XFMS_DATA::removeXNVUWaypoint(iD->nvupoint);
             delete iD->nvupoint;
-            iD->nvupoint = dEdit.newPoint;
+            iD->nvupoint = np;
             initializeList(iD->nvupoint);
         break;
 
         case DialogWaypointEdit::ADD_XNVU:
-            XFMS_DATA::addXNVUWaypoint(dEdit.newPoint);
-            initializeList(dEdit.newPoint);
+            np = new NVUPOINT(dEdit.newPoint);
+            np->wpOrigin = WAYPOINT::ORIGIN_XNVU;
+            XFMS_DATA::addXNVUWaypoint(np);
+            initializeList(np);
         break;
     }
 }
@@ -162,12 +167,14 @@ void DialogWPSEdit::on_pushButton_CreateNew_clicked()
     DialogWaypointEdit dEdit(NULL, false);
     const int rv = dEdit.exec();
 
+    NVUPOINT* np;
     switch(rv)
     {
         case DialogWaypointEdit::ADD_XNVU:
-            NVUPOINT* nP = new NVUPOINT(*dEdit.newPoint);
-            XFMS_DATA::addXNVUWaypoint(nP);
-            initializeList(nP);
+            np = new NVUPOINT(dEdit.newPoint);
+            np->wpOrigin = WAYPOINT::ORIGIN_XNVU;
+            XFMS_DATA::addXNVUWaypoint(np);
+            initializeList(np);
         break;
     }
 }

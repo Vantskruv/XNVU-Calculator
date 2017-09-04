@@ -1,4 +1,6 @@
 #include "XFMS_DATA.h"
+#include <airway.h>
+#include <airport_data.h>
 
 #include <fstream>
 #include <sstream>
@@ -1257,7 +1259,7 @@ void XFMS_DATA::validate_runways(const NVUPOINT* ap, const std::vector<RUNWAY*>&
         rwy = new NVUPOINT(*ap);
         if(rwy->data) delete rwy->data;
         //rwy->data = (void*) ap;
-        rwy->data = (void*) new WAYPOINT(*ap);
+        rwy->data = NULL;
         rwy->latlon = lRunways[i]->start;
         rwy->length = lRunways[i]->getLength();
         rwy->width = lRunways[i]->getWidth();
@@ -1265,7 +1267,7 @@ void XFMS_DATA::validate_runways(const NVUPOINT* ap, const std::vector<RUNWAY*>&
         rwy->name = lRunways[i]->rwyA;
         rwy->name2 = ap->name;// + " - " + ap->name2;
         rwy->type = lRunways[i]->type;
-        apd->lRunways.push_back(rwy);
+        //apd->lRunways.push_back(rwy);
         lWP.insert(std::make_pair(rwy->name, rwy));
         lWP2.insert(std::make_pair(rwy->name2, rwy));
 
@@ -1273,7 +1275,7 @@ void XFMS_DATA::validate_runways(const NVUPOINT* ap, const std::vector<RUNWAY*>&
 
         rwy = new NVUPOINT(*ap);
         if(rwy->data) delete rwy->data;
-        rwy->data = (void*) new WAYPOINT(*ap);
+        rwy->data = NULL;
         rwy->latlon = lRunways[i]->end;
         rwy->length = lRunways[i]->getLength();
         rwy->width = lRunways[i]->getWidth();
@@ -1281,7 +1283,7 @@ void XFMS_DATA::validate_runways(const NVUPOINT* ap, const std::vector<RUNWAY*>&
         rwy->name = lRunways[i]->rwyB;
         rwy->name2 = ap->name;// + " " + ap->name2;
         rwy->type = lRunways[i]->type;
-        apd->lRunways.push_back(rwy);
+        //apd->lRunways.push_back(rwy);
         lWP.insert(std::make_pair(rwy->name, rwy));
         lWP2.insert(std::make_pair(rwy->name2, rwy));
     }
@@ -3107,9 +3109,9 @@ int XFMS_DATA::saveXNVUFlightplan(const QString& file, std::vector<NVUPOINT*> lN
             << p->type << '|' << p->name << '|' << p->name2 << '|' << p->country << '|' << p->latlon.x << '|' << p->latlon.y << '|' << p->alt << '|'
             << p->elev << '|' << p->freq << '|' << p->range << '|' << p->ADEV << '|'
             << p->trans_alt << '|' << p->trans_level << '|' << p->length << '|';
-        if(p->rsbn)
+        if(p->getRSBN())
         {
-            out << p->rsbn->wpOrigin << '|' << p->rsbn->name << '|' << p->rsbn->name2 << '|' << p->rsbn->freq << '|' << p->rsbn->latlon.x << '|' << p->rsbn->latlon.y << "\n";
+            out << p->getRSBN()->wpOrigin << '|' << p->getRSBN()->name << '|' << p->getRSBN()->name2 << '|' << p->getRSBN()->freq << '|' << p->getRSBN()->latlon.x << '|' << p->getRSBN()->latlon.y << "\n";
         }//if
         else
         {
@@ -3221,7 +3223,6 @@ void XFMS_DATA::validate_xnvuflightplan(std::vector<NVUPOINT*>& lXNVUFlightplan,
     //Search for RSBN correction beacon, it needs to be the one here.
     std::vector< std::pair<NVUPOINT*, double> > lR;
     lR = XFMS_DATA::getClosestRSBN(&rsbn, -1, -1, (rsbn.wpOrigin == WAYPOINT::ORIGIN_RSBN) ? false : true);
-    wp.rsbn = NULL;
     if(lR.size()>0)
     {
         if
@@ -3232,7 +3233,7 @@ void XFMS_DATA::validate_xnvuflightplan(std::vector<NVUPOINT*>& lXNVUFlightplan,
            lR[0].second<=DEFAULT_WAYPOINT_MARGIN
         )
         {
-            wp.rsbn = lR[0].first;
+            wp.setRSBN(lR[0].first);
         }
     }
 
@@ -3242,7 +3243,7 @@ void XFMS_DATA::validate_xnvuflightplan(std::vector<NVUPOINT*>& lXNVUFlightplan,
     NVUPOINT* nwp = NULL;
     if(DialogSettings::distAlignXWP)
     {
-        double d = 0.0;
+        double d = -1;
         std::vector< std::pair<NVUPOINT*, double> > lWP = getClosestWaypointType(wp.latlon, wp.name, 0);
         if(lWP.size()>0){ nwp = lWP[0].first; d = lWP[0].second; };
 
@@ -3250,13 +3251,11 @@ void XFMS_DATA::validate_xnvuflightplan(std::vector<NVUPOINT*>& lXNVUFlightplan,
         else
         {
             nwp = new NVUPOINT(*nwp);
-            nwp->rsbn = wp.rsbn;
+            nwp->setRSBN(wp.getRSBN());
         }
     }//if
     else nwp = new NVUPOINT(wp);
 
-    //lWP.insert(std::make_pair(nwp->name, nwp));
-    //lWP2.insert(std::make_pair(nwp->name2, nwp));
     lXNVUFlightplan.push_back(nwp);
 }
 
@@ -3347,7 +3346,6 @@ void XFMS_DATA::validate_fms(std::vector<NVUPOINT*>& lFMS, const QStringList& RA
         else
         {
             nwp = new NVUPOINT(*nwp);
-            nwp->rsbn = wp.rsbn;
         }
     }//if
     else nwp = new NVUPOINT(wp);

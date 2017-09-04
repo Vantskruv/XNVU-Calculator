@@ -12,21 +12,20 @@ DialogWaypointEdit::DialogWaypointEdit(const NVUPOINT* _nvuPoint, bool isSave, Q
 {
     ui->setupUi(this);
 
-    newPoint = new NVUPOINT();
     if(_nvuPoint)
     {
-        newPoint->latlon = _nvuPoint->latlon;
-        newPoint->type = _nvuPoint->type;
-        newPoint->name = _nvuPoint->name;
-        newPoint->name2 = _nvuPoint->name2;
-        newPoint->range = _nvuPoint->range;
-        newPoint->freq = _nvuPoint->freq;
-        newPoint->alt = _nvuPoint->alt;
-        newPoint->elev = _nvuPoint->elev;
-        newPoint->rsbn = _nvuPoint->rsbn;
-        newPoint->country = _nvuPoint->country;
-        newPoint->MD = _nvuPoint->MD;
-        newPoint->ADEV = _nvuPoint->ADEV;
+        newPoint.latlon = _nvuPoint->latlon;
+        newPoint.type = _nvuPoint->type;
+        newPoint.name = _nvuPoint->name;
+        newPoint.name2 = _nvuPoint->name2;
+        newPoint.range = _nvuPoint->range;
+        newPoint.freq = _nvuPoint->freq;
+        newPoint.alt = _nvuPoint->alt;
+        newPoint.elev = _nvuPoint->elev;
+        newPoint.setRSBN(_nvuPoint->getRSBN());
+        newPoint.country = _nvuPoint->country;
+        newPoint.MD = _nvuPoint->MD;
+        newPoint.ADEV = _nvuPoint->ADEV;
     }//if
 
 
@@ -37,9 +36,9 @@ DialogWaypointEdit::DialogWaypointEdit(const NVUPOINT* _nvuPoint, bool isSave, Q
     ui->lineEdit_Name->setFont(font);
     ui->lineEdit_Country->setFont(font);
 
-    ui->doubleSpinBox_Freq->setDisabled(true);
-    ui->spinBox_Range->setDisabled(true);
-    ui->doubleSpinBox_AngleDev->setDisabled(true);
+    //ui->doubleSpinBox_Freq->setDisabled(true);
+    //ui->spinBox_Range->setDisabled(true);
+    //ui->doubleSpinBox_AngleDev->setDisabled(true);
 
     if(isSave) ui->pushButton_SaveCurrent->setDisabled(false);
     else ui->pushButton_SaveCurrent->setDisabled(true);
@@ -56,20 +55,20 @@ DialogWaypointEdit::DialogWaypointEdit(const NVUPOINT* _nvuPoint, bool isSave, Q
     ui->comboBox_Type->addItem(WAYPOINT::getTypeStr(NULL, WAYPOINT::TYPE_VORTAC), QVariant(WAYPOINT::TYPE_VORTAC));
 
 
-    ui->lineEdit_Identifier->setText(newPoint->name);
-    ui->lineEdit_Name->setText(newPoint->name2);
-    ui->lineEdit_Country->setText(newPoint->country);
+    ui->lineEdit_Identifier->setText(newPoint.name);
+    ui->lineEdit_Name->setText(newPoint.name2);
+    ui->lineEdit_Country->setText(newPoint.country);
 
-    ui->doubleSpinBox_Lat->setValue(newPoint->latlon.x);
-    ui->doubleSpinBox_Lon->setValue(newPoint->latlon.y);
-    ui->spinBox_Elev->setValue(newPoint->elev);
-    ui->spinBox_Alt->setValue(newPoint->alt);
+    ui->doubleSpinBox_Lat->setValue(newPoint.latlon.x);
+    ui->doubleSpinBox_Lon->setValue(newPoint.latlon.y);
+    ui->spinBox_Elev->setValue(newPoint.elev);
+    ui->spinBox_Alt->setValue(newPoint.alt);
 
     bool isFound = false;
     for(unsigned int i=0; i<ui->comboBox_Type->count(); i++)
     {
         QVariant variant = ui->comboBox_Type->itemData(i);
-        if(variant.toInt() == newPoint->type)
+        if(variant.toInt() == newPoint.type)
         {
             isFound = true;
             ui->comboBox_Type->setCurrentIndex(i);
@@ -81,9 +80,9 @@ DialogWaypointEdit::DialogWaypointEdit(const NVUPOINT* _nvuPoint, bool isSave, Q
         ui->comboBox_Type->setCurrentIndex(0);
     }
 
-    ui->doubleSpinBox_Freq->setValue(newPoint->freq);
-    ui->spinBox_Range->setValue(newPoint->range);
-    ui->doubleSpinBox_AngleDev->setValue(newPoint->ADEV);
+    ui->doubleSpinBox_Freq->setValue(newPoint.freq);
+    ui->spinBox_Range->setValue(newPoint.range);
+    ui->doubleSpinBox_AngleDev->setValue(newPoint.ADEV);
 }
 
 DialogWaypointEdit::~DialogWaypointEdit()
@@ -98,48 +97,46 @@ void DialogWaypointEdit::on_comboBox_Type_currentIndexChanged(int index)
 
 void DialogWaypointEdit::on_pushButton_Cancel_clicked()
 {
-    delete newPoint;
-    newPoint = NULL;
     done(CANCEL);
 }
 
 void DialogWaypointEdit::on_pushButton_SaveCurrent_clicked()
 {
-    newPoint->name = ui->lineEdit_Identifier->text().toUpper();
-    newPoint->name2 = ui->lineEdit_Name->text().toUpper();
-    newPoint->country = ui->lineEdit_Country->text().toUpper();
+    newPoint.name = ui->lineEdit_Identifier->text().toUpper();
+    newPoint.name2 = ui->lineEdit_Name->text().toUpper();
+    newPoint.country = ui->lineEdit_Country->text().toUpper();
 
-    newPoint->latlon.x = ui->doubleSpinBox_Lat->value();
-    newPoint->latlon.y = ui->doubleSpinBox_Lon->value();
-    newPoint->elev = ui->spinBox_Elev->value();
-    newPoint->alt = ui->spinBox_Alt->value();
+    newPoint.latlon.x = ui->doubleSpinBox_Lat->value();
+    newPoint.latlon.y = ui->doubleSpinBox_Lon->value();
+    newPoint.elev = ui->spinBox_Elev->value();
+    newPoint.alt = ui->spinBox_Alt->value();
 
-    newPoint->freq = ui->doubleSpinBox_Freq->value();
-    newPoint->range = ui->spinBox_Range->value();
-    newPoint->ADEV = ui->doubleSpinBox_AngleDev->value();
+    newPoint.freq = ui->doubleSpinBox_Freq->value();
+    newPoint.range = ui->spinBox_Range->value();
+    newPoint.ADEV = ui->doubleSpinBox_AngleDev->value();
 
-    newPoint->type = ui->comboBox_Type->currentData().toInt();
+    newPoint.type = ui->comboBox_Type->currentData().toInt();
 
     done(SAVE);
 }
 
 void DialogWaypointEdit::on_pushButton_CreateNew_clicked()
 {
-    newPoint->name = ui->lineEdit_Identifier->text().toUpper();
-    newPoint->name2 = ui->lineEdit_Name->text().toUpper();
-    newPoint->country = ui->lineEdit_Country->text().toUpper();
+    newPoint.name = ui->lineEdit_Identifier->text().toUpper();
+    newPoint.name2 = ui->lineEdit_Name->text().toUpper();
+    newPoint.country = ui->lineEdit_Country->text().toUpper();
 
-    newPoint->latlon.x = ui->doubleSpinBox_Lat->value();
-    newPoint->latlon.y = ui->doubleSpinBox_Lon->value();
-    newPoint->elev = ui->spinBox_Elev->value();
-    newPoint->alt = ui->spinBox_Alt->value();
+    newPoint.latlon.x = ui->doubleSpinBox_Lat->value();
+    newPoint.latlon.y = ui->doubleSpinBox_Lon->value();
+    newPoint.elev = ui->spinBox_Elev->value();
+    newPoint.alt = ui->spinBox_Alt->value();
 
-    newPoint->freq = ui->doubleSpinBox_Freq->value();
-    newPoint->range = ui->spinBox_Range->value();
-    newPoint->ADEV = ui->doubleSpinBox_AngleDev->value();
+    newPoint.freq = ui->doubleSpinBox_Freq->value();
+    newPoint.range = ui->spinBox_Range->value();
+    newPoint.ADEV = ui->doubleSpinBox_AngleDev->value();
 
-    newPoint->type = ui->comboBox_Type->currentData().toInt();
+    newPoint.type = ui->comboBox_Type->currentData().toInt();
 
-    newPoint->wpOrigin = WAYPOINT::ORIGIN_XNVU;
+    newPoint.wpOrigin = WAYPOINT::ORIGIN_XNVU;
     done(ADD_XNVU);
 }

@@ -6,6 +6,9 @@
 #include <QDebug>
 #include <QMouseEvent>
 
+#include <airway.h>
+#include <airport_data.h>
+
 QSearchList::QSearchList(QWidget *&w)
 {
     setFocusPolicy(Qt::NoFocus);

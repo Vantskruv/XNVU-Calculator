@@ -348,12 +348,12 @@ void QFlightplanTable::refreshRow(int row)
     item(row, COL::SPAS)->setText(QString::number(waypoint->Spas, 'f', 1));
     item(row, COL::SREM)->setText(QString::number(waypoint->Srem, 'f', 1));
 
-    if(waypoint->rsbn)
+    if(waypoint->getRSBN())
     {
-        double d = LMATH::calc_distance(waypoint->latlon, waypoint->rsbn->latlon);
-        qstr =        waypoint->rsbn->name +
-                      (waypoint->rsbn->country.isEmpty() ? "" : + " (" + waypoint->rsbn->country + ")") +
-                      (waypoint->rsbn->name2.isEmpty() ? "" : "  " + waypoint->rsbn->name2) +
+        double d = LMATH::calc_distance(waypoint->latlon, waypoint->getRSBN()->latlon);
+        qstr =        waypoint->getRSBN()->name +
+                      (waypoint->getRSBN()->country.isEmpty() ? "" : + " (" + waypoint->getRSBN()->country + ")") +
+                      (waypoint->getRSBN()->name2.isEmpty() ? "" : "  " + waypoint->getRSBN()->name2) +
                       " (" + QString::number(d, 'f', 0) + " KM)";
         item(row, COL::RSBN)->setText(qstr);
 
@@ -391,9 +391,6 @@ void QFlightplanTable::refreshFlightplan()
     double fork;
     NVU::generate(lNVUPoints, fork, dat);
 
-    //Update visual values in table
-    for(int i=0; i<rowCount(); i++) refreshRow(i);
-
     qFork->setText("Fork   " + QString::number(fork, 'f', 1));
 
     NVUPOINT *cp = NULL;
@@ -421,6 +418,9 @@ void QFlightplanTable::refreshFlightplan()
         else qTOD->setText("TOD: " + (d < 1.0 ? "at " : QString::number(d/1.852, 'f', 1) + " nm before ") + cp->name);
     }
     else qTOD->setText("TOD: UNABLE ");// + QString((DialogSettings::showTOD_METRIC == true ? " km" : " nm")));
+
+    //Update visual values in table
+    for(int i=0; i<rowCount(); i++) refreshRow(i);
 }
 
 void QFlightplanTable::autoGenerateCorrectionBeacons()
@@ -433,7 +433,7 @@ void QFlightplanTable::autoGenerateCorrectionBeacons()
         lRSBN = XFMS_DATA::getClosestRSBN(lNVUPoints[i], -1, DialogSettings::beaconDistance, DialogSettings::correctionVORDME);
         NVUPOINT* rsbn = NULL;
         double minZm = 0;
-        lNVUPoints[i]->rsbn = NULL;
+        lNVUPoints[i]->setRSBN(NULL);
 
         //Get leg distance for second next waypoint
         //Hence this S value for that leg will replace the Sm value which user eventually put in here, so it is good to have
@@ -443,14 +443,14 @@ void QFlightplanTable::autoGenerateCorrectionBeacons()
         if(lRSBN.size()>0)
         {
             rsbn = lRSBN[0].first;
-            lNVUPoints[i]->rsbn = lRSBN[0].first;
+            lNVUPoints[i]->setRSBN(lRSBN[0].first);
             lNVUPoints[i]->calc_rsbn_corr(lNVUPoints[i+1]->latlon);
             minZm = fabs(lNVUPoints[i]->Zm)*weight + fabs(lNVUPoints[i]->Sm + sN);
         }
 
         for(unsigned int j=0; j<lRSBN.size(); j++)
         {
-            lNVUPoints[i]->rsbn = lRSBN[j].first;
+            lNVUPoints[i]->setRSBN(lRSBN[j].first);
             lNVUPoints[i]->calc_rsbn_corr(lNVUPoints[i+1]->latlon);
             double sum =  fabs(lNVUPoints[i]->Zm)*weight + fabs(lNVUPoints[i]->Sm + sN);
             if(sum<minZm)
@@ -460,7 +460,7 @@ void QFlightplanTable::autoGenerateCorrectionBeacons()
             }//if
         }//for
 
-        lNVUPoints[i]->rsbn = rsbn;
+        lNVUPoints[i]->setRSBN(rsbn);
     }
 }
 

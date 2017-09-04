@@ -6,46 +6,7 @@
 #include "coremag.h"
 #include <QDebug>
 
-void NVUPOINT::calc_rsbn_corr(CPoint _p2R)
-{
-    if(rsbn==NULL) return;
 
-    //Set coordinates to radial
-    CPoint pRR = rsbn->latlon*M_PI/180.0;
-    CPoint p1R = latlon*M_PI/180.0;
-    CPoint p2R = _p2R*M_PI/180.0;
-
-    //Calculate point on course which is in 90 degree angle to the RSBN (vI)
-    CPoint v = LMATH::latlonToVector(p2R) - LMATH::latlonToVector(p1R);                         //Vector v pointing from p1R to p2R
-    CPoint vR = LMATH::latlonToVector(pRR) - LMATH::latlonToVector(p1R);                        //Vector vR pointing from p1R to pRR
-    double d = LMATH::GetClosestPointOnVector(vR, v);                                           //Returns scalar of v where vR is closest
-    CPoint vI = LMATH::latlonToVector(p1R) + v*d;                                               //Scale vector v to closest point and add p1R
-    vI = LMATH::vectorToLatlon(vI);                                                             //Transform above to latlon
-
-    //Calculate Sm (distance from second point to vI)
-    Sm = LMATH::calc_distance(p2R*180.0/M_PI, vI*180.0/M_PI);
-    //If closest point on course is at the other side of endpoint, set Sm to negative.
-    if(d<1.0) Sm = -Sm;
-
-    //Calculate Zm (distance from RSBN to vI)
-    Zm = LMATH::calc_distance(rsbn->latlon, vI*180.0/M_PI);
-    //If RSBN is on the left side of course, set Zm to negative.
-    v = v.getNormal(true);
-    if(LMATH::GetClosestPointOnVector(vR, v)>0) Zm = -Zm;
-
-    //Calculate map angle
-    vI = LMATH::latlonToVector(p2R) - LMATH::latlonToVector(p1R) + LMATH::latlonToVector(pRR);
-    vI = LMATH::vectorToLatlon(vI);
-    vI = vI*180.0/M_PI;
-    MapAngle = LMATH::calc_bearing(rsbn->latlon, vI);       //YK - A????
-    if(rsbn->wpOrigin == WAYPOINT::ORIGIN_X10_EARTHNAV || WAYPOINT::ORIGIN_X11_CUSTOM_EARTHNAV || WAYPOINT::ORIGIN_X11_DEFAULT_EARTHNAV) MapAngle-=rsbn->ADEV;
-
-    //Calculate Atrg
-    Atrg = LMATH::calc_bearing(rsbn->latlon, _p2R);
-
-    //Calculate Dtrg
-    Dtrg = LMATH::calc_distance(rsbn->latlon, _p2R);
-}
 
 void NVU::generate(std::vector<NVUPOINT*>& lWPs, double& NVU_FORK, long dat)
 {

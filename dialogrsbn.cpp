@@ -5,6 +5,9 @@
 #include "LMATH.h"
 #include <dialogsettings.h>
 
+#include <airway.h>
+#include <airport_data.h>
+
 #include <QDebug>
 
 DialogRSBN::DialogRSBN(NVUPOINT* wp, NVUPOINT* wp2, QWidget *parent) :
@@ -17,20 +20,43 @@ DialogRSBN::DialogRSBN(NVUPOINT* wp, NVUPOINT* wp2, QWidget *parent) :
     ui->listRSBN->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
     nvupoint = wp;
     nvupoint2 = wp2;
-    rsbn = (NVUPOINT*) nvupoint->rsbn;
+    rsbn = nvupoint->getRSBN();
 
     ui->spinBox->setValue(DialogSettings::beaconDistance);
     ui->checkBoxVORDME->setChecked(DialogSettings::correctionVORDME);
 
     if(rsbn)    //If rsbn is already set for this waypoint, and distance is greater then default max-distance shown, set new distance + 10 km so the rsbn can be shown in list.
     {
-        double d = LMATH::calc_distance(wp->latlon, rsbn->latlon);
-        if(d>ui->spinBox->value()) ui->spinBox->setValue((int)d+10);
-        if(rsbn->type!=WAYPOINT::TYPE_RSBN) ui->checkBoxVORDME->setChecked(true);
+        //Search for RSBN correction beacon, it needs to be the one here.
+        WAYPOINT* _rsbn = rsbn;
+        rsbn = NULL;
+        std::vector< std::pair<NVUPOINT*, double> > lR;
+        lR = XFMS_DATA::getClosestRSBN((NVUPOINT*)_rsbn, -1, -1, (_rsbn->wpOrigin == WAYPOINT::ORIGIN_RSBN) ? false : true);
+
+        for(unsigned int i=0; i<lR.size(); i++)
+        {
+            if
+            (
+               _rsbn->name.compare(lR[i].first->name)==0 &&
+               _rsbn->name2.compare(lR[i].first->name2)==0 &&
+               _rsbn->freq == lR[i].first->freq &&
+               lR[i].second<=DEFAULT_WAYPOINT_MARGIN
+            )
+            {
+                rsbn = lR[i].first;
+                break;
+            }
+        }
+        if(rsbn)
+        {
+            double d = LMATH::calc_distance(wp->latlon, rsbn->latlon);
+            if(d>ui->spinBox->value()) ui->spinBox->setValue((int)d+10);
+            if(rsbn->type!=WAYPOINT::TYPE_RSBN) ui->checkBoxVORDME->setChecked(true);
+        }//if
     }//
 
     ui->listRSBN->refresh(nvupoint, nvupoint2, ui->spinBox->value(), ui->checkBoxVORDME->isChecked(), rsbn);
-    setWaypointDescription(rsbn);
+    setWaypointDescription((NVUPOINT*)rsbn);
 }
 
 DialogRSBN::~DialogRSBN()
@@ -109,13 +135,13 @@ void DialogRSBN::setWaypointDescription(const NVUPOINT* wp)
 void DialogRSBN::on_checkBoxVORDME_stateChanged(int arg1)
 {
     ui->listRSBN->refresh(nvupoint, nvupoint2, ui->spinBox->value(), ui->checkBoxVORDME->isChecked(), rsbn);
-    setWaypointDescription(rsbn);
+    setWaypointDescription((NVUPOINT*)rsbn);
 }
 
 void DialogRSBN::on_spinBox_valueChanged(int arg1)
 {
     ui->listRSBN->refresh(nvupoint, nvupoint2, ui->spinBox->value(), ui->checkBoxVORDME->isChecked(), rsbn);
-    setWaypointDescription(rsbn);
+    setWaypointDescription((NVUPOINT*)rsbn);
 }
 
 void DialogRSBN::on_buttonBox_accepted()
@@ -128,5 +154,5 @@ void DialogRSBN::on_listRSBN_itemClicked(QTableWidgetItem *item)
 {
     int row = ui->listRSBN->row(item);
     rsbn = ui->listRSBN->getRSBN(row);
-    setWaypointDescription(rsbn);
+    setWaypointDescription((NVUPOINT*)rsbn);
 }

@@ -19,6 +19,9 @@
 #include <QPrintPreviewDialog>
 #include <qlabelclick.h>
 
+#include <nvupoint.h>
+#include <airway.h>
+
 
 int dat; //TODO
 QLabel* labelWarning;
@@ -249,17 +252,21 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
 
                 if(dr==DialogWaypointEdit::ADD_XNVU) //Create new
                 {
-                    XFMS_DATA::addXNVUWaypoint(dEdit.newPoint);
-                    NVUPOINT* nvup = new NVUPOINT(*dEdit.newPoint);
+
+                    NVUPOINT* nvup = new NVUPOINT(dEdit.newPoint);
                     nvup->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
-                    nvup->rsbn = wp->rsbn;
                     ui->tableWidget->replaceWaypoint(nvup, row);
+                    nvup = new NVUPOINT(dEdit.newPoint);
+                    nvup->setRSBN(NULL);
+                    nvup->wpOrigin = WAYPOINT::ORIGIN_XNVU;
+                    XFMS_DATA::addXNVUWaypoint(nvup);
+                    ui->tableWidget->refreshFlightplan();
                 }
                 else if(dr==DialogWaypointEdit::SAVE)
                 {
-                    dEdit.newPoint->rsbn = wp->rsbn;
-                    dEdit.newPoint->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
-                    ui->tableWidget->replaceWaypoint(dEdit.newPoint, row);
+                    NVUPOINT* nvup = new NVUPOINT(dEdit.newPoint);
+                    nvup->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
+                    ui->tableWidget->replaceWaypoint(nvup, row);
                     ui->tableWidget->refreshFlightplan();
                 }
             }
@@ -270,7 +277,7 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
                 int dr = dRSBN.exec();
                 if(dr == QDialog::Rejected) return;
 
-                wp->rsbn = dRSBN.rsbn;
+                wp->setRSBN(dRSBN.rsbn);
                 ui->tableWidget->refreshFlightplan();
             }
             else if(selectedItem == fpMenu.actions()[4]) //Delete waypoint
@@ -306,15 +313,19 @@ void MainWindow::showFlightplanContextMenu(const QPoint& pos) // this is a slot
             if(dr == QDialog::Rejected || dr == DialogWaypointEdit::CANCEL) return;
             if(dr == DialogWaypointEdit::ADD_XNVU)
             {
-                XFMS_DATA::addXNVUWaypoint(dEdit.newPoint);
-                NVUPOINT* np = new NVUPOINT(*dEdit.newPoint);
+                NVUPOINT* np = new NVUPOINT(dEdit.newPoint);
                 np->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
                 ui->tableWidget->insertWaypoint(np, ui->tableWidget->rowCount());
+
+                np = new NVUPOINT(dEdit.newPoint);
+                np->wpOrigin = WAYPOINT::ORIGIN_XNVU;
+                XFMS_DATA::addXNVUWaypoint(np);
             }
             else if(dr==DialogWaypointEdit::SAVE)
             {
-                dEdit.newPoint->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
-                ui->tableWidget->insertWaypoint(dEdit.newPoint, ui->tableWidget->rowCount());
+                NVUPOINT* np = new NVUPOINT(dEdit.newPoint);
+                np->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
+                ui->tableWidget->insertWaypoint(np, ui->tableWidget->rowCount());
             }
         }
 
@@ -382,7 +393,8 @@ void MainWindow::showXPlaneSettings()
 
 void MainWindow::importFMS()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, "Import FMS flightplan","", "FMS Files (*.fms);;All files (*.*)");
+    QString fileName = QFileDialog::getOpenFileName(this, "Import FMS flightplan", DialogSettings::defaultLoadSaveDir, "FMS Files (*.fms);;All files (*.*)");
+
 
     if(fileName.isEmpty()) return;
     ui->tableWidget->clearFlightplan();
@@ -409,6 +421,8 @@ void MainWindow::exportFMS()
         qstr = lP[0]->name + "_" + lP[lP.size()-1]->name + qstr;
     }
 
+    if(DialogSettings::defaultLoadSaveDir.length()>0) qstr = DialogSettings::defaultLoadSaveDir + "//" + qstr;
+
     QString fileName = QFileDialog::getSaveFileName(this, "Export FMS flightplan", qstr, "FMS Files (*.fms);;All files (*.*)");
     if(fileName.isEmpty()) return;
     XFMS_DATA::saveFMS(fileName, ui->tableWidget->getWaypoints());
@@ -434,7 +448,7 @@ void MainWindow::exportFMS_KLN90B()
 
 void MainWindow::loadNVUFlightplan()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, "Load XNVU flightplan", "", "XWP Files (*.xwp);;All files (*.*)");
+    QString fileName = QFileDialog::getOpenFileName(this, "Load XNVU flightplan", DialogSettings::defaultLoadSaveDir, "XWP Files (*.xwp);;All files (*.*)");
     if(fileName.isEmpty()) return;
     ui->tableWidget->clearFlightplan();
     std::vector<NVUPOINT*> lXNVU = XFMS_DATA::loadXNVUFlightplan(fileName);
@@ -450,7 +464,7 @@ void MainWindow::saveNVUFlightPlan()
         qstr = lP[0]->name + "_" + lP[lP.size()-1]->name + qstr;
     }
 
-
+    if(DialogSettings::defaultLoadSaveDir.length()>0) qstr = DialogSettings::defaultLoadSaveDir + "//" + qstr;
     QString fileName = QFileDialog::getSaveFileName(this, "Save XNVU flightplan", qstr, "XWP Files (*.xwp);;All files (*.*)");
     if(fileName.isEmpty()) return;
     XFMS_DATA::saveXNVUFlightplan(fileName, ui->tableWidget->getWaypoints());
@@ -726,8 +740,7 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
 
     QString qstr;
     qstr = WAYPOINT::getTypeStr(wp);
-    if(wp->type == WAYPOINT::TYPE_RUNWAY) qstr = qstr + " " + wp->name + " (" + QString::number(wp->length, 'f', 1) + "m)";
-    else if(wp->type == WAYPOINT::TYPE_HELIPAD) qstr = qstr + " " + wp->name + " (" + QString::number(wp->length, 'f', 1) + "x" + QString::number(wp->width, 'f', 1) + "m)";
+    if(wp->type == WAYPOINT::TYPE_RUNWAY || wp->type == WAYPOINT::TYPE_HELIPAD) qstr = qstr + " " + wp->name;
     ui->labelWPType2->setText(qstr);
 
     if(wp->type == WAYPOINT::TYPE_RUNWAY || wp->type == WAYPOINT::TYPE_HELIPAD) qstr = wp->name2;
@@ -737,7 +750,7 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
     if(wp->type == WAYPOINT::TYPE_NDB ||
        wp->type == WAYPOINT::TYPE_RSBN)
     {
-        qstr = qstr + "  Ch" + QString::number((int) wp->freq);
+        qstr = qstr + "  Ch " + QString::number((int) wp->freq);
     }//if
     else if(wp->type == WAYPOINT::TYPE_VOR ||
             wp->type == WAYPOINT::TYPE_DME ||
@@ -751,16 +764,13 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
 
     ui->labelWPType->setText(qstr);
 
-    if(wp->type == WAYPOINT::TYPE_AIRWAY && wp->data)
+    if(wp->type == WAYPOINT::TYPE_AIRWAY)
     {
         AIRWAY* ats = (AIRWAY*) wp->data;
         ui->labelIWPName2->setText("[" + ats->lATS[0]->name + "] ---> [" + ats->lATS[ats->lATS.size()-1]->name + "]");
     }
-    else if((wp->type == WAYPOINT::TYPE_RUNWAY || wp->type == WAYPOINT::TYPE_HELIPAD) && wp->data)
-    {
-        //ui->labelIWPName2->setText("Surface: " + WAYPOINT::getRunwaySurfaceStr(wp));
-        ui->labelIWPName2->setText(((WAYPOINT*)(wp->data))->name2);
-    }
+    else if(wp->type == WAYPOINT::TYPE_RUNWAY) ui->labelIWPName2->setText("Length: " + QString::number(wp->length, 'f', 1) + "m");
+    else if(wp->type == WAYPOINT::TYPE_HELIPAD) ui->labelIWPName2->setText("Size: " + QString::number(wp->length, 'f', 1) + "x" + QString::number(wp->width, 'f', 1) + "m");
     else if(!wp->name2.isEmpty()) ui->labelIWPName2->setText(wp->name2);
 
     if(wp->type == WAYPOINT::TYPE_AIRWAY)
@@ -1310,7 +1320,10 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     if(wp->type == WAYPOINT::TYPE_NDB ||
        wp->type == WAYPOINT::TYPE_RSBN)
     {
-        qstr = "Ch" + QString::number((int) wp->freq);
+        font.setBold(true);
+        painter.setFont(font);
+        fM = QFontMetrics(font);
+        qstr = "Ch " + QString::number((int) wp->freq);
         dx = fM.boundingRect(qstr).width();
         dx = (rectW*xscale)/2 - dx/2;
         painter.drawText(x + dx, y + rectH - 50, qstr);
@@ -1322,6 +1335,9 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
             wp->type == WAYPOINT::TYPE_TACAN ||
             wp->type == WAYPOINT::TYPE_VORTAC)
     {
+        font.setBold(true);
+        painter.setFont(font);
+        fM = QFontMetrics(font);
         qstr = QString::number(wp->freq, 'f', 3);
         dx = fM.boundingRect(qstr).width();
         dx = (rectW*xscale)/2 - dx/2;
@@ -1331,6 +1347,7 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
 
     //Draw coordinate column
     font.setPixelSize(fSize);
+    font.setBold(false);
     fM = QFontMetrics(font);
     painter.setFont(font);
     xscale = 3.5;
@@ -1420,34 +1437,43 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     x+=30;
     xscale = 7;
     painter.drawRect(x, y, rectW*xscale, rectH);
-    font.setPixelSize(fSize*0.75);
-    fM = QFontMetrics(font);
-    painter.setFont(font);
-    if(wp->rsbn) qstr = WAYPOINT::getTypeStr(wp->rsbn);
-    dy = fM.boundingRect(qstr).height();
-    dx = fM.boundingRect("VOR/DME").width();
-    painter.drawText(x + 50, y + dy + 10, qstr);
-    font.setPixelSize(fSize);
-    font.setBold(true);
-    fM = QFontMetrics(font);
-    painter.setFont(font);
-    if(wp->rsbn) qstr = (wp->rsbn->country.isEmpty() ? "" : wp->rsbn->country) +  wp->rsbn->name;
-    painter.drawText(x + 50 + dx + 100, y + dy + 10, qstr);
-    font.setBold(false);
-    font.setPixelSize(fSize*0.75);
-    fM = QFontMetrics(font);
-    painter.setFont(font);
-    if(wp->rsbn)
+    WAYPOINT* rsbn = wp->getRSBN();
+    if(rsbn)
     {
-        if(wp->rsbn->type==WAYPOINT::TYPE_RSBN) qstr = "Ch" + QString::number((int)wp->rsbn->freq) + (wp->rsbn->name2.isEmpty() ? "" : "   " + wp->rsbn->name2);
-        else qstr = QString::number(wp->rsbn->freq, 'f', 3) + (wp->rsbn->name2.isEmpty() ? "" : "   " + wp->rsbn->name2);
+        font.setPixelSize(fSize*0.75);
+        fM = QFontMetrics(font);
+        painter.setFont(font);
+        qstr = WAYPOINT::getTypeStr(rsbn);
+        dy = fM.boundingRect(qstr).height();
+        dx = fM.boundingRect("VOR/DME").width();
+        painter.drawText(x + 50, y + dy + 10, qstr);
+
+        font.setPixelSize(fSize);
+        font.setBold(true);
+        fM = QFontMetrics(font);
+        painter.setFont(font);
+        qstr = rsbn->name + (rsbn->country.isEmpty() ? "" : " [" + rsbn->country + "]");
+        painter.drawText(x + 50 + dx + 100, y + dy + 10, qstr);
+
+        font.setPixelSize(fSize*0.75);
+        fM = QFontMetrics(font);
+        painter.setFont(font);
+        if(rsbn->type==WAYPOINT::TYPE_RSBN) qstr = "Ch " + QString::number((int)rsbn->freq);// + (wp->rsbn->name2.isEmpty() ? "" : "   " + wp->rsbn->name2);
+        else qstr = QString::number(rsbn->freq, 'f', 3);// + (wp->rsbn->name2.isEmpty() ? "" : "   " + wp->rsbn->name2);
+        painter.drawText(x + 50, y + rectH - 50, qstr);
+        int tWidth = painter.fontMetrics().width(qstr);
+
+        font.setBold(false);
+        painter.setFont(font);
+        qstr = (rsbn->name2.isEmpty() ? "" : "   " + rsbn->name2);
+        if(!qstr.isEmpty()) painter.drawText(x + 50 + tWidth, y + rectH - 50, qstr);
     }
-    painter.drawText(x + 50, y + rectH - 50, qstr);
     x+=rectW*xscale;
 
     //Draw Sm and Zm
     qstr = "";
     font.setPixelSize(fSize);
+    font.setBold(false);
     fM = QFontMetrics(font);
     painter.setFont(font);
     xscale = 2.1;
@@ -1455,11 +1481,11 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     qstr = QString::number(wp->Sm, 'f', 1);
     dy = fM.boundingRect(qstr).height();
     painter.setPen(red);
-    if(!isArr && wp->rsbn) painter.drawText(x + 50, y + dy + 10, qstr);
+    if(!isArr && wp->getRSBN()) painter.drawText(x + 50, y + dy + 10, qstr);
     qstr = QString::number(wp->Zm, 'f', 1);
     dx = fM.boundingRect(qstr).width();
     painter.setPen(blue);
-    if(!isArr && wp->rsbn) painter.drawText(x + rectW*xscale - dx - 50, y + rectH - 50, qstr);
+    if(!isArr && wp->getRSBN()) painter.drawText(x + rectW*xscale - dx - 50, y + rectH - 50, qstr);
     x+=rectW*xscale;
 
     //Draw Map angle
@@ -1471,7 +1497,7 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     dx = fM.boundingRect(qstr).width();
     dx = (rectW*xscale)/2 - dx/2;
     painter.setPen(orange);
-    if(!isArr && wp->rsbn) painter.drawText(x + dx, y + fHOffset, qstr);
+    if(!isArr && wp->getRSBN()) painter.drawText(x + dx, y + fHOffset, qstr);
     x+=rectW*xscale;
 
     //Draw Atrg and Dtrg
@@ -1479,10 +1505,10 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     xscale = 2.4;
     painter.setPen(gridPen);
     painter.drawRect(x, y, rectW*xscale, rectH);
-    if(!isArr && wp->rsbn) qstr = QString::number(wp->Atrg, 'f', 1);
+    if(!isArr && wp->getRSBN()) qstr = QString::number(wp->Atrg, 'f', 1);
     dy = fM.boundingRect(qstr).height();
     painter.drawText(x + 50, y + dy + 10, qstr);
-    if(!isArr && wp->rsbn) qstr = QString::number(wp->Dtrg, 'f', 1);
+    if(!isArr && wp->getRSBN()) qstr = QString::number(wp->Dtrg, 'f', 1);
     dx = fM.boundingRect(qstr).width();
     painter.drawText(x + rectW*xscale - dx - 50, y + rectH - 50, qstr);
     x+=rectW*xscale;
@@ -1546,6 +1572,7 @@ void MainWindow::printOnPDF()
     }
 
     QString fileName = (*lWP.begin())->name + "_" + (lWP.back())->name + ".pdf";
+    if(DialogSettings::defaultLoadSaveDir.length()>0) fileName = DialogSettings::defaultLoadSaveDir + "//" + fileName;
     fileName = QFileDialog::getSaveFileName((QWidget* )0, "Export PDF", fileName, "*.pdf");
     if(fileName.isEmpty()) return;
     if(QFileInfo(fileName).suffix().isEmpty()) fileName.append(".pdf");
@@ -1573,17 +1600,20 @@ void MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
 
     if(dr==DialogWaypointEdit::ADD_XNVU) //Create new
     {
-        XFMS_DATA::addXNVUWaypoint(dEdit.newPoint);
-        NVUPOINT* np = new NVUPOINT(*dEdit.newPoint);
-        np->rsbn = wp->rsbn;
+        NVUPOINT* np = new NVUPOINT(dEdit.newPoint);
         np->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
         ui->tableWidget->replaceWaypoint(np, row);
+
+        np = new NVUPOINT(dEdit.newPoint);
+        np->setRSBN(NULL);
+        np->wpOrigin = WAYPOINT::ORIGIN_XNVU;
+        XFMS_DATA::addXNVUWaypoint(np);
+
         ui->tableWidget->refreshFlightplan();
     }
     else if(dr==DialogWaypointEdit::SAVE)
     {
-        NVUPOINT* np = dEdit.newPoint;
-        np->rsbn = wp->rsbn;
+        NVUPOINT* np = new NVUPOINT(dEdit.newPoint);
         np->wpOrigin = WAYPOINT::ORIGIN_FLIGHTPLAN;
         ui->tableWidget->replaceWaypoint(np, row);
         ui->tableWidget->refreshFlightplan();

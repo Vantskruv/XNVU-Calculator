@@ -38,7 +38,10 @@ SOURCES += main.cpp\
     qlineeditwp.cpp \
     customloadingdialog.cpp \
     qlabelclick.cpp \
-    qrsbntable.cpp
+    qrsbntable.cpp \
+    nvupoint.cpp \
+    airway.cpp \
+    airport_data.cpp
 
 HEADERS  += mainwindow.h \
     coremag.h \
@@ -62,7 +65,10 @@ HEADERS  += mainwindow.h \
     qlineeditwp.h \
     customloadingdialog.h \
     qlabelclick.h \
-    qrsbntable.h
+    qrsbntable.h \
+    nvupoint.h \
+    airway.h \
+    airport_data.h
 
 FORMS    += mainwindow.ui \
     dialogsettings.ui \

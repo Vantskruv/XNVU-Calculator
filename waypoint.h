@@ -27,143 +27,10 @@
 #define ATC_DEP		56
 
 
-class WAYPOINT;
-
-class AIRWAY
-{
-    private:
-        static void swap(AIRWAY& a, const AIRWAY& r)
-        {
-            a.name = r.name;
-            a.distance = r.distance;
-            a.lATS.clear();
-            for(unsigned int i=0; i<r.lATS.size(); i++) a.lATS.push_back(r.lATS[i]);
-        }
-
-    public:
-        QString name;
-        double distance;
-        std::vector<WAYPOINT*> lATS;    //Waypoints are not deleted when removing this airway, as they already are contained and manager in the lWP list.
-
-        AIRWAY()
-        {
-            name = "";
-            distance = -1;
-        }
-
-        AIRWAY(const AIRWAY& awy)
-        {
-            swap(*this, awy);
-        }
-        AIRWAY& operator=(const AIRWAY& other)
-        {
-            swap(*this, other);
-            return *this;
-        }
-
-        AIRWAY* clone()
-        {
-            return new AIRWAY(*this);
-        }
-};
-
-class AIRPORT_DATA
-{
-    private:
-        static void swap(AIRPORT_DATA& a, const AIRPORT_DATA& r)
-        {
-            for(unsigned int i=0; i<a.lRunways.size(); i++) delete a.lRunways[i];
-            a.lRunways.clear();
-            a.lFreq.clear();
-
-            a.city = r.city;
-            for(unsigned int i=0; i<r.lRunways.size(); i++) a.lRunways.push_back(r.lRunways[i]);//new WAYPOINT(*r.lRunways[i]));
-            for(unsigned int i=0; i<r.lFreq.size(); i++) a.lFreq.push_back(std::make_pair(r.lFreq[i].first, r.lFreq[i].second));
-        }
-
-    public:
-        QString city;                                 //The city airport belongs to
-        std::vector<WAYPOINT*> lRunways;              //List of runways belonging to airport
-        std::vector<std::pair<int, int> > lFreq;
-
-        AIRPORT_DATA()
-        {
-            city = "";
-        }
-
-        AIRPORT_DATA(const AIRPORT_DATA& ad)
-        {
-            swap(*this, ad);
-        }
-
-        AIRPORT_DATA& operator=(const AIRPORT_DATA& other)
-        {
-            swap(*this, other);
-            return *this;
-        }
-
-        AIRPORT_DATA* clone()
-        {
-            return new AIRPORT_DATA(*this);
-        }
-
-        ~AIRPORT_DATA()
-        {
-            //for(unsigned int i=0; i<lRunways.size(); i++) delete lRunways[i];
-        }
-};
-
 class WAYPOINT
 {
     private:
-        static void swap(WAYPOINT& m, const WAYPOINT& wp)
-        {
-            if(m.type == TYPE_AIRWAY && m.data!=NULL)
-            {
-                AIRWAY* awy = (AIRWAY*) m.data;
-                delete awy;
-            }//if
-            else if(m.type == TYPE_AIRPORT && m.data!=NULL)
-            {
-                AIRPORT_DATA* aRwys = (AIRPORT_DATA*) m.data;
-                delete aRwys;
-            }//if
-
-            m.latlon = wp.latlon;
-            m.type = wp.type;
-            m.name = wp.name;
-            m.name2 = wp.name2;
-            m.range = wp.range;
-            m.freq = wp.freq;
-            m.alt = wp.alt;
-            m.elev = wp.elev;
-            m.trans_alt = wp.trans_alt;
-            m.trans_level = wp.trans_level;
-            m.length = wp.length;
-            m.width = wp.width;
-            m.surface = wp.surface;
-            m.country = wp.country;
-            m.MD = wp.MD;
-            m.ADEV = wp.ADEV;          //Angle deviation of VOR/DME from X-Plane earth_nav.dat
-            m.wpOrigin = wp.wpOrigin;         //If waypoint has not been converted from FMS (1), is retrieved from earth_nav.dat (2), or is custom made (3)
-            m.data = NULL;
-
-            if(wp.type == TYPE_AIRPORT && wp.data!=NULL)
-            {
-                AIRPORT_DATA* apd = (AIRPORT_DATA*) wp.data;
-                m.data = (void*) new AIRPORT_DATA(*apd);
-            }
-            else if((wp.type == TYPE_RUNWAY || wp.type == TYPE_HELIPAD) && wp.data!=NULL)
-            {
-                WAYPOINT* nwp = (WAYPOINT*) wp.data;
-                m.data = (void*) new WAYPOINT(*nwp);
-            }
-            else if(wp.type == TYPE_AIRWAY && wp.data!=NULL)
-            {
-                AIRWAY* awy = (AIRWAY*) wp.data;
-                m.data = (void*) new AIRWAY(*awy);
-            }
-        }
+        static void swap(WAYPOINT& m, const WAYPOINT& wp);
 
     public:
         static constexpr int ORIGIN_X10_AIRAC_AIRPORTS = 1;
@@ -209,7 +76,7 @@ class WAYPOINT
 
         CPoint latlon;
         int type = -1;
-        QString name;                   //For runways, this is the runway name i.e. RW25R, otherwise ICAO code
+        QString name;                   //For runways, this is the runway name i.e. 25R, otherwise ICAO code
         QString name2;                  //For runways, this is the ICAO of the airport, otherwise the name of the airport/waypoint.
         int range = 0;
 		double freq = 0; 
@@ -236,46 +103,11 @@ class WAYPOINT
         static QString getOriginStr(int _origin);
         static bool isNavaid(int _type);
 
-
-        WAYPOINT()
-        {
-            type = -1;
-            data = NULL;
-        }
-
-        WAYPOINT(const WAYPOINT& wp)
-        {
-            swap(*this, wp);
-        }
-        WAYPOINT& operator=(const WAYPOINT& other)
-        {
-            swap(*this, other);
-            return *this;
-        }
-
-        WAYPOINT* clone()
-        {
-            return new WAYPOINT(*this);
-        }
-
-        virtual ~WAYPOINT()
-        {
-            if(type == TYPE_AIRWAY && data!=NULL)
-            {
-                AIRWAY* awy = (AIRWAY*) data;
-                delete awy;
-            }//if
-            else if(type == TYPE_AIRPORT && data!=NULL)
-            {
-                AIRPORT_DATA* aRwys = (AIRPORT_DATA*) data;
-                delete aRwys;
-            }//if
-            else if((type == TYPE_RUNWAY || type == TYPE_HELIPAD) && data!=NULL)
-            {
-                WAYPOINT* ap = (WAYPOINT*) data;
-                delete ap;
-            }//if
-        }
+        WAYPOINT();
+        WAYPOINT(const WAYPOINT& wp);
+        WAYPOINT& operator=(const WAYPOINT& other);
+        WAYPOINT* clone();
+        virtual ~WAYPOINT();
 };
 
 
