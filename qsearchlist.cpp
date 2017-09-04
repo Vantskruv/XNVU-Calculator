@@ -65,7 +65,7 @@ void QSearchList::search(const QString &name, bool filter)
         newItem->nvupoint = lWP[i];
         addItem(newItem, filter);
 
-/*
+
         if(lWP[i]->type == WAYPOINT::TYPE_AIRPORT)
         {
             AIRPORT_DATA* ap = (AIRPORT_DATA*) lWP[i]->data;
@@ -73,7 +73,7 @@ void QSearchList::search(const QString &name, bool filter)
             {
                 for(unsigned int j = 0; j<ap->lRunways.size(); j++)
                 {
-                    QString sString = "    " + ap->lRunways[j]->name + " (" + QString::number(LMATH::feetToMeter(ap->lRunways[j]->longest_runway), 'f', 1) + "m)";
+                    QString sString = "    " + ap->lRunways[j]->name + " (" + QString::number(ap->lRunways[j]->length, 'f', 1) + "m)";
                     newItem = new QListWidgetItemData;
                     newItem->setText(sString);
                     newItem->nvupoint = (NVUPOINT*) ap->lRunways[j];
@@ -81,7 +81,7 @@ void QSearchList::search(const QString &name, bool filter)
                 }
             }
         }
-*/
+
     }
 
 }
@@ -102,6 +102,7 @@ void QSearchList::addItem(QListWidgetItemData *wd, bool filter)
         case WAYPOINT::TYPE_VORDME: if(showTYPE_VORDME); else return; break;
         case WAYPOINT::TYPE_VORTAC: if(showTYPE_VORDME); else return; break;
         case WAYPOINT::TYPE_ILS: if(showTYPE_VORDME); else return; break; //TODO currently we are combining ILS navaids with VOR/DME:s.
+        case WAYPOINT::TYPE_LOC: if(showTYPE_VORDME); else return; break; //TODO currently we are combining ILS navaids with VOR/DME:s.
         case WAYPOINT::TYPE_VOR: if(showTYPE_VOR); else return; break;
         case WAYPOINT::TYPE_DME: if(showTYPE_DME); else return; break;
         case WAYPOINT::TYPE_TACAN: if(showTYPE_DME); else return; break;

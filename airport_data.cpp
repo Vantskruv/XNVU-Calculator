@@ -8,7 +8,7 @@ void AIRPORT_DATA::swap(AIRPORT_DATA& a, const AIRPORT_DATA& r)
     a.lFreq.clear();
 
     a.city = r.city;
-    //for(unsigned int i=0; i<r.lRunways.size(); i++) a.lRunways.push_back(new WAYPOINT(*r.lRunways[i]));//new WAYPOINT(*r.lRunways[i]));
+    for(unsigned int i=0; i<r.lRunways.size(); i++) a.lRunways.push_back(new WAYPOINT(*r.lRunways[i]));
     for(unsigned int i=0; i<r.lFreq.size(); i++) a.lFreq.push_back(std::make_pair(r.lFreq[i].first, r.lFreq[i].second));
 }
 
@@ -36,5 +36,5 @@ AIRPORT_DATA* AIRPORT_DATA::clone()
 
 AIRPORT_DATA::~AIRPORT_DATA()
 {
-    //for(unsigned int i=0; i<lRunways.size(); i++) delete lRunways[i];
+    for(unsigned int i=0; i<lRunways.size(); i++) delete lRunways[i];
 }

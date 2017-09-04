@@ -11,7 +11,7 @@ class AIRPORT_DATA
 
     public:
         QString city;                                 //The city airport belongs to
-        //std::vector<WAYPOINT*> lRunways;              //List of runways belonging to airport
+        std::vector<WAYPOINT*> lRunways;              //List of runways belonging to airport
         std::vector<std::pair<int, int> > lFreq;
 
         AIRPORT_DATA();

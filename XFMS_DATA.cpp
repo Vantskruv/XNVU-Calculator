@@ -1267,9 +1267,9 @@ void XFMS_DATA::validate_runways(const NVUPOINT* ap, const std::vector<RUNWAY*>&
         rwy->name = lRunways[i]->rwyA;
         rwy->name2 = ap->name;// + " - " + ap->name2;
         rwy->type = lRunways[i]->type;
-        //apd->lRunways.push_back(rwy);
-        lWP.insert(std::make_pair(rwy->name, rwy));
-        lWP2.insert(std::make_pair(rwy->name2, rwy));
+        apd->lRunways.push_back(rwy);
+        //lWP.insert(std::make_pair(rwy->name, rwy));
+        //lWP2.insert(std::make_pair(rwy->name2, rwy));
 
         if(rwy->type == WAYPOINT::TYPE_HELIPAD) continue;
 
@@ -1283,9 +1283,9 @@ void XFMS_DATA::validate_runways(const NVUPOINT* ap, const std::vector<RUNWAY*>&
         rwy->name = lRunways[i]->rwyB;
         rwy->name2 = ap->name;// + " " + ap->name2;
         rwy->type = lRunways[i]->type;
-        //apd->lRunways.push_back(rwy);
-        lWP.insert(std::make_pair(rwy->name, rwy));
-        lWP2.insert(std::make_pair(rwy->name2, rwy));
+        apd->lRunways.push_back(rwy);
+        //lWP.insert(std::make_pair(rwy->name, rwy));
+        //lWP2.insert(std::make_pair(rwy->name2, rwy));
     }
 }
 
@@ -1803,7 +1803,7 @@ void XFMS_DATA::validate_earthnav_XP11(const QStringList &record, int _origin)
         {
             case 0:	//Type
                 _type = qstr.toInt();
-                if(_type==2 || _type==3 || _type == 13) //NDB, VHFNAV, STANDALONE DME
+                if(_type==2 || _type==3 || _type == 4 || _type == 5 || _type == 13) //NDB, VHFNAV, LOCALIZER, ILS, STANDALONE DME
                 {
                     wp = new NVUPOINT();
                     wp->type = -_type;
@@ -1839,10 +1839,22 @@ void XFMS_DATA::validate_earthnav_XP11(const QStringList &record, int _origin)
                 wp->name = qstr;
             break;
             case 8: //TODO: Airport or enroute (ENRT), maybe store it also
+                if(wp->type == -4 || wp->type == -5)
+                {
+                    wp->name2 = qstr;
+                }
             break;
             case 9: //Country
                 wp->country = qstr;
             break;
+            case 10:
+                if(wp->type == -4 || wp->type == -5)
+                {
+                    wp->name2 = wp->name2 + " " + qstr;
+                    wp->type = (wp->type == -4 ? WAYPOINT::TYPE_ILS : WAYPOINT::TYPE_LOC);
+                    i = record.size();
+                    break;
+                }
 
             default: //Real name and VOR/DME type
                 //Concat real name, and if VOR/DME is found, we have completed that waypoint
@@ -1869,7 +1881,7 @@ void XFMS_DATA::validate_earthnav_XP11(const QStringList &record, int _origin)
                 {
                     while(i<record.size())
                     {
-                        if(qstr.compare("VOR/DME")==0)
+                        if(qstr.compare("VOR/DME")==0 || qstr.compare("VOR-DME")==0)
 
                         {
                             wp->type = WAYPOINT::TYPE_VORDME;
@@ -1908,12 +1920,6 @@ void XFMS_DATA::validate_earthnav_XP11(const QStringList &record, int _origin)
                     while(i<record.size())
                     {
                         if(qstr.compare("DME")==0)
-                        {
-                            wp->type = WAYPOINT::TYPE_DME;
-                            i = record.size();
-                            break;
-                        }
-                        else if(qstr.compare("DME-ILS")==0)
                         {
                             wp->type = WAYPOINT::TYPE_DME;
                             i = record.size();

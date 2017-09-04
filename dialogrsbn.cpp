@@ -66,48 +66,56 @@ DialogRSBN::~DialogRSBN()
 
 void DialogRSBN::setWaypointDescription(const NVUPOINT* wp)
 {
+    //ui->labelIWPName->setText("");
     ui->labelIWPName2->setText("");
     ui->labelWPType->setText("");
-    ui->labelWPType2->setText("");
     ui->labelWPMagVar->setText("");
     ui->labelWPLatlon->setText("");
     ui->labelWPNote->setText("");
+    ui->labelWPType2->setText("");
 
-    if(!wp) return;
+    if(wp == NULL) return;
 
     QString qstr;
     qstr = WAYPOINT::getTypeStr(wp);
+    if(wp->type == WAYPOINT::TYPE_RUNWAY || wp->type == WAYPOINT::TYPE_HELIPAD) qstr = qstr + " " + wp->name;
     ui->labelWPType2->setText(qstr);
 
-    qstr = wp->name;
+    if(wp->type == WAYPOINT::TYPE_RUNWAY || wp->type == WAYPOINT::TYPE_HELIPAD) qstr = wp->name2;
+    else qstr = wp->name;
     if(!wp->country.isEmpty()) qstr = qstr + " [" + wp->country + "]";
 
     if(wp->type == WAYPOINT::TYPE_NDB ||
        wp->type == WAYPOINT::TYPE_RSBN)
     {
-        qstr = qstr + "  Ch" + QString::number((int) wp->freq);
+        qstr = qstr + "  Ch " + QString::number((int) wp->freq);
     }//if
     else if(wp->type == WAYPOINT::TYPE_VOR ||
             wp->type == WAYPOINT::TYPE_DME ||
             wp->type == WAYPOINT::TYPE_VORDME ||
-            wp->type == WAYPOINT::TYPE_VORTAC ||
-            wp->type == WAYPOINT::TYPE_TACAN)
+            wp->type == WAYPOINT::TYPE_ILS ||
+            wp->type == WAYPOINT::TYPE_LOC ||
+            wp->type == WAYPOINT::TYPE_TACAN ||
+            wp->type == WAYPOINT::TYPE_VORTAC)
     {
         qstr = qstr + "  " + QString::number(wp->freq, 'f', 3);
     }//if
+
     ui->labelWPType->setText(qstr);
 
-    if(wp->type == WAYPOINT::TYPE_AIRWAY && wp->data)
+    if(wp->type == WAYPOINT::TYPE_AIRWAY)
     {
         AIRWAY* ats = (AIRWAY*) wp->data;
         ui->labelIWPName2->setText("[" + ats->lATS[0]->name + "] ---> [" + ats->lATS[ats->lATS.size()-1]->name + "]");
     }
+    else if(wp->type == WAYPOINT::TYPE_RUNWAY) ui->labelIWPName2->setText("Length: " + QString::number(wp->length, 'f', 1) + "m");
+    else if(wp->type == WAYPOINT::TYPE_HELIPAD) ui->labelIWPName2->setText("Size: " + QString::number(wp->length, 'f', 1) + "x" + QString::number(wp->width, 'f', 1) + "m");
     else if(!wp->name2.isEmpty()) ui->labelIWPName2->setText(wp->name2);
 
-    if(wp->type == WAYPOINT::TYPE_AIRWAY && wp->data)
+    if(wp->type == WAYPOINT::TYPE_AIRWAY)
     {
         AIRWAY* ats = (AIRWAY*) wp->data;
-        ui->labelWPLatlon->setText("Fixes: " + QString::number(ats->lATS.size()) + "    Dist: " + QString::number(ats->distance, 'f', 1) + " KM");
+        if(wp->data) ui->labelWPLatlon->setText("Fixes: " + QString::number(ats->lATS.size()) + "    Dist: " + QString::number(ats->distance, 'f', 1) + " KM");
     }
     else
     {
@@ -127,9 +135,26 @@ void DialogRSBN::setWaypointDescription(const NVUPOINT* wp)
     {
         ui->labelWPMagVar->setText("CLICK TO SHOW WAYPOINTS");
     }
-    else ui->labelWPMagVar->setText("Magnetic Declination: " + QString::number(wp->MD, 'f', 1));
+    else
+    {
+        qstr = "MD: " + QString::number(wp->MD, 'f', 1);
+        if(wp->type == WAYPOINT::TYPE_AIRPORT ||
+           wp->type == WAYPOINT::TYPE_DME ||
+           wp->type == WAYPOINT::TYPE_NDB ||
+           wp->type == WAYPOINT::TYPE_VOR ||
+           wp->type == WAYPOINT::TYPE_VORDME ||
+           wp->type == WAYPOINT::TYPE_ILS ||
+           wp->type == WAYPOINT::TYPE_LOC ||
+           wp->type == WAYPOINT::TYPE_TACAN ||
+           wp->type == WAYPOINT::TYPE_VORTAC
+           ) qstr = qstr + "        Elev: " + (DialogSettings::showFeet ? QString::number(wp->elev, 'f', 0) + " ft": QString::number(LMATH::feetToMeter(wp->elev), 'f', 0) + " m");
+        else if(wp->type == WAYPOINT::TYPE_RUNWAY  || wp->type == WAYPOINT::TYPE_HELIPAD) qstr = qstr  + "        Surface: " + WAYPOINT::getRunwaySurfaceStr(wp);
+
+        ui->labelWPMagVar->setText(qstr);
+    }
 
     ui->labelWPNote->setText("Source: " + WAYPOINT::getOriginStr(wp->wpOrigin));
+
 }
 
 void DialogRSBN::on_checkBoxVORDME_stateChanged(int arg1)

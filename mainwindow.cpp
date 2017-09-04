@@ -726,7 +726,7 @@ void MainWindow::on_listWidget_currentRowChanged(int currentRow)
     setWaypointDescription(itemD->nvupoint);
 }
 
-void MainWindow::setWaypointDescription(NVUPOINT* wp)
+void MainWindow::setWaypointDescription(const NVUPOINT* wp)
 {
     //ui->labelIWPName->setText("");
     ui->labelIWPName2->setText("");
@@ -756,6 +756,7 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
             wp->type == WAYPOINT::TYPE_DME ||
             wp->type == WAYPOINT::TYPE_VORDME ||
             wp->type == WAYPOINT::TYPE_ILS ||
+            wp->type == WAYPOINT::TYPE_LOC ||
             wp->type == WAYPOINT::TYPE_TACAN ||
             wp->type == WAYPOINT::TYPE_VORTAC)
     {
@@ -805,6 +806,7 @@ void MainWindow::setWaypointDescription(NVUPOINT* wp)
            wp->type == WAYPOINT::TYPE_VOR ||
            wp->type == WAYPOINT::TYPE_VORDME ||
            wp->type == WAYPOINT::TYPE_ILS ||
+           wp->type == WAYPOINT::TYPE_LOC ||
            wp->type == WAYPOINT::TYPE_TACAN ||
            wp->type == WAYPOINT::TYPE_VORTAC
            ) qstr = qstr + "        Elev: " + (DialogSettings::showFeet ? QString::number(wp->elev, 'f', 0) + " ft": QString::number(LMATH::feetToMeter(wp->elev), 'f', 0) + " m");
@@ -1283,6 +1285,7 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     painter.setFont(font);
     painter.drawRect(x, y, rectW*xscale, rectH);
     qstr = wp->name;
+    if(wp->type == WAYPOINT::TYPE_RUNWAY || wp->type == WAYPOINT::TYPE_HELIPAD) qstr = wp->name2 + " " + qstr;
     dx = fM.boundingRect(qstr).width();
     dx = (rectW*xscale)/2 - dx/2;
     dy = fM.boundingRect(qstr).height() + 10;
@@ -1332,6 +1335,7 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
             wp->type == WAYPOINT::TYPE_DME ||
             wp->type == WAYPOINT::TYPE_VORDME ||
             wp->type == WAYPOINT::TYPE_ILS ||
+            wp->type == WAYPOINT::TYPE_LOC ||
             wp->type == WAYPOINT::TYPE_TACAN ||
             wp->type == WAYPOINT::TYPE_VORTAC)
     {

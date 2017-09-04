@@ -68,6 +68,7 @@ class WAYPOINT
         static constexpr int TYPE_VHFNAV = 13; //Includes VORDME/VOR/DME/VORTAC/TACAN
         static constexpr int TYPE_RUNWAY = 14;
         static constexpr int TYPE_HELIPAD = 15;
+        static constexpr int TYPE_LOC = 16;
         //static constexpr int TYPE_STAR = 13;
         //static constexpr int TYPE_SID = 14;
         //static constexpr int TYPE_APPTR = 15;

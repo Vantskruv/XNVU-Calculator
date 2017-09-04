@@ -11,7 +11,7 @@
 #include "qlineeditwp.h"
 #include <qlabelclick.h>
 
-#define XNVU_VERSION    "XNVU version 0.375"
+#define XNVU_VERSION    "XNVU version 0.376"
 
 namespace Ui {
 class MainWindow;
@@ -52,7 +52,7 @@ private slots:
     void clickedDataLabels(QLabelClick *_label);
 
     void deleteCurrentWaypoint();
-    void setWaypointDescription(NVUPOINT* wp);
+    void setWaypointDescription(const NVUPOINT *wp);
 
     void printPreview(QPrinter*);
     void drawNVUHeader(QPainter& painter, NVUPOINT *dep, NVUPOINT *arr, double fork, int& y);

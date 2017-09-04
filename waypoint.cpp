@@ -144,7 +144,7 @@ QString WAYPOINT::latToStr(double x)
 QString WAYPOINT::getTypeStr(const WAYPOINT* wp, int _type)
 {
     int t = (wp) ? wp->type : _type;
-    if(t == TYPE_AIRPORT) return "Airport";
+    if(t == TYPE_AIRPORT) return "AIRPORT";
     if(t == TYPE_NDB) return "NDB";
     if(t == TYPE_VOR) return "VOR";
     if(t == TYPE_VORDME) return "VOR/DME";
@@ -154,11 +154,12 @@ QString WAYPOINT::getTypeStr(const WAYPOINT* wp, int _type)
     if(t == TYPE_LATLON) return "LAT/LON";
     if(t == TYPE_AIRWAY) return "AIRWAY";
     if(t == TYPE_ILS) return "ILS";
+    if(t == TYPE_LOC) return "LOC";
     if(t == TYPE_VORTAC) return "VORTAC";
     if(t == TYPE_TACAN) return "TACAN";
     if(t == TYPE_VHFNAV) return "VHF NAV";
-    if(t == TYPE_RUNWAY) return "Runway";
-    if(t == TYPE_HELIPAD) return "Helipad";
+    if(t == TYPE_RUNWAY) return "RUNWAY";
+    if(t == TYPE_HELIPAD) return "HELIPAD";
     //if(t == TYPE_STAR) return "STAR";
     //if(t == TYPE_SID) return "SID";
     //if(t == TYPE_APPTR) return "TRANSITION";
@@ -183,6 +184,7 @@ QString WAYPOINT::getRunwaySurfaceStr(const WAYPOINT* wp, int _surface)
     return "Unknown";
 }
 
+/*
 std::vector<QString> WAYPOINT::getTypeStrList()
 {
     //TODO: Bad coding, very bad coding. Need to reprogram.
@@ -210,6 +212,7 @@ std::vector<QString> WAYPOINT::getTypeStrList()
     //rTStr.push_back(getTypeStr(NULL, TYPE_FINAL));
     return rTStr;
 }
+*/
 
 QString WAYPOINT::getOriginStr(int _origin)
 {
@@ -250,9 +253,9 @@ bool WAYPOINT::isNavaid(int _type)
     if(_type == TYPE_VORDME) return true;
     if(_type == TYPE_VOR) return true;
     if(_type == TYPE_ILS) return true;
+    if(_type == TYPE_LOC) return true;
     if(_type == TYPE_DME) return true;
     if(_type == TYPE_RSBN) return true;
-    if(_type == TYPE_ILS) return true;
     if(_type == TYPE_VORTAC) return true;
     if(_type == TYPE_TACAN) return true;
     if(_type == TYPE_VHFNAV) return true;

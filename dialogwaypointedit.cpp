@@ -50,6 +50,7 @@ DialogWaypointEdit::DialogWaypointEdit(const NVUPOINT* _nvuPoint, bool isSave, Q
     ui->comboBox_Type->addItem(WAYPOINT::getTypeStr(NULL, WAYPOINT::TYPE_VOR), QVariant(WAYPOINT::TYPE_VOR));
     ui->comboBox_Type->addItem(WAYPOINT::getTypeStr(NULL, WAYPOINT::TYPE_DME), QVariant(WAYPOINT::TYPE_DME));
     ui->comboBox_Type->addItem(WAYPOINT::getTypeStr(NULL, WAYPOINT::TYPE_VORDME), QVariant(WAYPOINT::TYPE_VORDME));
+    ui->comboBox_Type->addItem(WAYPOINT::getTypeStr(NULL, WAYPOINT::TYPE_LOC), QVariant(WAYPOINT::TYPE_LOC));
     ui->comboBox_Type->addItem(WAYPOINT::getTypeStr(NULL, WAYPOINT::TYPE_ILS), QVariant(WAYPOINT::TYPE_ILS));
     ui->comboBox_Type->addItem(WAYPOINT::getTypeStr(NULL, WAYPOINT::TYPE_TACAN), QVariant(WAYPOINT::TYPE_TACAN));
     ui->comboBox_Type->addItem(WAYPOINT::getTypeStr(NULL, WAYPOINT::TYPE_VORTAC), QVariant(WAYPOINT::TYPE_VORTAC));
