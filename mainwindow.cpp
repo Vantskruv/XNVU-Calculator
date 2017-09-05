@@ -487,8 +487,17 @@ void MainWindow::deleteCurrentWaypoint()
 void MainWindow::tableGoUp()
 {
     int c = ui->tableWidget->currentRow();
+    if(c<0)
+    {
+        c = ui->listWidget->currentRow();
+        if(c<=0) return;
+        c--;
+        ui->listWidget->setCurrentRow(c);
+        setWaypointDescription(ui->listWidget->getWaypoint(ui->listWidget->currentRow()));
+        return;
+    }
     c--;
-    if(c<0) return;
+
 
     ui->tableWidget->selectRow(c);
     NVUPOINT* wp = ui->tableWidget->getWaypoint(ui->tableWidget->currentRow());
@@ -499,6 +508,15 @@ void MainWindow::tableGoUp()
 void MainWindow::tableGoDown()
 {
     int c = ui->tableWidget->currentRow();
+    if(c<0)
+    {
+        c = ui->listWidget->currentRow();
+        if(c>=(ui->listWidget->count()-1)) return;
+        c++;
+        ui->listWidget->setCurrentRow(c);
+        setWaypointDescription(ui->listWidget->getWaypoint(ui->listWidget->currentRow()));
+        return;
+    }
     c++;
     if(c>=ui->tableWidget->rowCount()) return;
 

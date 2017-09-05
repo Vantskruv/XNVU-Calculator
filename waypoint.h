@@ -92,7 +92,7 @@ class WAYPOINT
         double MD = 0;
         double ADEV = 0;                //Angle deviation of VOR/DME from X-Plane earth_nav.dat
         int wpOrigin = 0;               //If waypoint has not been converted from FMS (1), is retrieved from earth_nav.dat (2), or is custom made (3)
-        void* data = NULL;              //For airports this contains the AIRPORT_DATA class, for airways the AIRWAY class, for runways/helipads this contains the WAYPOINT describing the airport.
+        void* data = NULL;              //For airports this contains the AIRPORT_DATA class, for airways the AIRWAY class
 
         //bool compare(WAYPOINT*);
 

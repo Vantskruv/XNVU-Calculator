@@ -223,7 +223,7 @@ QString XFMS_DATA::getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVU
     _wpAirway = NULL;
 
     lA.clear();
-    for(int i=0; i<llA.size(); i++)
+    for(unsigned int i=0; i<llA.size(); i++)
     {
         NVUPOINT* wp = llA[i];
         if(wp->type != WAYPOINT::TYPE_AIRWAY) continue;
@@ -233,7 +233,7 @@ QString XFMS_DATA::getAirwayWaypointsBetween(QString& airway, NVUPOINT* wpA, NVU
 
         int kA = -1;
         int kB = -1;
-        for(int k=0; k<aw->lATS.size(); k++)    //Search for the identifers in the airway (where the airway should start and end).
+        for(unsigned int k=0; k<aw->lATS.size(); k++)    //Search for the identifers in the airway (where the airway should start and end).
         {
             NVUPOINT* ap = (NVUPOINT*) aw->lATS[k];
             if(ap->name.compare(wpA->name)==0) kA = k;
@@ -319,7 +319,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& _route
 
 
     route.clear();
-    for(int i=0; i<record.size(); i++)
+    for(unsigned int i=0; i<record.size(); i++)
     {
         qstr = record[i];
 
@@ -349,7 +349,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& _route
         //If more than 1 waypoint is found, choose the waypoint that is closest to the last on in current route.
         dMin = std::numeric_limits<double>::max();
         dCurrent = 0;
-        for(int k=0; k<sWaypoint.size(); k++)
+        for(unsigned int k=0; k<sWaypoint.size(); k++)
         {
             if(cRoute.size()>0) dCurrent = LMATH::calc_distance(sWaypoint[k]->latlon, cRoute[cRoute.size()-1]->latlon);
             else if(wpRef) dCurrent = LMATH::calc_distance(sWaypoint[k]->latlon, wpRef->latlon);
@@ -361,7 +361,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& _route
         }
 
         cRoute.push_back(cwp);
-    }
+    }//for
     sWaypoint.clear();
 
     for(int i=0; i<cRoute.size(); i++)
@@ -409,7 +409,7 @@ QString XFMS_DATA::getRoute(const QString& _qstr, std::vector<NVUPOINT*>& _route
             }//if
 
             route.pop_back();   //Remove the last waypoint, as a new and more correct one is added from the airway.
-            for(int k=0; k<lA.size(); k++)
+            for(unsigned int k=0; k<lA.size(); k++)
             {
                 route.push_back(lA[k]);
             }//for
@@ -511,7 +511,7 @@ std::vector< std::pair<NVUPOINT*, double> > XFMS_DATA::getClosestWaypointType(co
     double dMin = std::numeric_limits<double>::max();
     std::vector<NVUPOINT*> lS = search(_name, _type);
 
-    for(int i=0; i<lS.size(); i++)
+    for(unsigned int i=0; i<lS.size(); i++)
     {
         double d = LMATH::calc_distance(_latlon, lS[i]->latlon);
         if(d<=dMin)
@@ -524,7 +524,7 @@ std::vector< std::pair<NVUPOINT*, double> > XFMS_DATA::getClosestWaypointType(co
     sort(lWP.begin(), lWP.end(),
     [](const std::pair<NVUPOINT*, double>& lhs, const std::pair<NVUPOINT*, double>& rhs) -> bool
     {
-        if(lhs.second == 0) return true;
+        //if(lhs.second == 0) return true;
         return lhs.second < rhs.second;
     });
 
@@ -540,14 +540,14 @@ std::vector< std::pair<NVUPOINT*, double> > XFMS_DATA::getClosestRSBN(const NVUP
     if(d<0) d = std::numeric_limits<double>::max();
 
     std::vector< std::pair<NVUPOINT*, double> > rCP;
-    for(int i=0; i<lRSBN.size(); i++)
+    for(unsigned int i=0; i<lRSBN.size(); i++)
     {
         double cD = LMATH::calc_distance(wp->latlon.x, wp->latlon.y, lRSBN[i]->latlon.x, lRSBN[i]->latlon.y);
         if(cD>d) continue;
         rCP.push_back(std::make_pair(lRSBN[i], cD));
     }
 
-    if(includeVOR) for(int i=0; i<lXVORDME.size(); i++)
+    if(includeVOR) for(unsigned int i=0; i<lXVORDME.size(); i++)
     {
         double cD = LMATH::calc_distance(wp->latlon.x, wp->latlon.y, lXVORDME[i]->latlon.x, lXVORDME[i]->latlon.y);
         if(cD>d) continue;
@@ -558,7 +558,7 @@ std::vector< std::pair<NVUPOINT*, double> > XFMS_DATA::getClosestRSBN(const NVUP
     sort(rCP.begin(), rCP.end(),
     [](const std::pair<NVUPOINT*, double>& lhs, const std::pair<NVUPOINT*, double>& rhs) -> bool
     {
-        if(lhs.second == 0) return true;
+        //if(lhs.second == 0) return true;
         return lhs.second < rhs.second;
     });
 
@@ -887,7 +887,7 @@ void XFMS_DATA::load(int _dat)
 
 void XFMS_DATA::addXNVUData(std::vector<NVUPOINT*> lP)
 {
-    for(int i=0; i<lP.size(); i++)
+    for(unsigned int i=0; i<lP.size(); i++)
     {
         addXNVUWaypoint(lP[i]);
     }
@@ -1303,7 +1303,7 @@ int XFMS_DATA::validate_header(QFile& infile)
 
         try
         {
-            for(int i=0; i<record.size(); i++)
+            for(unsigned int i=0; i<record.size(); i++)
             {
                 qstr = record.at(i).simplified();
                 switch(i)
@@ -1355,7 +1355,7 @@ void XFMS_DATA::validate_cycle_info(QFile& infile, NAV_SOURCE_DATA &_navSource)
 
         try
         {
-            for(int i=0; i<record.size(); i++)
+            for(unsigned int i=0; i<record.size(); i++)
             {
                 qstr = record.at(i).simplified();
                 switch(i)
@@ -1408,7 +1408,7 @@ void XFMS_DATA::validate_waypoint_XP11(const QStringList& record, int _origin)
     NVUPOINT* wp = new NVUPOINT();
     wp->type = WAYPOINT::TYPE_FIX;
 
-    for(int i=0; i<record.size(); i++)
+    for(unsigned int i=0; i<record.size(); i++)
     {
         QString qstr = record.at(i).simplified();
         switch(i)
@@ -1489,7 +1489,7 @@ void XFMS_DATA::validate_airways_XP11(QFile& infile, int _origin)
         record = line.split(' ',  QString::SkipEmptyParts);
         try
         {
-            for(int i=0; i<record.size(); i++)
+            for(unsigned int i=0; i<record.size(); i++)
             {
                 qstr = record[i].simplified();
                 switch(i)
@@ -1579,7 +1579,7 @@ void XFMS_DATA::validate_airways_XP11(QFile& infile, int _origin)
                     break;
                 }//else if
             }
-            if(i == (sPoints.size() - 1) && aSeg.start == NULL && wp.type!=-2)
+            if(i == (int(sPoints.size()) - 1) && aSeg.start == NULL && wp.type!=-2)
             {
                 //Special case (something is wrong, hence the combination of identifer and type of waypoint in airway is not found in navaids/fixes)
                 //We then instead add the waypoint the waypoint first in list that is not XNVU.
@@ -1618,7 +1618,7 @@ void XFMS_DATA::validate_airways_XP11(QFile& infile, int _origin)
                 }//else if
             }
 
-            if(i == (sPoints.size() - 1) && aSeg.start == NULL && wp2.type!=-2)
+            if(i == (int(sPoints.size()) - 1) && aSeg.start == NULL && wp2.type!=-2)
             {
                 //Special case (something is wrong, hence the combination of identifer and type of waypoint in airway is not found in navaids/fixes)
                 //We then instead add the waypoint the waypoint first in list that is not XNVU.
@@ -1647,7 +1647,7 @@ void XFMS_DATA::validate_airways_XP11(QFile& infile, int _origin)
             NVUPOINT* tmp = aSeg.start;
             aSeg.start = aSeg.end;
             aSeg.end = tmp;
-            for(int i=0; i<sharedAirways.size(); i++)
+            for(unsigned int i=0; i<sharedAirways.size(); i++)
             {
                 AIRWAY_SEGMENT_X11* nASeg = new AIRWAY_SEGMENT_X11();
                 nASeg->start = aSeg.start;
@@ -1665,7 +1665,7 @@ void XFMS_DATA::validate_airways_XP11(QFile& infile, int _origin)
             aSeg.end = tmp;
         }//else if
 
-        for(int i=0; i<sharedAirways.size(); i++)
+        for(unsigned int i=0; i<sharedAirways.size(); i++)
         {
             AIRWAY_SEGMENT_X11* nASeg = new AIRWAY_SEGMENT_X11();
             nASeg->start = aSeg.start;
@@ -1785,7 +1785,7 @@ void XFMS_DATA::validate_airways_XP11(QFile& infile, int _origin)
         if(it == lASegs.end()) break;
     }//for
 
-    for(int i=0; i<lASegs.size(); i++) delete lASegs.at(i);
+    for(unsigned int i=0; i<lASegs.size(); i++) delete lASegs.at(i);
     lASegs.clear();
 }
 
@@ -1795,7 +1795,7 @@ void XFMS_DATA::validate_earthnav_XP11(const QStringList &record, int _origin)
 
     NVUPOINT* wp = new NVUPOINT();
 
-    for(int i=0; i<record.size(); i++)
+    for(unsigned int i=0; i<record.size(); i++)
     {
         QString qstr = record.at(i).simplified();
         int _type;
@@ -2339,7 +2339,7 @@ void XFMS_DATA::validate_airport_XP10(const QStringList& record)
     if(record.size()<5) return;
 
     NVUPOINT* wp;
-	for(int i=0; i<record.size(); i++)
+    for(unsigned int i=0; i<record.size(); i++)
 	{
         QString qstr = record.at(i).simplified();
         switch(i)
@@ -2391,7 +2391,7 @@ void XFMS_DATA::validate_navaid_XP10(const QStringList &record)
     NVUPOINT* wp = new NVUPOINT();
     bool isILS;
 
-	for(int i=0; i<record.size(); i++)
+    for(unsigned int i=0; i<record.size(); i++)
 	{
         QString qstr = record.at(i).simplified();
         switch(i)
@@ -2461,7 +2461,7 @@ void XFMS_DATA::validate_earthnav_XP10(const QStringList &record)
 
     NVUPOINT* wp = new NVUPOINT();
 
-    for(int i=0; i<record.size(); i++)
+    for(unsigned int i=0; i<record.size(); i++)
     {
         QString qstr = record.at(i).simplified();
         switch(i)
@@ -2593,7 +2593,7 @@ void XFMS_DATA::validate_waypoint_XP10(const QStringList& record)
     NVUPOINT* wp = new NVUPOINT();
     wp->type = WAYPOINT::TYPE_FIX;
 
-	for(int i=0; i<record.size(); i++)
+    for(unsigned int i=0; i<record.size(); i++)
 	{
         QString qstr = record.at(i).simplified();
         switch(i)
@@ -2657,7 +2657,7 @@ void XFMS_DATA::validate_airways_XP10(QFile& infile)
         QStringList record;
         record = line.split(',',  QString::SkipEmptyParts);
 
-        for(int i=0; i<record.size(); i++)
+        for(unsigned int i=0; i<record.size(); i++)
         {
             qstr = record.at(i).simplified();
             switch(i)
@@ -2677,9 +2677,9 @@ void XFMS_DATA::validate_airways_XP10(QFile& infile)
                                 wpA->MD = ats->lATS[0]->MD;
                                 wpA->data = ats;
                                 ats->distance = 0;
-                                for(int k=0; k<ats->lATS.size()-1; k++)
+                                for(unsigned int k=1; k<ats->lATS.size(); k++)
                                 {
-                                    ats->distance+=LMATH::calc_distance(ats->lATS[k]->latlon, ats->lATS[k+1]->latlon);
+                                    ats->distance+=LMATH::calc_distance(ats->lATS[k-1]->latlon, ats->lATS[k]->latlon);
                                 }
                                 //lAirways.push_back(ats);
                                 lWP.insert(std::make_pair(wpA->name, wpA));
@@ -2733,8 +2733,6 @@ void XFMS_DATA::validate_airways_XP10(QFile& infile)
         NVUPOINT* a = NULL;
         NVUPOINT* b = NULL;
 
-
-        double d;
         std::vector< std::pair<NVUPOINT*, double> > cL = getClosestWaypointType(wpA.latlon, wpA.name, 0);
         for(unsigned int i=0; i<cL.size(); i++) if(cL[i].first->wpOrigin!=WAYPOINT::ORIGIN_XNVU && cL[i].second<=DEFAULT_WAYPOINT_MARGIN){a = cL[i].first; break;};
         cL = getClosestWaypointType(wpB.latlon, wpA.name, 0);
@@ -2818,7 +2816,7 @@ QString XFMS_DATA::validate_custom_point(const NVUPOINT* wpRef, NVUPOINT*& rPoin
         NVUPOINT* cWP;
         double dMin = std::numeric_limits<double>::max();
         double dCurrent = 0;
-        for(int k=0; k<lWP.size(); k++)
+        for(unsigned int k=0; k<lWP.size(); k++)
         {
             dCurrent = LMATH::calc_distance(wpRef->latlon, lWP[k]->latlon);
             if(dCurrent<dMin)
@@ -2951,7 +2949,7 @@ void XFMS_DATA::validate_RSBN(const QStringList &record)
     NVUPOINT* wp = new NVUPOINT();
     wp->type = WAYPOINT::TYPE_RSBN;
 
-    for(int i=0; i<record.size(); i++)
+    for(unsigned int i=0; i<record.size(); i++)
     {
         QString qstr = record.at(i).simplified();
 
@@ -2996,7 +2994,7 @@ void XFMS_DATA::validate_xnvu(const QStringList& RAW)
 
     NVUPOINT wp;
 
-    for(int i=0; i<RAW.size(); i++)
+    for(unsigned int i=0; i<RAW.size(); i++)
     {
         QString qstr = RAW.at(i).simplified();
         switch(i)
@@ -3062,7 +3060,7 @@ int XFMS_DATA::saveXNVUData()
 
     QTextStream out(&outfile);
 
-    for(int i=0; i<lXNVU.size(); i++)
+    for(unsigned int i=0; i<lXNVU.size(); i++)
     {
         NVUPOINT* p = lXNVU[i];
         out << qSetRealNumberPrecision(16)
@@ -3108,7 +3106,7 @@ int XFMS_DATA::saveXNVUFlightplan(const QString& file, std::vector<NVUPOINT*> lN
 
     QTextStream out(&outfile);
 
-    for(int i=0; i<lN.size(); i++)
+    for(unsigned int i=0; i<lN.size(); i++)
     {
         NVUPOINT* p = lN[i];
         out << qSetRealNumberPrecision(16)
@@ -3158,7 +3156,7 @@ void XFMS_DATA::validate_xnvuflightplan(std::vector<NVUPOINT*>& lXNVUFlightplan,
     NVUPOINT wp;
     NVUPOINT rsbn;
 
-    for(int i=0; i<RAW.size(); i++)
+    for(unsigned int i=0; i<RAW.size(); i++)
     {
         QString qstr = RAW.at(i).simplified();
         switch(i)
@@ -3300,7 +3298,7 @@ int XFMS_DATA::saveFMS(const QString& file, const std::vector<NVUPOINT*> lN)
     QTextStream out(&outfile);
 
     out << "I\n3 version\n1\n" << lN.size() << '\n';
-    for(int i=0; i<lN.size(); i++)
+    for(unsigned int i=0; i<lN.size(); i++)
     {
         NVUPOINT* p = lN[i];
         out <<  qSetRealNumberPrecision(16) << XNVUToFMSType(p->type) << ' ' << p->name << ' ' << p->alt << ' ' << p->latlon.x << ' ' << p->latlon.y << '\n';
@@ -3315,7 +3313,7 @@ void XFMS_DATA::validate_fms(std::vector<NVUPOINT*>& lFMS, const QStringList& RA
 {
     NVUPOINT wp;
 
-    for(int i=0; i<RAW.size(); i++)
+    for(unsigned int i=0; i<RAW.size(); i++)
     {
         QString qstr = RAW.at(i).simplified();
         switch(i)
