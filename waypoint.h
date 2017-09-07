@@ -18,13 +18,6 @@
 #define SURFACE_WATER		13
 #define SURFACE_SNOW_ICE	14	//(SNW)
 #define SURFACE_UNKOWN		15	//Transparent, custom airports
-#define ATC_ATIS	50
-#define ATC_UNICOM	51
-#define ATC_DEL		52
-#define ATC_GND		53
-#define ATC_TWR		54
-#define ATC_APP		55
-#define ATC_DEP		56
 
 
 class WAYPOINT
@@ -78,7 +71,8 @@ class WAYPOINT
         CPoint latlon;
         int type = -1;
         QString name;                   //For runways, this is the runway name i.e. 25R, otherwise ICAO code
-        QString name2;                  //For runways, this is the ICAO of the airport, otherwise the name of the airport/waypoint.
+        QString name2;                  //For runways, this is the ICAO of the airport, for ILS/LOC this is the ICAO airport code, otherwise the name of the airport/waypoint.
+        QString name3;                  //For runways, this is the name of the airport, or for ILS/LOC, this is the runway number
         int range = 0;
 		double freq = 0; 
         int alt = 0;

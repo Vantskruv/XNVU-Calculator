@@ -79,6 +79,7 @@ void DialogRSBN::setWaypointDescription(const NVUPOINT* wp)
     QString qstr;
     qstr = WAYPOINT::getTypeStr(wp);
     if(wp->type == WAYPOINT::TYPE_RUNWAY || wp->type == WAYPOINT::TYPE_HELIPAD) qstr = qstr + " " + wp->name;
+    else if(wp->type == WAYPOINT::TYPE_ILS || wp->type == WAYPOINT::TYPE_LOC) qstr = qstr + " " + wp->name3;
     ui->labelWPType2->setText(qstr);
 
     if(wp->type == WAYPOINT::TYPE_RUNWAY || wp->type == WAYPOINT::TYPE_HELIPAD) qstr = wp->name2;

@@ -1601,6 +1601,14 @@ QMenu::item:disabled
     <property name="title">
      <string>Export/Print</string>
     </property>
+    <widget class="QMenu" name="menuShow_summary">
+     <property name="title">
+      <string>Show summary</string>
+     </property>
+     <addaction name="actionAt_last_page"/>
+     <addaction name="actionAt_every_page"/>
+     <addaction name="actionDo_not_show"/>
+    </widget>
     <addaction name="actionPrint_2"/>
     <addaction name="actionPrint_to_PDF"/>
     <addaction name="actionExport_to_FMS"/>
@@ -1608,6 +1616,7 @@ QMenu::item:disabled
     <addaction name="separator"/>
     <addaction name="actionPrint_settings"/>
     <addaction name="actionNightmode"/>
+    <addaction name="menuShow_summary"/>
    </widget>
    <widget class="QMenu" name="menuUtils">
     <property name="title">
@@ -1949,6 +1958,30 @@ QMenu::item:disabled
   <action name="actionAutogenerate_correction_beacons">
    <property name="text">
     <string>Autogenerate correction beacons</string>
+   </property>
+  </action>
+  <action name="actionAt_last_page">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>At last page</string>
+   </property>
+  </action>
+  <action name="actionAt_every_page">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>At every page</string>
+   </property>
+  </action>
+  <action name="actionDo_not_show">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Do not show</string>
    </property>
   </action>
  </widget>

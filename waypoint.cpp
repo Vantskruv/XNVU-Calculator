@@ -63,6 +63,7 @@ void WAYPOINT::swap(WAYPOINT& m, const WAYPOINT& wp)
     m.type = wp.type;
     m.name = wp.name;
     m.name2 = wp.name2;
+    m.name3 = wp.name3;
     m.range = wp.range;
     m.freq = wp.freq;
     m.alt = wp.alt;

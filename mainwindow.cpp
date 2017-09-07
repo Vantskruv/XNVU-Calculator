@@ -21,6 +21,7 @@
 
 #include <nvupoint.h>
 #include <airway.h>
+#include <airport_data.h>
 
 
 int dat; //TODO
@@ -71,6 +72,19 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionImport_X_Plane_FMS_2, SIGNAL(triggered()), this, SLOT(importFMS()));
     connect(ui->actionKLN_90B, SIGNAL(triggered()), this, SLOT(importFMS_KLN90B()));
     connect(ui->actionAutogenerate_correction_beacons, SIGNAL(triggered()), this, SLOT(autoGenerateCorrectionBeacons()));
+
+    showSummaryActions = new QActionGroup( this );
+    showSummaryActions->addAction(ui->actionDo_not_show);
+    showSummaryActions->addAction(ui->actionAt_last_page);
+    showSummaryActions->addAction(ui->actionAt_every_page);
+    showSummaryActions->setExclusive(true);
+    switch(DialogSettings::showSummary)
+    {
+        case 0: ui->actionDo_not_show->setChecked(true); break;
+        case 1: ui->actionAt_last_page->setChecked(true); break;
+        case 2: ui->actionAt_every_page->setChecked(true); break;
+        default: ui->actionAt_last_page->setChecked(true);
+    }
 
     //Connect clickable labels for TOD calculations
     //connect(ui->labelCruise, SIGNAL(clicked(QLabelClick*)), this, SLOT(clickedDataLabels(QLabelClick*)));
@@ -160,8 +174,11 @@ MainWindow::~MainWindow()
     DialogSettings::tableState = ui->tableWidget->horizontalHeader()->saveState();
 
     DialogSettings::nightMode = ui->actionNightmode->isChecked();
-    //DialogSettings::showTOD_METRIC_PRINT = ui->actionDistance_in_NM->isChecked();
-    //DialogSettings::showFeet_PRINT = ui->actionAltitude_in_feet->isChecked();
+    DialogSettings::showSummary = 1;
+    if(ui->actionDo_not_show->isChecked()) DialogSettings::showSummary = 0;
+    else if(ui->actionAt_every_page->isChecked()) DialogSettings::showSummary = 2;
+
+    delete showSummaryActions;
 
     DialogSettings::saveSettings();
 
@@ -584,11 +601,12 @@ void MainWindow::printPreview(QPrinter* printer)
     drawNVUHeader(painter, lWPs[0], lWPs[lWPs.size() - 1], fork, y);
     y+=30;
     int j = 0;
+    int lBreak = (ui->actionAt_every_page->isChecked() ? 17 : 19);
     for(int i=0; i<lWPs.size(); i++, j++)
     {
-        if(j==19)
+        if(j==lBreak)
         {
-            //painterDrawSummary(painter, lWPs, y);
+            if(ui->actionAt_every_page->isChecked()) painterDrawSummary(painter, lWPs, y);
             printer->newPage();
             painter.setViewport(defvp);
             prect = printer->pageRect();
@@ -602,7 +620,20 @@ void MainWindow::printPreview(QPrinter* printer)
             j = 0;
         }
         painterDrawNVUPoint(painter, lWPs[i], i+1, i == (lWPs.size() - 1), y);
+    }
 
+    if(j<=17 && !ui->actionDo_not_show->isChecked()) painterDrawSummary(painter, lWPs, y);
+    else if(!ui->actionDo_not_show->isChecked())
+    {
+        printer->newPage();
+        painter.setViewport(defvp);
+        prect = printer->pageRect();
+        if(ui->actionNightmode->isChecked()) painter.fillRect(prect, Qt::black);
+        prect.setY(1000);
+        prect.setX(1000);
+        painter.setViewport(prect);
+        y = 0;
+        painterDrawSummary(painter, lWPs, y);
     }
 
     painter.end();
@@ -759,6 +790,7 @@ void MainWindow::setWaypointDescription(const NVUPOINT* wp)
     QString qstr;
     qstr = WAYPOINT::getTypeStr(wp);
     if(wp->type == WAYPOINT::TYPE_RUNWAY || wp->type == WAYPOINT::TYPE_HELIPAD) qstr = qstr + " " + wp->name;
+    else if(wp->type == WAYPOINT::TYPE_ILS || wp->type == WAYPOINT::TYPE_LOC) qstr = qstr + " " + wp->name3;
     ui->labelWPType2->setText(qstr);
 
     if(wp->type == WAYPOINT::TYPE_RUNWAY || wp->type == WAYPOINT::TYPE_HELIPAD) qstr = wp->name2;
@@ -837,7 +869,292 @@ void MainWindow::setWaypointDescription(const NVUPOINT* wp)
 
 }
 
+void MainWindow::painterDrawRunways(QPainter& painter, NVUPOINT* ap, int x, int y, bool isArrival)
+{
+    int width = 14033 - 1000;
+    QColor red(143, 30, 30, 255);
+    QColor blue(6, 6, 131, 255);
+    QColor white(255, 255, 255);
+    QColor black(0, 0, 0);
+    QColor orange(186, 105, 0, 255);
 
+    if(ui->actionNightmode->isChecked())
+    {
+        white = QColor(0, 0, 0);
+        black = QColor(0, 154, 0);
+        red = QColor(242, 30, 30, 255);
+        blue = QColor(0, 242, 242, 255);
+        orange = QColor(224, 126, 0, 255);
+    }//if
+
+    QPen gridPen(black, 0, Qt::SolidLine);
+    //Drawing the runways, works and is nice, but not necessary and takes up much space.
+
+    //First get the extremities of the airport runways
+    if(ap->type == WAYPOINT::TYPE_AIRPORT && ap->data!=NULL)
+    {
+        AIRPORT_DATA* ad = (AIRPORT_DATA*) ap->data;
+        //Set top left corner and bottom right corner of airport
+        CPoint pTopLeft(181, 91, 0);
+        CPoint pBottomRight(-181, -91, 0);
+
+        //Get topleft and bottomright extreme corners fitting all the runways in the airport
+        if(ad->lRunways.size()>0)       //Set first point, as we have nothing to compare it to.
+        {
+            WAYPOINT* r = ad->lRunways[0];
+            CPoint rs = r->latlon;
+            LMATH::latlonToScreen(rs);
+
+            pTopLeft.x = rs.x;
+            pTopLeft.y = rs.y;
+            pBottomRight.x = rs.x;
+            pBottomRight.y = rs.y;
+
+            /*
+            pTopLeft.x = (rs.x<re.x ? rs.x : re.x);
+            pTopLeft.y = (rs.y<re.y ? rs.y : re.y);
+            pBottomRight.x = (rs.x>re.x ? rs.x : re.x);
+            pBottomRight.y = (rs.y>re.y ? rs.y : re.y);
+            */
+        }
+        for(unsigned int i=1; i<ad->lRunways.size(); i++)   //Continue comparing
+        {
+            WAYPOINT* r = ad->lRunways[i];
+            CPoint rs = r->latlon;
+            LMATH::latlonToScreen(rs);
+
+            if(rs.x<pTopLeft.x) pTopLeft.x = rs.x;
+            if(rs.y<pTopLeft.y) pTopLeft.y = rs.y;
+
+            if(rs.x>pBottomRight.x) pBottomRight.x = rs.x;
+            if(rs.y>pBottomRight.y) pBottomRight.y = rs.y;
+        }
+
+
+        //Draw the rectangle for the airport information
+        double ox = x + width/2.0 - 1600 - 150; //x + 150;
+        double oy = 150;
+        QRect adRect(x, y, width/2.0, 400*3 + oy*2);//height - y);
+        painter.drawRect(adRect);
+
+        //Set scale factor of airport
+        CPoint pSize(pBottomRight - pTopLeft);
+        pSize.x = fabs(pSize.x);
+        pSize.y = fabs(pSize.y);
+        QRect apRect = adRect; //We set the airport rect to be a little smaller with 50x2 margins in height(handsomer).
+        apRect.setHeight(apRect.height() - oy*2);
+        apRect.setWidth(1600);
+        double aScale = std::min(apRect.width()/pSize.x, apRect.height()/pSize.y); //std::min(depRect.width()/pSize.x, depRect.height()/pSize.y);
+        pTopLeft = pTopLeft*aScale;
+        pBottomRight = pBottomRight*aScale;
+        double dy = fabs(pTopLeft.y - pBottomRight.y);
+        dy = (dy - apRect.height())/2.0;
+
+        //Draw the runways for arrival
+        //gridPen.setWidth(5);
+        //painter.setPen(gridPen);
+        //painter.setBrush(black);
+        qDebug() << ap->name << ": " << QString::number(aScale, 'f', 3);
+
+        for(unsigned int i=1; i<ad->lRunways.size(); i+=2)
+        {
+            WAYPOINT* rws = ad->lRunways[i-1];
+            if(rws->type != WAYPOINT::TYPE_RUNWAY) continue;
+            WAYPOINT* rwe = ad->lRunways[i];
+
+            CPoint rs = rws->latlon;
+            CPoint re = rwe->latlon;
+            LMATH::latlonToScreen(rs);
+            LMATH::latlonToScreen(re);
+
+            CPoint rsl = (rs + (re - rs).getNormal(false).getNormalized()*0.000015)*aScale - pTopLeft;       //15 meters left
+            CPoint rsr = (rs + (re - rs).getNormal(true).getNormalized()*0.000015)*aScale - pTopLeft;       //15 meters right
+            CPoint rel = (re + (rs - re).getNormal(false).getNormalized()*0.000015)*aScale - pTopLeft;       //15 meters left
+            CPoint rer = (re + (rs - re).getNormal(true).getNormalized()*0.000015)*aScale - pTopLeft;       //15 meters right
+            QPointF points[4] =
+            {
+                QPointF(rsl.x+ox, rsl.y+y+oy - dy),
+                QPointF(rer.x+ox, rer.y+y+oy - dy),
+                QPointF(rel.x+ox, rel.y+y+oy - dy),
+                QPointF(rsr.x+ox, rsr.y+y+oy - dy)
+            };
+
+
+            painter.drawPolygon(points, 4);
+
+            rs = rs*aScale;
+            re = re*aScale;
+            rs = (rs - pTopLeft);
+            re = (re - pTopLeft);
+
+            rs.x+=10;
+            re.x+=10;
+            rs.y+=y+10;
+            re.y+=y+10;
+            //painter.drawLine(rs.x, rs.y, re.x, re.y);
+        }//for
+
+        //Draw separation line
+        painter.drawLine(QLine(ox - 150, y, ox - 150, y + 400*3 + oy*2));
+
+        //Draw airport information/data
+        x+=150;
+        QFont font = QFont("FreeSans");
+        font.setPixelSize(200);
+        font.setBold(true);
+        QFontMetrics fM(font);
+        painter.setFont(font);
+        y+=painter.fontMetrics().height();
+        painter.drawText(x, y, QString(isArrival ? "Arrival - " : "Departure - ") + ap->name);
+        font.setBold(false);
+        font.setPixelSize(150);
+        painter.setFont(font);
+        int sw = width/2.0 - painter.fontMetrics().width("Longest runway NNAB / NNCD:  XXXXXm") - 150 - 1600;
+        painter.drawText(x + sw, y, "Longest runway" + (ap->name3.length()>0 ? " " + ap->name3 :"") + ":  " + QString::number(ap->length, 'f', 0) + "m");
+
+        y+=25;
+        y+=painter.fontMetrics().height() + 25;
+
+        //Draw runway navaids
+
+        //Retain a list of ILS/LOC beacons at the airfield, and connect them to correct runway.
+        std::vector<NVUPOINT*> lP = XFMS_DATA::search(ap->name, 0, 2, ap->country);
+        std::vector< std::pair<WAYPOINT*, NVUPOINT*> > lNav;
+        for(unsigned int i=0; (i<ad->lRunways.size()); i++)
+        {
+            if(ad->lRunways[i]->type == WAYPOINT::TYPE_HELIPAD) continue;
+            for(unsigned int j=0; j<lP.size(); j++)
+            {
+                if(ad->lRunways[i]->name.compare(lP[j]->name3) == 0)
+                {
+                    lNav.push_back(std::make_pair(ad->lRunways[i], lP[j]));
+                    break;
+                }
+            }
+        }
+
+        font.setBold(true);
+        painter.setFont(font);
+        painter.drawText(x, y, "ILS/LOC navaids");
+        font.setBold(false);
+        painter.setFont(font);
+        ox = 0;
+        oy = 0;
+        sw = painter.fontMetrics().width("NNCD: ");
+        for(unsigned int i=0; i<lNav.size(); i++)
+        {
+            if(i == 5 || i == 10){ ox+= 1400; oy = 0;};
+            oy+=painter.fontMetrics().height() + 25;
+            font.setBold(true);
+            painter.setFont(font);
+            painter.drawText(x + ox, y + oy, lNav[i].first->name + ": ");
+            font.setBold(false);
+            painter.setFont(font);
+            painter.drawText(x + ox + sw, y + oy, WAYPOINT::getTypeStr(NULL, lNav[i].second->type) +  " " + QString::number(lNav[i].second->freq, 'g', 6));
+        }
+
+        //Draw transition levels
+        //painter.drawText(x, y+200, "Transition Level:  FL" + QString::number(ap->trans_level, 'f', 0) + " ft");
+        //painter.drawText(x, y+600, "Transition Alt:    " + QString::number(ap->trans_alt, 'f', 0) + " ft");
+
+        //Draw runway lengths
+        /*
+        QString qstr = "Longest Runways";
+        int j = 0;
+        ox = 2000;
+        oy = 0;
+        font.setBold(true);
+        painter.setFont(font);
+        painter.drawText(x + ox, y, qstr);
+        font.setBold(false);
+        painter.setFont(font);
+        std::vector< std::pair<QString, double> > lLR;
+        for(unsigned int i=1; (i<ad->lRunways.size() && j<5); i+=2)
+        {
+            if(ad->lRunways[i-1]->type == WAYPOINT::TYPE_HELIPAD) continue;
+            double l = ad->lRunways[i]->length;
+            qstr = ad->lRunways[i-1]->name + " / " + ad->lRunways[i]->name;// + "  " + QString::number(l, 'f', 0) + "m";
+            lLR.push_back(std::make_pair(qstr, l));
+            j++;
+        }
+        sort(lLR.begin(), lLR.end(),
+        [](const std::pair<QString, double>& lhs, const std::pair<QString, double>& rhs) -> bool
+        {
+            return lhs.second < rhs.second;
+        });
+        while(lLR.size()>5) lLR.pop_back();
+        int sw = painter.fontMetrics().width("30CR / 12CL  ");
+        for(unsigned int i=0; i<lLR.size(); i++)
+        {
+            if(i == 4 ){ ox+= 750; oy = 0;};
+            oy+=painter.fontMetrics().height() + 25;
+            painter.drawText(x + ox, y + oy, lLR[i].first);
+            painter.drawText(x + ox + sw, y + oy, QString::number(lLR[i].second, 'f', 0) + "m");
+        }
+        */
+
+        /*
+        for(unsigned int i=1; (i<ad->lRunways.size() && i<5); i+=2)
+        {
+            if(j == 8 || j == 16){ ox+= 750; oy = 0;};
+            if(ad->lRunways[i-1]->type == WAYPOINT::TYPE_HELIPAD) continue;
+            oy+=painter.fontMetrics().height() + 25;
+            qstr = "[ " + ad->lRunways[i-1]->name + " / " + ad->lRunways[i]->name + "]" + "[ " + QString::number(ad->lRunways[i]->length, 'f', 0) + "m ]";
+            painter.drawText(x + ox, y + oy, qstr);
+            j++;
+        }
+        */
+    }
+
+
+
+}
+
+void MainWindow::painterDrawSummary(QPainter& painter, std::vector<NVUPOINT*>& lWP, int y)
+{
+    if(lWP.size()<2) return;
+
+    int width = 14033 - 1000;
+    int height = 9917 - 1000;
+    int fSize = 150;                    //Font size
+    double xScale = 1;
+    int xBegin = 0;
+    int x = xBegin;
+    QColor red(143, 30, 30, 255);
+    QColor blue(6, 6, 131, 255);
+    QColor white(255, 255, 255);
+    QColor black(0, 0, 0);
+    QColor orange(186, 105, 0, 255);
+
+    if(ui->actionNightmode->isChecked())
+    {
+        white = QColor(0, 0, 0);
+        black = QColor(0, 154, 0);
+        red = QColor(242, 30, 30, 255);
+        blue = QColor(0, 242, 242, 255);
+        orange = QColor(224, 126, 0, 255);
+    }//if
+
+    QPen gridPen(black, 0, Qt::SolidLine);
+    QFont font = QFont("FreeSans");
+    font.setPixelSize(fSize);
+    QFontMetrics fM(font);
+    painter.setFont(font);
+    painter.setBrush(white);
+    painter.setPen(gridPen);
+
+    painterDrawRunways(painter, lWP[lWP.size()-1], x, y, true);
+    x+=width/2.0 - 25;
+    x+=50;
+    //painter.setFont(font);
+    //gridPen.setWidth(5);
+    //painter.setPen(gridPen);
+    //painter.setBrush(white);
+    painterDrawRunways(painter, lWP[0], x, y, false);
+
+}
+
+/*
 void MainWindow::painterDrawSummary(QPainter& painter, std::vector<NVUPOINT*>& lWP, int y)
 {
     int width = 14033 - 1000;
@@ -868,17 +1185,12 @@ void MainWindow::painterDrawSummary(QPainter& painter, std::vector<NVUPOINT*>& l
     painter.setFont(font);
     painter.setBrush(white);
 
-    QRect depRect(x, y, width/2.0, height - y);
-    x+=width/2.0 - 25;
-    x+=50;
-    QRect arrRect(x, y, width/2.0, height - y);
 
-    painter.drawRect(depRect);
 
-    painter.drawRect(arrRect);
 
-    /*
     //Drawing the runways, works and is nice, but not necessary and takes up much space.
+
+    //First get the extremities of the airport runways
     NVUPOINT* dep = lWP[0];
     if(dep->type == WAYPOINT::TYPE_AIRPORT && dep->data!=NULL)
     {
@@ -890,51 +1202,69 @@ void MainWindow::painterDrawSummary(QPainter& painter, std::vector<NVUPOINT*>& l
         //Get topleft and bottomright extreme corners fitting all the runways in the airport
         if(ad->lRunways.size()>0)       //Set first point, as we have nothing to compare it to.
         {
-            RUNWAY* r = ad->lRunways[0];
-            CPoint rs = CPoint(r->start.x, r->start.y, 0.0);
-            CPoint re = CPoint(r->end.x, r->end.y, 0.0);
+            WAYPOINT* r = ad->lRunways[0];
+            CPoint rs = r->latlon;
             LMATH::latlonToScreen(rs);
-            LMATH::latlonToScreen(re);
 
-            pTopLeft.x = (rs.x<re.x ? rs.x : re.x);
-            pTopLeft.y = (rs.y<re.y ? rs.y : re.y);
-            pBottomRight.x = (rs.x>re.x ? rs.x : re.x);
-            pBottomRight.y = (rs.y>re.y ? rs.y : re.y);
+            pTopLeft.x = rs.x;
+            pTopLeft.y = rs.y;
+            pBottomRight.x = rs.x;
+            pBottomRight.y = rs.y;
+
+
+            //pTopLeft.x = (rs.x<re.x ? rs.x : re.x);
+            //pTopLeft.y = (rs.y<re.y ? rs.y : re.y);
+            //pBottomRight.x = (rs.x>re.x ? rs.x : re.x);
+            //pBottomRight.y = (rs.y>re.y ? rs.y : re.y);
+
         }
         for(unsigned int i=1; i<ad->lRunways.size(); i++)   //Continue comparing
         {
-            RUNWAY* r = ad->lRunways[i];
-            CPoint rs = CPoint(r->start.x, r->start.y, 0.0);
-            CPoint re = CPoint(r->end.x, r->end.y, 0.0);
+            WAYPOINT* r = ad->lRunways[i];
+            CPoint rs = r->latlon;
             LMATH::latlonToScreen(rs);
-            LMATH::latlonToScreen(re);
 
             if(rs.x<pTopLeft.x) pTopLeft.x = rs.x;
-            if(re.x<pTopLeft.x) pTopLeft.x = re.x;
             if(rs.y<pTopLeft.y) pTopLeft.y = rs.y;
-            if(re.y<pTopLeft.y) pTopLeft.y = re.y;
 
             if(rs.x>pBottomRight.x) pBottomRight.x = rs.x;
-            if(re.x>pBottomRight.x) pBottomRight.x = re.x;
             if(rs.y>pBottomRight.y) pBottomRight.y = rs.y;
-            if(re.y>pBottomRight.y) pBottomRight.y = re.y;
         }
+
+
+        //Draw the rectangles for departure and arrival airport information
+        double ox = 150;
+        double oy = 150;
+        QRect depRect(x, y, width/2.0, 400*3 + oy*2);//height - y);
+        x+=width/2.0 - 25;
+        x+=50;
+        QRect arrRect(x, y, width/2.0, 400*3 + oy*2);//height - y);
+        painter.drawRect(depRect);
+        painter.drawRect(arrRect);
 
         //Set scale factor of airport
         CPoint pSize(pBottomRight - pTopLeft);
         pSize.x = fabs(pSize.x);
         pSize.y = fabs(pSize.y);
-        double aScale = std::min(depRect.width()/pSize.x, depRect.height()/pSize.y); //std::min(depRect.width()/pSize.x, depRect.height()/pSize.y);
+        QRect apRect = depRect; //We set the airport rect to be a little smaller with 50x2 margins in height(handsomer).
+        apRect.setHeight(apRect.height() - oy*2);
+        double aScale = std::min(apRect.width()/pSize.x, apRect.height()/pSize.y); //std::min(depRect.width()/pSize.x, depRect.height()/pSize.y);
         pTopLeft = pTopLeft*aScale;
 
-        //Draw the runways
+        ox+=arrRect.x();
+
+        //Draw the runways for arrival
         gridPen.setWidth(5);
         painter.setPen(gridPen);
-        for(unsigned int i=0; i<ad->lRunways.size(); i++)
+
+        for(unsigned int i=1; i<ad->lRunways.size(); i+=2)
         {
-            RUNWAY* r = ad->lRunways[i];
-            CPoint rs = CPoint(r->start.x, r->start.y, 0.0);
-            CPoint re = CPoint(r->end.x, r->end.y, 0.0);
+            WAYPOINT* rws = ad->lRunways[i-1];
+            if(rws->type != WAYPOINT::TYPE_RUNWAY) continue;
+            WAYPOINT* rwe = ad->lRunways[i];
+
+            CPoint rs = rws->latlon;
+            CPoint re = rwe->latlon;
             LMATH::latlonToScreen(rs);
             LMATH::latlonToScreen(re);
 
@@ -944,10 +1274,10 @@ void MainWindow::painterDrawSummary(QPainter& painter, std::vector<NVUPOINT*>& l
             CPoint rer = (re + (rs - re).getNormal(true).getNormalized()*0.000005)*aScale - pTopLeft;       //15 meters right
             QPointF points[4] =
             {
-                QPointF(rsl.x+10, rsl.y+y+10),
-                QPointF(rer.x+10, rer.y+y+10),
-                QPointF(rel.x+10, rel.y+y+10),
-                QPointF(rsr.x+10, rsr.y+y+10)
+                QPointF(rsl.x+ox, rsl.y+y+oy),
+                QPointF(rer.x+ox, rer.y+y+oy),
+                QPointF(rel.x+ox, rel.y+y+oy),
+                QPointF(rsr.x+ox, rsr.y+y+oy)
             };
 
             painter.setBrush(black);
@@ -965,9 +1295,9 @@ void MainWindow::painterDrawSummary(QPainter& painter, std::vector<NVUPOINT*>& l
             //painter.drawLine(rs.x, rs.y, re.x, re.y);
         }//for
     }
-    */
-}
 
+}
+*/
 void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, double fork, int& y)
 {
     QColor black(0, 0, 0);
@@ -1153,7 +1483,7 @@ void MainWindow::drawNVUHeader(QPainter& painter, NVUPOINT* dep, NVUPOINT* arr, 
 
     //Draw RSBN column
     x+=30;
-    xscale = 7;
+    xscale = 7.7;
     painter.drawRect(x, y, rectW*xscale, rectH);
     qstr = "VORDME / RSBN";
     dx = fM.boundingRect(qstr).width();
@@ -1329,6 +1659,7 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     painter.setFont(font);
     painter.drawRect(x, y, rectW*xscale, rectH);
     qstr = WAYPOINT::getTypeStr(wp);
+    if(wp->type == WAYPOINT::TYPE_ILS || wp->type == WAYPOINT::TYPE_LOC) qstr+= " " + wp->name3;
     dx = fM.boundingRect(qstr).width();
     dx = (rectW*xscale)/2 - dx/2;
     if(WAYPOINT::isNavaid(wp->type)) dy = fM.boundingRect(qstr).height() + 10;
@@ -1457,7 +1788,7 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     //Draw RSBN column
     qstr = "";
     x+=30;
-    xscale = 7;
+    xscale = 7.7;
     painter.drawRect(x, y, rectW*xscale, rectH);
     WAYPOINT* rsbn = wp->getRSBN();
     if(rsbn)
@@ -1559,6 +1890,30 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     x+= rectW*xscale;
 
     y+=rectH;
+}
+
+void MainWindow::on_showSummary(int show)
+{
+    switch(show)
+    {
+        case 0:
+            ui->actionDo_not_show->setChecked(true);
+            ui->actionAt_last_page->setChecked(false);
+            ui->actionAt_every_page->setChecked(false);
+        break;
+        case 1:
+            ui->actionDo_not_show->setChecked(false);
+            ui->actionAt_last_page->setChecked(true);
+            ui->actionAt_every_page->setChecked(false);
+        break;
+        case 2:
+            ui->actionDo_not_show->setChecked(false);
+            ui->actionAt_last_page->setChecked(false);
+            ui->actionAt_every_page->setChecked(true);
+        break;
+    }
+
+    //DialogSettings::showSummary = show;
 }
 
 void MainWindow::on_pushButtonPrint_clicked()

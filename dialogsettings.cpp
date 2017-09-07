@@ -28,6 +28,7 @@ bool DialogSettings::distAlignXWP = false;
 bool DialogSettings::distAlignFMS = false;
 double DialogSettings::distAlignMargin = 0.0001;
 bool DialogSettings::nightMode = true;
+int DialogSettings::showSummary = 1;
 bool DialogSettings::showFeet = false;
 //bool DialogSettings::showFeet_PRINT = false;
 int DialogSettings::cruiseFormat = 0;
@@ -88,6 +89,7 @@ void DialogSettings::loadSettings()
     distAlignFMS = s.value("DistAlignFMS", distAlignFMS).toBool();
     distAlignMargin = s.value("DistAlignMargin", distAlignMargin).toDouble();
     nightMode = s.value("NightMode", nightMode).toBool();
+    showSummary = s.value("showSummary", showSummary).toInt();
     showFeet = s.value("ShowFeet", showFeet).toBool();
     //showFeet_PRINT = s.value("ShowFeet_PRINT", showFeet_PRINT).toBool();
     cruiseFormat = s.value("CruiseFormat", cruiseFormat).toInt();
@@ -123,6 +125,7 @@ void DialogSettings::saveSettings()
     s.setValue("DistAlignFMS", distAlignFMS);
     s.setValue("DistAlignMargin", distAlignMargin);
     s.setValue("ShowFeet", showFeet);
+    s.setValue("showSummary", showSummary);
     //s.setValue("ShowFeet_PRINT", showFeet_PRINT);
     s.setValue("NightMode", nightMode);
     s.setValue("CruiseFormat", cruiseFormat);

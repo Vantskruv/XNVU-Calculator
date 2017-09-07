@@ -54,6 +54,7 @@ public:
     static bool distAlignFMS;
     static double distAlignMargin;
     static bool nightMode;              //Only in printed flightplan
+    static int showSummary;
     static bool showFeet;               //Only in UI
     //static bool showFeet_PRINT;         //Only in printed flightplan
     static int cruiseFormat;            //Only in UI

@@ -11,7 +11,7 @@
 #include "qlineeditwp.h"
 #include <qlabelclick.h>
 
-#define XNVU_VERSION    "XNVU version 0.377"
+#define XNVU_VERSION    "XNVU version 0.378"
 
 namespace Ui {
 class MainWindow;
@@ -22,6 +22,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 private:
+    QActionGroup* showSummaryActions;
     //void calculateTOD();
     void fplDataChangeCheck();
 
@@ -56,6 +57,7 @@ private slots:
 
     void printPreview(QPrinter*);
     void drawNVUHeader(QPainter& painter, NVUPOINT *dep, NVUPOINT *arr, double fork, int& y);
+    void painterDrawRunways(QPainter& painter, NVUPOINT* ap, int x, int y, bool isArrival);
     void painterDrawSummary(QPainter& painter, std::vector<NVUPOINT*>& lWP, int y);
     void painterDrawNVUPoint(QPainter& painter, NVUPOINT*wp, int wpNumber, bool isArr, int &y);
     void clearFlightplanTimeout();
@@ -63,6 +65,8 @@ private slots:
 
     void on_lineEdit_textChanged(const QString &arg1);
     void on_listWidget_itemDoubleClicked(QListWidgetItem *item);
+
+    void on_showSummary(int show);
 
     void on_pushButtonPrint_clicked();
 

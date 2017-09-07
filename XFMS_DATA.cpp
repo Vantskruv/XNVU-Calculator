@@ -1014,6 +1014,7 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                             double lMax = -1;
                             for(unsigned int j = 0; j<lRunways.size(); j++) if(lRunways[j]->getLength()>lMax){ rwy = lRunways[j]; lMax = lRunways[j]->getLength(); }
                             wp.length = lMax;
+                            wp.name3 = rwy->rwyA + (rwy->type == WAYPOINT::TYPE_RUNWAY ? " / " + rwy->rwyB : "");
                             if(!lat_set || !lon_set) wp.latlon = rwy->getMiddlePoint();
 
                             NVUPOINT* nwp = new NVUPOINT(wp);
@@ -1097,7 +1098,7 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                                 wp.trans_alt = qstr.toInt();
                                 break;
                             }
-                            else if(qstr.compare("transition_alt") == 0)
+                            else if(qstr.compare("transition_level") == 0)
                             {
                                 if(i>=record[i].size()) break;
                                 qstr = record[i].simplified();
@@ -1235,6 +1236,7 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
         double lMax = -1;
         for(unsigned int j = 0; j<lRunways.size(); j++) if(lRunways[j]->getLength()>lMax){ rwy = lRunways[j]; lMax = lRunways[j]->getLength(); }
         wp.length = lMax;
+        wp.name3 = rwy->rwyA + (rwy->type == WAYPOINT::TYPE_RUNWAY ? " / " + rwy->rwyB : "");
         if(!lat_set || !lon_set) wp.latlon = rwy->getMiddlePoint();
 
         NVUPOINT* nwp = new NVUPOINT(wp);
@@ -1248,11 +1250,12 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
     }//if
 }
 
-void XFMS_DATA::validate_runways(const NVUPOINT* ap, const std::vector<RUNWAY*>& lRunways)
+void XFMS_DATA::validate_runways(NVUPOINT* ap, const std::vector<RUNWAY*>& lRunways)
 {
     AIRPORT_DATA* apd = (AIRPORT_DATA*) ap->data;
     if(!apd) return;
 
+    //double lMax = -1;
     NVUPOINT* rwy;
     for(unsigned int i=0; i<lRunways.size(); i++)
     {
@@ -1271,6 +1274,7 @@ void XFMS_DATA::validate_runways(const NVUPOINT* ap, const std::vector<RUNWAY*>&
         //lWP.insert(std::make_pair(rwy->name, rwy));
         //lWP2.insert(std::make_pair(rwy->name2, rwy));
 
+
         if(rwy->type == WAYPOINT::TYPE_HELIPAD) continue;
 
         rwy = new NVUPOINT(*ap);
@@ -1284,8 +1288,15 @@ void XFMS_DATA::validate_runways(const NVUPOINT* ap, const std::vector<RUNWAY*>&
         rwy->name2 = ap->name;// + " " + ap->name2;
         rwy->type = lRunways[i]->type;
         apd->lRunways.push_back(rwy);
-        //lWP.insert(std::make_pair(rwy->name, rwy));
-        //lWP2.insert(std::make_pair(rwy->name2, rwy));
+
+        /*
+        if(rwy->length>lMax)
+        {
+            lMax = rwy->length;
+            ap->length = lMax;
+            ap->name3 = lRunways[i]->rwyA + " / " + lRunways[i]->rwyB;
+        }//if
+        */
     }
 }
 
@@ -1850,7 +1861,8 @@ void XFMS_DATA::validate_earthnav_XP11(const QStringList &record, int _origin)
             case 10:
                 if(wp->type == -4 || wp->type == -5)
                 {
-                    wp->name2 = wp->name2 + " " + qstr;
+                    //wp->name2 = wp->name2 + " " + qstr;
+                    wp->name3 = qstr;
                     wp->type = (wp->type == -4 ? WAYPOINT::TYPE_ILS : WAYPOINT::TYPE_LOC);
                     i = record.size();
                     break;
