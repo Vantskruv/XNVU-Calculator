@@ -1892,29 +1892,6 @@ void MainWindow::painterDrawNVUPoint(QPainter& painter, NVUPOINT *wp, int wpNumb
     y+=rectH;
 }
 
-void MainWindow::on_showSummary(int show)
-{
-    switch(show)
-    {
-        case 0:
-            ui->actionDo_not_show->setChecked(true);
-            ui->actionAt_last_page->setChecked(false);
-            ui->actionAt_every_page->setChecked(false);
-        break;
-        case 1:
-            ui->actionDo_not_show->setChecked(false);
-            ui->actionAt_last_page->setChecked(true);
-            ui->actionAt_every_page->setChecked(false);
-        break;
-        case 2:
-            ui->actionDo_not_show->setChecked(false);
-            ui->actionAt_last_page->setChecked(false);
-            ui->actionAt_every_page->setChecked(true);
-        break;
-    }
-
-    //DialogSettings::showSummary = show;
-}
 
 void MainWindow::on_pushButtonPrint_clicked()
 {
