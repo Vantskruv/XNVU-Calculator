@@ -954,7 +954,6 @@ void MainWindow::painterDrawRunways(QPainter& painter, NVUPOINT* ap, int x, int 
         //gridPen.setWidth(5);
         //painter.setPen(gridPen);
         //painter.setBrush(black);
-        qDebug() << ap->name << ": " << QString::number(aScale, 'f', 3);
 
         for(unsigned int i=1; i<ad->lRunways.size(); i+=2)
         {
