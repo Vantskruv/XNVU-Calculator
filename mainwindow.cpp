@@ -979,7 +979,6 @@ void MainWindow::painterDrawRunways(QPainter& painter, NVUPOINT* ap, int x, int 
                 QPointF(rsr.x+ox, rsr.y+y+oy - dy)
             };
 
-
             painter.drawPolygon(points, 4);
 
             rs = rs*aScale;

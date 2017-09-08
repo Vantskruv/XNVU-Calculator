@@ -33,7 +33,7 @@ QRSBNTable::QRSBNTable(QWidget *w) : QTableWidget(w)
     setColumnWidth(COL::S, 75);
     setColumnWidth(COL::ZM, 75);
     setColumnWidth(COL::SM, 75);
-    setColumnWidth(COL::ID, 75);
+    setColumnWidth(COL::ID, 100);
     setColumnWidth(COL::NAME, 250);
     verticalHeader()->setDefaultSectionSize(20);
     horizontalHeader()->setStretchLastSection(true);

@@ -41,6 +41,35 @@
 	color: rgb(107, 239, 0);
 }
 
+QScrollBar::handle:vertical
+{
+	background: rgb(107, 239, 0);
+}
+
+QScrollBar::handle:horizontal
+{
+	background: rgb(107, 239, 0);
+}
+
+QScrollBar::up-arrow:vertical
+{
+	background: rgb(200, 200, 0);
+}
+
+QScrollBar::down-arrow:vertical
+{
+	background: rgb(200, 200, 0);
+}
+
+QScrollBar::left-arrow:horizontal
+{
+	background: rgb(200, 200, 0);
+}
+
+QScrollBar::right-arrow:horizontal
+{
+	background: rgb(200, 200, 0);
+}
 
 #frameDescription, #labelFork, #labelAltitude, #labelTOD
 {

@@ -28,6 +28,7 @@ QFlightplanTable::QFlightplanTable(QWidget *&w) : QTableWidget(w)
     horizontalHeader()->setDefaultAlignment(Qt::AlignLeft);
     verticalHeader()->setHidden(true);
 
+
     //Setup columns and horizontal header
     setColumnCount(COL::_SIZE);
 

@@ -233,6 +233,8 @@ LatLon.prototype.finalBearingTo = function(point) {
 
 double LMATH::calc_fork(double lat1, double lon1, int h1, double lat2, double lon2, int h2, long dat)
 {
+    if(CPoint(lat1, lon1, 0.0).isSimilar(CPoint(lat2, lon2, 0.0), 0.0001)) return 0.0;
+
     double m1 = calc_magvar(lat1, lon1, dat, double(h1)/1000.0);
     double m2 = calc_magvar(lat2, lon2, dat, double(h2)/1000.0);
 
