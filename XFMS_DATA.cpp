@@ -1072,42 +1072,42 @@ void XFMS_DATA::validate_airports_XP11(QFile& infile, int wpOrigin)
                             i++;
                             if(qstr.compare("datum_lat") == 0)
                             {
-                                if(i>=record[i].size()) break;
+                                if(i>=record.size()) break;
                                 qstr = record[i].simplified();
                                 wp.latlon.x = qstr.toDouble();
                                 lat_set = true;
                             }
                             else if(qstr.compare("datum_lon") == 0)
                             {
-                                if(i>=record[i].size()) break;
+                                if(i>=record.size()) break;
                                 qstr = record[i].simplified();
                                 wp.latlon.y = qstr.toDouble();
                                 lon_set = true;
                             }//if
                             else if(qstr.compare("region_code") == 0)
                             {
-                                if(i>=record[i].size()) break;
+                                if(i>=record.size()) break;
                                 qstr = record[i].simplified();
                                 wp.country = qstr;
                                 break;
                             }
                             else if(qstr.compare("transition_alt") == 0)
                             {
-                                if(i>=record[i].size()) break;
+                                if(i>=record.size()) break;
                                 qstr = record[i].simplified();
                                 wp.trans_alt = qstr.toInt();
                                 break;
                             }
                             else if(qstr.compare("transition_level") == 0)
                             {
-                                if(i>=record[i].size()) break;
+                                if(i>=record.size()) break;
                                 qstr = record[i].simplified();
                                 wp.trans_level = qstr.toInt();
                                 break;
                             }
                             else if(qstr.compare("city") == 0)
                             {
-                                if(i>=record[i].size()) break;
+                                if(i>=record.size()) break;
                                 city = record[i].simplified();
                             }
                         }
