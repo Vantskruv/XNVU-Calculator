@@ -74,8 +74,8 @@ void QSearchList::search(const QString &name, bool filter)
                 for(unsigned int j = 0; j<ap->lRunways.size(); j++)
                 {
                     QString sString = "    " + ap->lRunways[j]->name;
-                    if(ap->lRunways[i]->type == WAYPOINT::TYPE_RUNWAY) sString = sString + " (" + QString::number(ap->lRunways[j]->length, 'f', 0) + "m)";
-                    else if(ap->lRunways[i]->type == WAYPOINT::TYPE_HELIPAD) sString = sString +  " (" + QString::number(ap->lRunways[j]->length, 'f', 0) + "x" + QString::number(ap->lRunways[i]->width, 'f', 0) +  "m)";
+                    if(ap->lRunways[j]->type == WAYPOINT::TYPE_RUNWAY) sString = sString + " (" + QString::number(ap->lRunways[j]->length, 'f', 0) + "m)";
+                    else if(ap->lRunways[j]->type == WAYPOINT::TYPE_HELIPAD) sString = sString +  " (" + QString::number(ap->lRunways[j]->length, 'f', 0) + "x" + QString::number(ap->lRunways[j]->width, 'f', 0) +  "m)";
                     newItem = new QListWidgetItemData;
                     newItem->setText(sString);
                     newItem->nvupoint = (NVUPOINT*) ap->lRunways[j];
