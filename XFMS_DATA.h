@@ -47,15 +47,19 @@ class XFMS_DATA
         static void validate_earthnav_XP10(const QStringList& record);
         static void validate_airways_XP10(QFile&);
 
+        enum xp_fms_file_version {VERSION_XP10, VERSION_XP11};
+
         static void validate_RSBN(const QStringList& record);
         static void validate_xnvu(const QStringList& record);
-        static void validate_fms(std::vector<NVUPOINT*>& lFMS, const QStringList& record);
+        static void validate_fms(std::vector<NVUPOINT*>& lFMS, const QStringList& record, xp_fms_file_version version);
         static void validate_xnvuflightplan(std::vector<NVUPOINT*>& lXNVUFlightplan, const QStringList& record);
         //Returns a new allocated waypoint if successful. If waypoint is a bearing/distance waypoint, wpRef needs to be set.
         //If error occurs, a description of error is returned.
         static QString validate_custom_point(const NVUPOINT* wpRef, NVUPOINT *&rPoint, const QString& record);
 
         static void validate_sidstar_XP11(QFile& _infile, const QString& _airport); //TODO: Under development, only for XP11 currently
+        static bool parse_fms_line_XP10(const QStringList& RAW, NVUPOINT& wp);
+        static bool parse_fms_line_XP11(const QStringList& RAW, NVUPOINT& wp);
 
     public:
         static int dat;

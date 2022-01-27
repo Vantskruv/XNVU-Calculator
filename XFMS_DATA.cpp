@@ -3283,17 +3283,23 @@ std::vector<NVUPOINT*> XFMS_DATA::loadFMS(const QString& file)
     QFile infile(file);
     if(!infile.open(QIODevice::ReadOnly | QIODevice::Text)) return lFMS;
 
+    xp_fms_file_version version = VERSION_XP10;
+
     while(!infile.atEnd())
     {
         QString line = infile.readLine();
         QStringList list;
         list = line.split(' ', QString::SkipEmptyParts);
-
-        if(list.size() == 5)
+ 
+        if(list.size() == 2)
         {
-            validate_fms(lFMS, list);
+            if (list[0] == "3" && list[1] == "version\n")
+                version = VERSION_XP10;
+            else if (list[0] == "1100" && list[1] == "Version\n")
+                version = VERSION_XP11;
         }
 
+        validate_fms(lFMS, list, version);
     }//while
 
     infile.close();
@@ -3321,9 +3327,10 @@ int XFMS_DATA::saveFMS(const QString& file, const std::vector<NVUPOINT*> lN)
     return 1;
 }
 
-void XFMS_DATA::validate_fms(std::vector<NVUPOINT*>& lFMS, const QStringList& RAW)
+bool XFMS_DATA::parse_fms_line_XP10(const QStringList& RAW, NVUPOINT& wp)
 {
-    NVUPOINT wp;
+    if (RAW.size() != 5)
+        return false;
 
     for(unsigned int i=0; i<RAW.size(); i++)
     {
@@ -3332,22 +3339,69 @@ void XFMS_DATA::validate_fms(std::vector<NVUPOINT*>& lFMS, const QStringList& RA
         {
             case 0: //TYPE
                 wp.type = XFMS_DATA::FMSToXNVUType(qstr.toInt());
-            break;
+                break;
             case 1:
                 wp.name = qstr;
-            break;
+                break;
             case 2: //Altitude (feet)
                 wp.alt = qstr.toDouble();
-            break;
+                break;
 
             case 3:
                 wp.latlon.x = qstr.toDouble();
-            break;
+                break;
             case 4:
                 wp.latlon.y = qstr.toDouble();
-            break;
+                break;
         }//Switch
     }//for
+    return true;
+}
+
+bool XFMS_DATA::parse_fms_line_XP11(const QStringList& RAW, NVUPOINT& wp)
+{
+    if (RAW.size() != 6)
+        return false;
+
+    for(unsigned int i=0; i<RAW.size(); i++)
+    {
+        QString qstr = RAW.at(i).simplified();
+        switch(i)
+        {
+            case 0: //TYPE
+                wp.type = XFMS_DATA::FMSToXNVUType(qstr.toInt());
+                break;
+            case 1:
+                wp.name = qstr;
+                break;
+            case 3: //Altitude (feet)
+                wp.alt = qstr.toDouble();
+                break;
+            case 4:
+                wp.latlon.x = qstr.toDouble();
+                break;
+            case 5:
+                wp.latlon.y = qstr.toDouble();
+                break;
+        }//Switch
+    }//for
+
+    return true;
+}
+
+void XFMS_DATA::validate_fms(std::vector<NVUPOINT*>& lFMS, const QStringList& RAW, xp_fms_file_version version)
+{
+    NVUPOINT wp;
+    bool parse_result = false;
+
+    if (version == VERSION_XP10)
+        parse_result = parse_fms_line_XP10(RAW, wp);
+    else if (version == VERSION_XP11)
+        parse_result = parse_fms_line_XP11(RAW, wp);
+
+    if (!parse_result)
+        return;
+
     wp.wpOrigin = WAYPOINT::ORIGIN_FMS;
     wp.MD = calc_magvar(wp.latlon.x, wp.latlon.y, dat, (double(LMATH::feetToMeter(wp.alt))/1000.0));
 
