@@ -36,10 +36,9 @@
 #ifndef SG_MAGVAR_HXX
 #define SG_MAGVAR_HXX
 
-#ifdef _WIN32
+#ifndef M_PI
     #define M_PI 3.1415926535897932384626433832795028841971693993751
 #endif
-
 
 /* Convert date to Julian day    1950-2049 */
 unsigned long int yymmdd_to_julian_days( int yy, int mm, int dd );

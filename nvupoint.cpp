@@ -1,6 +1,6 @@
 #include <nvupoint.h>
 #include <LMATH.h>
-
+#include <coremag.h>
 
 void NVUPOINT::swap(NVUPOINT& m, const NVUPOINT& wp)
 {
